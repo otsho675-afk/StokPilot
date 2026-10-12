@@ -42,7 +42,7 @@ void main() {
   addTearDown(() async => tester.binding.setSurfaceSize(null));
   await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(
     builder: (context) => FilledButton(
-      onPressed: () => showDialog<void>(context: context, builder: (_) =>
+      onPressed: () => showDialog<void>(context: context, builder: (dialogContext) =>
         AlertDialog(
           title: const Text('Yeni ürün'),
           content: SizedBox(width: 520, child: SingleChildScrollView(child:
@@ -58,7 +58,7 @@ void main() {
               ),
             ]),
           )),
-          actions: [TextButton(onPressed: () => Navigator.pop(_),
+          actions: [TextButton(onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Kapat'))],
         )),
       child: const Text('Ürün ekle'),
