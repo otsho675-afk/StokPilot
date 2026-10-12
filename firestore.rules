@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function owner(uid) { return signedIn() && request.auth.uid == uid; }
+    match /workspaces/{uid} {
+      allow read: if owner(uid);
+      // Client cannot create/edit workspace or its entitlement; initializeWorkspace callable does that.
+      allow write: if false;
+      match /entitlements/{docId} {
+        allow read: if owner(uid);
+        allow write: if false;
+      }
+      match /categories/{id} {
+        allow read: if owner(uid);
+        allow create: if owner(uid)
+          && request.resource.data.keys().hasOnly(['name','createdAt']);
+        allow update: if owner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name']);
+        allow delete: if owner(uid);
+      }
+      match /units/{id} {
+        allow read: if owner(uid);
+        allow create: if owner(uid)
+          && request.resource.data.keys().hasOnly(['name','symbol','createdAt']);
+        allow update: if owner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','symbol']);
+        allow delete: if owner(uid);
+      }
+      match /taxRates/{id} {
+        allow read: if owner(uid);
+        allow create: if owner(uid)
+          && request.resource.data.keys().hasOnly(['name','rateBps','createdAt'])
+          && request.resource.data.rateBps is int
+          && request.resource.data.rateBps >= 0 && request.resource.data.rateBps <= 10000;
+        allow update: if owner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','rateBps'])
+          && request.resource.data.rateBps is int
+          && request.resource.data.rateBps >= 0 && request.resource.data.rateBps <= 10000;
+        allow delete: if owner(uid);
+      }
+      match /products/{id} {
+        allow read: if owner(uid);
+        // All product creations must pass the transactional createProduct Cloud Function.
+        allow create: if false;
+        allow update: if owner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','sku','barcode','categoryId','unitId','taxRateBps','purchasePriceMinor','salePriceMinor','minStockMilli','isActive'])
+          && request.resource.data.purchasePriceMinor is int && request.resource.data.purchasePriceMinor >= 0
+          && request.resource.data.salePriceMinor is int && request.resource.data.salePriceMinor >= 0
+          && request.resource.data.taxRateBps is int
+          && request.resource.data.taxRateBps >= 0 && request.resource.data.taxRateBps <= 10000;
+        allow delete: if false;
+      }
+      match /contacts/{id} {
+        allow read: if owner(uid);
+        allow create: if owner(uid)
+          && request.resource.data.keys().hasOnly(['name','type','phone','email','taxNumber','address','balanceMinor','createdAt'])
+          && request.resource.data.balanceMinor == 0
+          && request.resource.data.type in ['customer','supplier','both'];
+        allow update: if owner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','type','phone','email','taxNumber','address'])
+          && request.resource.data.type in ['customer','supplier','both'];
+        allow delete: if false;
+      }
+      match /trades/{id} { allow read: if owner(uid); allow write: if false; }
+      match /stockMoves/{id} { allow read: if owner(uid); allow write: if false; }
+      match /payments/{id} { allow read: if owner(uid); allow write: if false; }
+      match /billingEvents/{id} { allow read, write: if false; }
+    }
+  }
+}

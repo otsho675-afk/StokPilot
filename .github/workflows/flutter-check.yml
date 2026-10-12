@@ -1,0 +1,27 @@
+name: Flutter code quality
+on:
+  push:
+  pull_request:
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate platform scaffold
+        run: flutter create --project-name stokpilot --org com.yesildas --platforms android,ios .
+      - run: flutter pub get
+      - run: dart format lib test
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test
+  functions-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: cd functions && npm install && npm run lint && npm test

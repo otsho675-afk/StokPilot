@@ -1,0 +1,45 @@
+name: stokpilot
+description: Profesyonel stok, cari, satis ve tedarik yonetimi.
+publish_to: none
+version: 1.0.0+1
+environment:
+  sdk: '>=3.6.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  firebase_core: ^4.14.0
+  firebase_auth: ^6.7.0
+  google_sign_in: ^7.2.0
+  cloud_firestore: ^6.10.0
+  cloud_functions: ^6.5.0
+  purchases_flutter: ^10.15.2
+  intl: ^0.20.2
+  uuid: ^4.5.1
+  fl_chart: ^1.1.1
+  collection: ^1.19.1
+  cupertino_icons: ^1.0.8
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
+flutter:
+  uses-material-design: true
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: assets/icons/stokpilot_icon.png
+  adaptive_icon_background: '#132F35'
+  adaptive_icon_foreground: assets/icons/stokpilot_icon.png
+
+flutter_native_splash:
+  color: '#F5F7F7'
+  image: assets/icons/stokpilot_icon.png
+  android_12:
+    color: '#F5F7F7'
+    image: assets/icons/stokpilot_icon.png
