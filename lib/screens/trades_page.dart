@@ -53,7 +53,7 @@ class _TradesPageState extends State<TradesPage> {
             child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
               decoration: BoxDecoration(color: canvas,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: line)),
+                border: Border.all(color: const Color(0xFFE5ECEE))),
               child: Row(children: [
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
