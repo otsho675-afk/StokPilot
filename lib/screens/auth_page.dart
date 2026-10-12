@@ -7,6 +7,7 @@ import '../widgets/ui.dart';
 
 // Anonymous account linking retains the same UID and all its stock data.
 class AuthActions {
+  static final Future<void> _googleInitialized = GoogleSignIn.instance.initialize();
   static Future<void> guest() async => FirebaseAuth.instance.signInAnonymously();
 
   static Future<void> google({bool link = false}) async {
@@ -19,7 +20,7 @@ class AuthActions {
       }
       return;
     }
-    await GoogleSignIn.instance.initialize();
+    await _googleInitialized;
     final googleUser = await GoogleSignIn.instance.authenticate();
     final googleAuth = googleUser.authentication;
     final token = googleAuth.idToken;
