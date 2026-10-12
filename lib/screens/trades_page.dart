@@ -127,7 +127,7 @@ Future<_Line?> _addLineDialog(BuildContext context, QueryDocumentSnapshot<Map<St
   final qty = TextEditingController(text: '1');
   final price = TextEditingController(text: (((sale ? m['salePriceMinor'] : m['purchasePriceMinor']) ?? 0) / 100).toStringAsFixed(2).replaceAll('.', ','));
   _Line? result;
-  await showDialog<void>(context: context, builder: (dialogContext) => AlertDialog(
+  await showDialog<void>(context: context, builder: (dialogContext) => ResponsiveFormDialog(
     title: Text(m['name'] ?? 'Ürün'),
     content: SizedBox(width: 380, child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text('Mevcut stok: ${quantity(m['stockMilli'] ?? 0)}', style: const TextStyle(color: Colors.blueGrey)),

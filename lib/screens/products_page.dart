@@ -354,7 +354,7 @@ class _ProductsPageState extends State<ProductsPage> {
 
 Future<void> stockDialog(BuildContext context, QueryDocumentSnapshot<Map<String,dynamic>> item) async {
   final value = TextEditingController(), note = TextEditingController(); bool addition = true, busy = false;
-  await showDialog<void>(context: context, builder: (dialogContext) => StatefulBuilder(builder: (context, update) => AlertDialog(
+  await showDialog<void>(context: context, builder: (dialogContext) => StatefulBuilder(builder: (context, update) => ResponsiveFormDialog(
     title: Text('${item.data()['name']} • Stok düzelt'),
     content: SizedBox(width: 400, child: Column(mainAxisSize: MainAxisSize.min, children: [
       SegmentedButton<bool>(segments: const [ButtonSegment(value: true, label: Text('Giriş')), ButtonSegment(value: false, label: Text('Çıkış'))], selected: {addition}, onSelectionChanged: (s) => update(() => addition = s.first)),
@@ -393,7 +393,7 @@ Future<void> productDialog(BuildContext context, {QueryDocumentSnapshot<Map<Stri
     final matched = taxDocs.where((d) => d.data()['rateBps'] == existing['taxRateBps']);
     if (matched.isNotEmpty) taxId = matched.first.id;
   }
-  await showDialog<void>(context: context, builder: (dialogContext) => StatefulBuilder(builder: (context, update) => AlertDialog(
+  await showDialog<void>(context: context, builder: (dialogContext) => StatefulBuilder(builder: (context, update) => ResponsiveFormDialog(
     title: Text(item == null ? 'Yeni ürün' : 'Ürün düzenle'),
     content: SizedBox(width: 520, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
       TextField(controller: name, decoration: const InputDecoration(labelText: 'Ürün adı *')),

@@ -170,6 +170,78 @@ class StatusPill extends StatelessWidget {
   );
 }
 
+
+/// A form dialog with finite dimensions, unlike AlertDialog's intrinsic-width
+/// sizing, which can fail when forms contain LayoutBuilder/ResponsiveFields.
+class ResponsiveFormDialog extends StatelessWidget {
+  const ResponsiveFormDialog({
+    super.key,
+    required this.title,
+    required this.content,
+    this.actions = const <Widget>[],
+  });
+
+  final Widget title;
+  final Widget content;
+  final List<Widget> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    final width = (size.width - 48).clamp(200.0, 560.0).toDouble();
+    final maxHeight = (size.height - keyboard - 48).clamp(160.0, 9000.0).toDouble();
+
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      clipBehavior: Clip.antiAlias,
+      backgroundColor: Colors.white,
+      child: SizedBox(
+        width: width,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                child: DefaultTextStyle(
+                  style: const TextStyle(
+                    fontSize: 20,
+                    color: ink,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  child: title,
+                ),
+              ),
+              Flexible(
+                fit: FlexFit.loose,
+                child: SingleChildScrollView(
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: content,
+                ),
+              ),
+              if (actions.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: actions,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 void notify(BuildContext context, String message, {bool error = false}) {
   ScaffoldMessenger.of(context).hideCurrentSnackBar();
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(

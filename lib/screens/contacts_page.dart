@@ -201,7 +201,7 @@ Future<void> contactDialog(BuildContext context, {QueryDocumentSnapshot<Map<Stri
     email = TextEditingController(text: m?['email'] ?? ''), tax = TextEditingController(text: m?['taxNumber'] ?? ''),
     address = TextEditingController(text: m?['address'] ?? '');
   String type = m?['type'] ?? 'customer'; bool busy = false;
-  await showDialog<void>(context: context, builder: (dc) => StatefulBuilder(builder: (context, update) => AlertDialog(
+  await showDialog<void>(context: context, builder: (dc) => StatefulBuilder(builder: (context, update) => ResponsiveFormDialog(
     title: Text(item == null ? 'Cari ekle' : 'Cari düzenle'),
     content: SizedBox(width: 470, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
       TextField(controller: name, decoration: const InputDecoration(labelText: 'Ad / firma ünvanı *')),
@@ -230,7 +230,7 @@ Future<void> contactDialog(BuildContext context, {QueryDocumentSnapshot<Map<Stri
 }
 Future<void> paymentDialog(BuildContext context, QueryDocumentSnapshot<Map<String,dynamic>> contact) async {
   final input = TextEditingController(); String type = 'collection'; bool busy = false;
-  await showDialog<void>(context: context, builder: (dc) => StatefulBuilder(builder: (context, update) => AlertDialog(
+  await showDialog<void>(context: context, builder: (dc) => StatefulBuilder(builder: (context, update) => ResponsiveFormDialog(
     title: Text('${contact.data()['name']} • Cari hareket'),
     content: SizedBox(width: 380, child: Column(mainAxisSize: MainAxisSize.min, children: [
       DropdownButtonFormField<String>(initialValue: type, decoration: const InputDecoration(labelText: 'İşlem'), items: const [
