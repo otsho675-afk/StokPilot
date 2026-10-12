@@ -244,6 +244,47 @@ class ResponsiveFormDialog extends StatelessWidget {
   }
 }
 
+/// The route, not its awaiting caller, owns text controllers until unmount.
+/// showDialog completes at pop, before the reverse transition finishes.
+class _RouteControllerOwner extends StatefulWidget {
+  const _RouteControllerOwner({
+    required this.controllers,
+    required this.child,
+  });
+  final List<TextEditingController> controllers;
+  final Widget child;
+
+  @override
+  State<_RouteControllerOwner> createState() => _RouteControllerOwnerState();
+}
+
+class _RouteControllerOwnerState extends State<_RouteControllerOwner> {
+  @override
+  void dispose() {
+    for (final controller in widget.controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
+Future<T?> showOwnedDialog<T>({
+  required BuildContext context,
+  required List<TextEditingController> controllers,
+  required WidgetBuilder builder,
+}) {
+  return showDialog<T>(
+    context: context,
+    builder: (routeContext) => _RouteControllerOwner(
+      controllers: controllers,
+      child: Builder(builder: builder),
+    ),
+  );
+}
+
 void notify(BuildContext context, String message, {bool error = false}) {
   ScaffoldMessenger.of(context).hideCurrentSnackBar();
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(

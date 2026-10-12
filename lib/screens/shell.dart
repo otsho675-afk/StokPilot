@@ -27,7 +27,9 @@ class _MainShellState extends State<MainShell> {
   ];
   static const mobileTabs = [0, 1, 2, 4];
 
-  void navigate(int index) => setState(() => selected = index);
+  void navigate(int index) {
+    if (selected != index && mounted) setState(() => selected = index);
+  }
 
   Widget screen() => switch (selected) {
     0 => OverviewPage(onNavigate: navigate),
@@ -166,8 +168,7 @@ class _MainShellState extends State<MainShell> {
                   wide ? 30 : 15, mobile ? 20 : 30),
                 child: Center(child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1240),
-                  child: AnimatedSwitcher(duration: const Duration(milliseconds: 180),
-                    child: KeyedSubtree(key: ValueKey(selected), child: screen())),
+                  child: KeyedSubtree(key: ValueKey(selected), child: screen()),
                 )),
               )),
             ]))),

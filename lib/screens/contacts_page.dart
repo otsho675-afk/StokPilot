@@ -201,7 +201,7 @@ Future<void> contactDialog(BuildContext context, {QueryDocumentSnapshot<Map<Stri
     email = TextEditingController(text: m?['email'] ?? ''), tax = TextEditingController(text: m?['taxNumber'] ?? ''),
     address = TextEditingController(text: m?['address'] ?? '');
   String type = m?['type'] ?? 'customer'; bool busy = false;
-  await showDialog<void>(context: context, builder: (dc) => StatefulBuilder(builder: (context, update) => ResponsiveFormDialog(
+  await showOwnedDialog<void>(context: context, controllers: [name, phone, email, tax, address], builder: (dc) => StatefulBuilder(builder: (context, update) => ResponsiveFormDialog(
     title: Text(item == null ? 'Cari ekle' : 'Cari düzenle'),
     content: SizedBox(width: 470, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
       TextField(controller: name, decoration: const InputDecoration(labelText: 'Ad / firma ünvanı *')),
@@ -226,11 +226,10 @@ Future<void> contactDialog(BuildContext context, {QueryDocumentSnapshot<Map<Stri
       }, child: const Text('Kaydet')),
     ],
   )));
-  for (final c in [name, phone, email, tax, address]) { c.dispose(); }
 }
 Future<void> paymentDialog(BuildContext context, QueryDocumentSnapshot<Map<String,dynamic>> contact) async {
   final input = TextEditingController(); String type = 'collection'; bool busy = false;
-  await showDialog<void>(context: context, builder: (dc) => StatefulBuilder(builder: (context, update) => ResponsiveFormDialog(
+  await showOwnedDialog<void>(context: context, controllers: [input], builder: (dc) => StatefulBuilder(builder: (context, update) => ResponsiveFormDialog(
     title: Text('${contact.data()['name']} • Cari hareket'),
     content: SizedBox(width: 380, child: Column(mainAxisSize: MainAxisSize.min, children: [
       DropdownButtonFormField<String>(initialValue: type, decoration: const InputDecoration(labelText: 'İşlem'), items: const [
@@ -250,7 +249,6 @@ Future<void> paymentDialog(BuildContext context, QueryDocumentSnapshot<Map<Strin
       }, child: const Text('İşlemi kaydet')),
     ],
   )));
-  input.dispose();
 }
 Future<void> contactHistory(BuildContext context, QueryDocumentSnapshot<Map<String,dynamic>> contact) async {
   final api = AppApi.instance;

@@ -70,7 +70,7 @@ Future<void> masterDialog(BuildContext context, String collection, {QueryDocumen
   final name = TextEditingController(text: data?['name'] ?? ''), other = TextEditingController(
     text: collection == 'units' ? (data?['symbol'] ?? '') : (data == null ? '20' : ((data['rateBps'] ?? 0) / 100).toString().replaceAll('.', ',')));
   bool saving = false;
-  await showDialog<void>(context: context, builder: (dc) => StatefulBuilder(builder: (context, update) => ResponsiveFormDialog(
+  await showOwnedDialog<void>(context: context, controllers: [name, other], builder: (dc) => StatefulBuilder(builder: (context, update) => ResponsiveFormDialog(
     title: Text(item == null ? 'Yeni kayıt' : 'Kaydı düzenle'),
     content: SizedBox(width: 360, child: Column(mainAxisSize: MainAxisSize.min, children: [
       TextField(controller: name, decoration: InputDecoration(labelText: collection == 'taxRates' ? 'KDV adı (ör. Genel %20)' : 'Ad *')),
@@ -95,5 +95,5 @@ Future<void> masterDialog(BuildContext context, String collection, {QueryDocumen
       }, child: const Text('Kaydet')),
     ],
   )));
-  name.dispose(); other.dispose();
+  
 }
