@@ -53,6 +53,9 @@ test('Spark: guest creates 50 items, blocks #51 and cross-account reads', async 
     });
   }));
   await assertFails(updateDoc(workspace, { productCount: 0 }));
+  // Prevent quota resetting by deleting and recreating the workspace.
+  const { deleteDoc } = require('firebase/firestore');
+  await assertFails(deleteDoc(workspace));
   const other = env.authenticatedContext('other-user').firestore();
   await assertFails(getDoc(doc(other, 'workspaces/owner-one')));
 });

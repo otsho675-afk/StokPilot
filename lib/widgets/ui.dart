@@ -77,7 +77,7 @@ Future<bool> confirm(BuildContext context, String title, String body) async => a
 
 Future<void> requestAccountDeletion(BuildContext context) async {
   if (!await confirm(context, 'Hesabımı kalıcı sil',
-      'Ürünler, cariler, stok ve tüm işletme geçmişi kalıcı olarak silinir. Aboneliğiniz otomatik iptal olmaz; önce Apple / Google mağaza aboneliklerinden iptal edin.')) { return; }
+      'Ürün, cari ve işlem geçmişi silinir; kötüye kullanımı önlemek için minimal teknik kota sayacı saklanır. Aboneliğiniz otomatik iptal olmaz; mağazadan ayrıca iptal edin.')) { return; }
   if (!context.mounted) return;
   if (!await confirm(context, 'Son onay', 'Bu işlem geri alınamaz. Hesabınız ve kayıtlarınız silinsin mi?')) return;
   try {

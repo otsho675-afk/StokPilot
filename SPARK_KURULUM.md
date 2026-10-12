@@ -31,7 +31,7 @@ Cloudflare Workers + RevenueCat abonelik köprüsünün kurulumu: [cloudflare-bi
 
 ## Hesap silme
 
-Spark sürümü hesap silme isteğinde ilgili kullanıcının Firestore koleksiyonlarını istemciden 100'lü gruplar halinde siler, işletme ana belgesini siler ve sonra Firebase Auth hesabını kaldırır. Firebase, güvenlik nedeniyle hesabı silerken yakın zamanda tekrar giriş isteyebilir; işlem yarıda kesilirse tekrar denenmelidir. Abonelik mağaza hesabından ayrıca iptal edilir.
+Spark sürümü hesap silme isteğinde ilgili kullanıcının Firestore koleksiyonlarını istemciden 100'lü gruplar halinde siler, işletme ana belgesindeki isim bilgisini anonimleştirir, tekrar kullanımını engelleyen minimal teknik kota kaydını korur ve sonra Firebase Auth hesabını kaldırır. Firebase, güvenlik nedeniyle hesabı silerken yakın zamanda tekrar giriş isteyebilir; işlem yarıda kesilirse tekrar denenmelidir. Abonelik mağaza hesabından ayrıca iptal edilir.
 
 ## Spark kotaları
 

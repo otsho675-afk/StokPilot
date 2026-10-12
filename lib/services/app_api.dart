@@ -294,6 +294,12 @@ class AppApi {
 
   /// Delete known Firestore collections in chunks (Spark has no Admin recursiveDelete).
   Future<void> deleteAccount() async {
+    final user = auth.currentUser;
+    if (user == null) throw StateError('Oturum kapalı.');
+    final lastSignIn = user.metadata.lastSignInTime;
+    if (lastSignIn == null || DateTime.now().difference(lastSignIn) > const Duration(minutes: 4)) {
+      throw StateError('Hesabı silmeden önce çıkış yapıp son 4 dakika içinde yeniden giriş yapın. Misafir hesapta çıkış verileri kaybettirebilir; önceden hesabı bağlayın.');
+    }
     const names = [
       'categories', 'units', 'taxRates', 'products', 'contacts',
       'trades', 'stockMoves', 'payments', 'entitlements', 'billingEvents',
@@ -309,7 +315,12 @@ class AppApi {
         await batch.commit();
       }
     }
-    await workspace.delete();
+    // Keep only a non-reusable technical quota anchor; deleting/recreating
+    // the workspace would otherwise reset the free 50-product allowance.
+    await workspace.update({
+      'name': 'Hesap silindi',
+      'deletedAt': FieldValue.serverTimestamp(),
+    });
     await auth.currentUser!.delete();
   }
 }

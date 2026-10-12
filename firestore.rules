@@ -17,7 +17,8 @@ service cloud.firestore {
     function signedMoney(value) { return intBetween(value, -1000000000000, 1000000000000); }
     function named(value) { return value is string && value.size() > 0 && value.size() <= 150; }
     match /workspaces/{uid} {
-      allow read, delete: if owner(uid);
+      allow read: if owner(uid);
+      allow delete: if false; // quota anchor survives account-data deletion
       allow create: if owner(uid) &&
         request.resource.data.keys().hasOnly(['ownerUid','name','currency','productCount','createdAt']) &&
         request.resource.data.ownerUid == uid &&
@@ -26,15 +27,22 @@ service cloud.firestore {
         request.resource.data.productCount == 0 &&
         request.resource.data.createdAt == request.time;
       // One counter update = exactly one product ID; a batch cannot add 51st product.
-      allow update: if owner(uid) &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['productCount','lastProductId']) &&
+      allow update: if owner(uid) && (
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['productCount','lastProductId']) &&
+        !('deletedAt' in resource.data) &&
         intBetween(resource.data.productCount, 0, 1999999999) &&
         request.resource.data.productCount == resource.data.productCount + 1 &&
         request.resource.data.lastProductId is string &&
         request.resource.data.lastProductId.size() > 0 &&
         !exists(product(uid, request.resource.data.lastProductId)) &&
         existsAfter(product(uid, request.resource.data.lastProductId)) &&
-        (resource.data.productCount < 50 || premium(uid));
+        (resource.data.productCount < 50 || premium(uid))) ||
+        // Account erase leaves only a non-reusable technical quota anchor.
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','deletedAt']) &&
+          !('deletedAt' in resource.data) &&
+          request.resource.data.name == 'Hesap silindi' &&
+          request.resource.data.deletedAt == request.time)
+      );
       match /entitlements/{id} {
         allow read, delete: if owner(uid);
         // A store-receipt-verifying external server must write Pro entitlement.
@@ -77,6 +85,7 @@ service cloud.firestore {
       match /products/{id} {
         allow read, delete: if owner(uid);
         allow create: if owner(uid) &&
+          !('deletedAt' in get(ws(uid)).data) &&
           (get(ws(uid)).data.productCount < 50 || premium(uid)) &&
           getAfter(ws(uid)).data.productCount == get(ws(uid)).data.productCount + 1 &&
           getAfter(ws(uid)).data.lastProductId == id &&
