@@ -30,7 +30,7 @@ class SettingsPage extends StatelessWidget {
     ])),
     const SizedBox(height: 18), DataPanel(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Text('Veri ve güvenlik', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)), const SizedBox(height: 7),
-      const Text('Veriler Firebase Firestore üzerinde hesabınıza ait işletme alanında saklanır. Kullanıcılar diğer işletmelerin kayıtlarını okuyamaz. Stok ve cari bakiyeleri sadece sunucu işlemleri değiştirebilir.'),
+      const Text('Veriler Firebase Firestore üzerinde hesabınıza ait işletme alanında saklanır. Kullanıcılar diğer işletmelerin kayıtlarını okuyamaz. Stok ve cari hareketleri Firestore transaction ile kaydedilir. Her hesap sadece kendi verilerine erişebilir.'),
       const SizedBox(height: 12), Wrap(spacing: 8, children: [
         TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const LegalPage(privacy: true))), child: const Text('Gizlilik')),
         TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const LegalPage(privacy: false))), child: const Text('Koşullar')),

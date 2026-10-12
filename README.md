@@ -1,3 +1,9 @@
+# StokPilot - Firebase Spark
+
+**GÜNCEL SÜRÜM:** Cloud Functions yerine doğrudan Firestore transaction kullanır; Firebase Blaze planına geçiş gerekmez. Ücretsiz 50 ürün sınırı Firestore kurallarıyla uygulanır. 50 TL/ay Pro abonelik **henüz ödeme doğrulaması kurulmadığından test sürümünde kapalıdır**.
+
+Kurulumun güncel adımları: [SPARK_KURULUM.md](SPARK_KURULUM.md).
+
 # StokPilot — Flutter + Firebase — 50 Ürün Ücretsiz, Pro ₺50/Ay
 
 StokPilot stok, kategori, birim, KDV, cari müşteri/tedarikçi, alış, satış, tahsilat, rapor ve stok hareketleri için Flutter + Firestore + Cloud Functions tabanlı bir uygulamadır.
@@ -22,24 +28,6 @@ Misafir hesabı aynı Firebase UID üzerinde `linkWithCredential` (Google) veya 
 - `productCount` tarihsel oluşturulmuş kayıt sayısıdır; ürün pasife almak ücretsiz kotayı geri kazandırmaz. Eski kurulumdan geçişte sayım backfill yapılır; eski veri varsa `productCount` değerinin doğru olduğundan emin olun.
 - RevenueCat webhook doğrulanmış `pro` entitlement ile `status=active`, `source=revenuecat`, `expiresAt` yazar. Mağaza fiyatı **koddan değiştirilmez**.
 - Gerçek mağaza/RevenueCat/Apple/Google kurulumları tamamlanana kadar canlı para çekimi **etkin değildir**.
-
-## Açılışta `[firebase_functions/not-found] NOT_FOUND` hatası
-
-Bu hata Flutter'ın `initializeWorkspace` callable fonksiyonunu bulamadığını gösterir. Kaynak kodda fonksiyon `functions/index.js` içinde, istemci çağrısı `lib/services/app_api.dart` içinde **europe-west1** bölgesinde tanımlıdır. GitHub'a kodu göndermek Firebase'e dağıtım yapmak **değildir**.
-
-Firebase projesi **stokpilot-5bd2e** için PowerShell'de, GitHub'dan güncellediğiniz proje klasöründe:
-
-```powershell
-git pull origin main
-firebase login
-firebase functions:list --project stokpilot-5bd2e
-Set-ExecutionPolicy -Scope Process Bypass
-.\scripts\deploy_backend_windows.ps1
-```
-
-Bu betik Firestore kuralları ile gerekli **6 callable** fonksiyonu dağıtır ve sonunda `firebase functions:list` ile kontrol eder. Fonksiyonlar **2. nesil** ve `europe-west1` bölgesindedir. Firebase projesinde **Blaze** planı ve gerekli Google Cloud API servisleri etkin olmalıdır. Betik RevenueCat ödeme webhook'unu, `REVENUECAT_WEBHOOK_SECRET` kurulana kadar dağıtmaz.
-
-Uygulama hâlâ aynı hatayı veriyorsa `flutterfire configure --project=stokpilot-5bd2e --platforms=android,ios --android-package-name=com.yesildas.stokpilot --ios-bundle-id=com.yesildas.stokpilot` komutunu çalıştırın. Android `android/app/google-services.json` dosyasındaki `project_info.project_id` alanının **stokpilot-5bd2e** olduğunu doğrulayın; ardından uygulamayı yeniden başlatın. Firebase Console → Build → Functions içinde `initializeWorkspace` fonksiyonunun **europe-west1** bölgesinde yayımlanmış olması gerekir. Fonksiyon hiçbir yerde görünmüyorsa GitHub'da çalıştırılmış Flutter testleri canlı Firebase dağıtımının yerini tutmaz.
 
 ## Firebase Auth giriş hatasının çözümü
 

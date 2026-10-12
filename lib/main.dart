@@ -1,4 +1,3 @@
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -44,27 +43,13 @@ class StokPilotApp extends StatelessWidget {
   );
 }
 String readableInitializationError(Object error) {
-  if (error is FirebaseFunctionsException) {
-    final project = Firebase.app().options.projectId;
-    if (error.code == 'not-found') {
-      return 'Sunucuda initializeWorkspace fonksiyonu bulunamadı. '
-          'Bağlı Firebase projesi: $project. Bölge: europe-west1. '
-          'Önce PowerShell içinde scripts/deploy_backend_windows.ps1 dosyasını '
-          'çalıştırarak Firebase Cloud Functions dağıtımını tamamlayın. '
-          'Başka Firebase projesine bağlandıysanız flutterfire configure ile düzeltin.';
-    }
-    if (error.code == 'unauthenticated') {
-      return 'Oturum doğrulanamadı. Hesaptan çıkıp yeniden giriş yapın.';
-    }
-    if (error.code == 'permission-denied') {
-      return 'Firebase erişimi reddedildi. Proje ve kullanıcı yetkilerini kontrol edin.';
-    }
-    if (error.code == 'unavailable' || error.code == 'deadline-exceeded') {
-      return 'Firebase sunucusuna şu an ulaşılamıyor. İnternet bağlantınızı ve servis durumunu kontrol edip tekrar deneyin.';
-    }
-    return 'Firebase sunucusu hata verdi (' + error.code + '). ' + (error.message ?? '');
+  if (error is FirebaseException && error.code == 'permission-denied') {
+    return 'Firestore yetkisi reddedildi. Firebase Spark güvenlik kurallarını yayımlayın.';
   }
-  return 'Başlatma başarısız oldu. ' + error.toString();
+  if (error is FirebaseException && error.code == 'unavailable') {
+    return 'Firebase bağlantısı şu an kurulamadı. İnternet bağlantısını kontrol edin.';
+  }
+  return 'Başlatma başarısız oldu: $error';
 }
 
 class WorkspaceInitializer extends StatefulWidget {

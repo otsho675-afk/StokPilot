@@ -15,7 +15,7 @@ Toplanabilecek bilgiler: Hesap e-postası ve giriş bilgileri; işletmenin kayde
 
 Amaç: Kimlik doğrulama, senkronizasyon, stok/cari yönetimi, abonelik erişimi, güvenlik, hata teşhisi.
 
-Altyapı: Firebase Authentication, Cloud Firestore ve Cloud Functions. Mağaza içi ödemelerin doğrulaması için RevenueCat kullanılır. Kart bilgileri StokPilot içinde tutulmaz.
+Altyapı: Firebase Authentication, Cloud Firestore ve Firebase Authentication. Mağaza içi ödemelerin doğrulaması için RevenueCat kullanılır. Kart bilgileri StokPilot içinde tutulmaz.
 
 Saklama: Hesap var oldukça ilgili kayıtlar saklanabilir. Uygulamada hesap silme talep edildiğinde işletme verileri ve hesap kaldırılır. Yasal saklama yükümlülükleri ayrıca değerlendirilmelidir.
 

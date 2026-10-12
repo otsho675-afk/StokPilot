@@ -1,71 +1,176 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
-    function owner(uid) { return signedIn() && request.auth.uid == uid; }
+    function owner(uid) { return request.auth != null && request.auth.uid == uid; }
+    function ws(uid) { return /databases/$(database)/documents/workspaces/$(uid); }
+    function product(uid, id) { return /databases/$(database)/documents/workspaces/$(uid)/products/$(id); }
+    function entitlement(uid) { return /databases/$(database)/documents/workspaces/$(uid)/entitlements/current; }
+    function premium(uid) {
+      return exists(entitlement(uid)) &&
+        get(entitlement(uid)).data.status == 'active' &&
+        get(entitlement(uid)).data.source == 'revenuecat' &&
+        get(entitlement(uid)).data.expiresAt is timestamp &&
+        get(entitlement(uid)).data.expiresAt > request.time;
+    }
+    function intBetween(value, min, max) { return value is int && value >= min && value <= max; }
+    function money(value) { return intBetween(value, 0, 1000000000000); }
+    function signedMoney(value) { return intBetween(value, -1000000000000, 1000000000000); }
+    function named(value) { return value is string && value.size() > 0 && value.size() <= 150; }
     match /workspaces/{uid} {
-      allow read: if owner(uid);
-      // Client cannot create/edit workspace or its entitlement; initializeWorkspace callable does that.
-      allow write: if false;
-      match /entitlements/{docId} {
-        allow read: if owner(uid);
-        allow write: if false;
+      allow read, delete: if owner(uid);
+      allow create: if owner(uid) &&
+        request.resource.data.keys().hasOnly(['ownerUid','name','currency','productCount','createdAt']) &&
+        request.resource.data.ownerUid == uid &&
+        named(request.resource.data.name) &&
+        request.resource.data.currency == 'TRY' &&
+        request.resource.data.productCount == 0 &&
+        request.resource.data.createdAt == request.time;
+      // One counter update = exactly one product ID; a batch cannot add 51st product.
+      allow update: if owner(uid) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['productCount','lastProductId']) &&
+        intBetween(resource.data.productCount, 0, 1999999999) &&
+        request.resource.data.productCount == resource.data.productCount + 1 &&
+        request.resource.data.lastProductId is string &&
+        request.resource.data.lastProductId.size() > 0 &&
+        !exists(product(uid, request.resource.data.lastProductId)) &&
+        existsAfter(product(uid, request.resource.data.lastProductId)) &&
+        (resource.data.productCount < 50 || premium(uid));
+      match /entitlements/{id} {
+        allow read, delete: if owner(uid);
+        // A store-receipt-verifying external server must write Pro entitlement.
+        allow create, update: if false;
       }
       match /categories/{id} {
-        allow read: if owner(uid);
-        allow create: if owner(uid)
-          && request.resource.data.keys().hasOnly(['name','createdAt']);
-        allow update: if owner(uid)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name']);
-        allow delete: if owner(uid);
+        allow read, delete: if owner(uid);
+        allow create: if owner(uid) &&
+          request.resource.data.keys().hasOnly(['name','createdAt']) &&
+          named(request.resource.data.name) &&
+          request.resource.data.createdAt == request.time;
+        allow update: if owner(uid) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name']) &&
+          named(request.resource.data.name);
       }
       match /units/{id} {
-        allow read: if owner(uid);
-        allow create: if owner(uid)
-          && request.resource.data.keys().hasOnly(['name','symbol','createdAt']);
-        allow update: if owner(uid)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','symbol']);
-        allow delete: if owner(uid);
+        allow read, delete: if owner(uid);
+        allow create: if owner(uid) &&
+          request.resource.data.keys().hasOnly(['name','symbol','createdAt']) &&
+          named(request.resource.data.name) &&
+          request.resource.data.symbol is string &&
+          request.resource.data.createdAt == request.time;
+        allow update: if owner(uid) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','symbol']) &&
+          named(request.resource.data.name) &&
+          request.resource.data.symbol is string;
       }
       match /taxRates/{id} {
-        allow read: if owner(uid);
-        allow create: if owner(uid)
-          && request.resource.data.keys().hasOnly(['name','rateBps','createdAt'])
-          && request.resource.data.rateBps is int
-          && request.resource.data.rateBps >= 0 && request.resource.data.rateBps <= 10000;
-        allow update: if owner(uid)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','rateBps'])
-          && request.resource.data.rateBps is int
-          && request.resource.data.rateBps >= 0 && request.resource.data.rateBps <= 10000;
-        allow delete: if owner(uid);
+        allow read, delete: if owner(uid);
+        allow create: if owner(uid) &&
+          request.resource.data.keys().hasOnly(['name','rateBps','createdAt']) &&
+          named(request.resource.data.name) &&
+          intBetween(request.resource.data.rateBps, 0, 10000) &&
+          request.resource.data.createdAt == request.time;
+        allow update: if owner(uid) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','rateBps']) &&
+          named(request.resource.data.name) &&
+          intBetween(request.resource.data.rateBps, 0, 10000);
       }
       match /products/{id} {
-        allow read: if owner(uid);
-        // All product creations must pass the transactional createProduct Cloud Function.
-        allow create: if false;
-        allow update: if owner(uid)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','sku','barcode','categoryId','unitId','taxRateBps','purchasePriceMinor','salePriceMinor','minStockMilli','isActive'])
-          && request.resource.data.purchasePriceMinor is int && request.resource.data.purchasePriceMinor >= 0
-          && request.resource.data.salePriceMinor is int && request.resource.data.salePriceMinor >= 0
-          && request.resource.data.taxRateBps is int
-          && request.resource.data.taxRateBps >= 0 && request.resource.data.taxRateBps <= 10000;
-        allow delete: if false;
+        allow read, delete: if owner(uid);
+        allow create: if owner(uid) &&
+          (get(ws(uid)).data.productCount < 50 || premium(uid)) &&
+          getAfter(ws(uid)).data.productCount == get(ws(uid)).data.productCount + 1 &&
+          getAfter(ws(uid)).data.lastProductId == id &&
+          request.resource.data.keys().hasOnly([
+            'name','sku','barcode','categoryId','unitId','taxRateBps',
+            'purchasePriceMinor','salePriceMinor','minStockMilli',
+            'isActive','stockMilli','createdAt'
+          ]) &&
+          named(request.resource.data.name) &&
+          request.resource.data.sku is string &&
+          request.resource.data.barcode is string &&
+          request.resource.data.categoryId is string &&
+          request.resource.data.unitId is string &&
+          intBetween(request.resource.data.taxRateBps, 0, 10000) &&
+          money(request.resource.data.purchasePriceMinor) &&
+          money(request.resource.data.salePriceMinor) &&
+          money(request.resource.data.minStockMilli) &&
+          request.resource.data.isActive is bool &&
+          request.resource.data.stockMilli == 0 &&
+          request.resource.data.createdAt == request.time;
+        allow update: if owner(uid) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'name','sku','barcode','categoryId','unitId','taxRateBps',
+            'purchasePriceMinor','salePriceMinor','minStockMilli',
+            'isActive','stockMilli'
+          ]) &&
+          named(request.resource.data.name) &&
+          request.resource.data.sku is string &&
+          request.resource.data.barcode is string &&
+          request.resource.data.categoryId is string &&
+          request.resource.data.unitId is string &&
+          request.resource.data.isActive is bool &&
+          intBetween(request.resource.data.taxRateBps, 0, 10000) &&
+          money(request.resource.data.purchasePriceMinor) &&
+          money(request.resource.data.salePriceMinor) &&
+          money(request.resource.data.minStockMilli) &&
+          money(request.resource.data.stockMilli);
       }
       match /contacts/{id} {
-        allow read: if owner(uid);
-        allow create: if owner(uid)
-          && request.resource.data.keys().hasOnly(['name','type','phone','email','taxNumber','address','balanceMinor','createdAt'])
-          && request.resource.data.balanceMinor == 0
-          && request.resource.data.type in ['customer','supplier','both'];
-        allow update: if owner(uid)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','type','phone','email','taxNumber','address'])
-          && request.resource.data.type in ['customer','supplier','both'];
-        allow delete: if false;
+        allow read, delete: if owner(uid);
+        allow create: if owner(uid) &&
+          request.resource.data.keys().hasOnly(['name','type','phone','email','taxNumber','address','balanceMinor','createdAt']) &&
+          named(request.resource.data.name) &&
+          request.resource.data.type in ['customer','supplier','both'] &&
+          request.resource.data.balanceMinor == 0 &&
+          request.resource.data.createdAt == request.time;
+        allow update: if owner(uid) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','type','phone','email','taxNumber','address','balanceMinor']) &&
+          named(request.resource.data.name) &&
+          request.resource.data.type in ['customer','supplier','both'] &&
+          signedMoney(request.resource.data.balanceMinor);
       }
-      match /trades/{id} { allow read: if owner(uid); allow write: if false; }
-      match /stockMoves/{id} { allow read: if owner(uid); allow write: if false; }
-      match /payments/{id} { allow read: if owner(uid); allow write: if false; }
-      match /billingEvents/{id} { allow read, write: if false; }
+      match /trades/{id} {
+        allow read, delete: if owner(uid);
+        allow create: if owner(uid) &&
+          request.resource.data.keys().hasOnly(['type','contactId','lines','paidMinor','netMinor','taxMinor','totalMinor','note','createdAt']) &&
+          request.resource.data.type in ['sale','purchase'] &&
+          request.resource.data.lines is list &&
+          request.resource.data.lines.size() > 0 &&
+          request.resource.data.lines.size() <= 30 &&
+          money(request.resource.data.netMinor) &&
+          money(request.resource.data.taxMinor) &&
+          money(request.resource.data.totalMinor) &&
+          money(request.resource.data.paidMinor) &&
+          request.resource.data.paidMinor <= request.resource.data.totalMinor &&
+          request.resource.data.createdAt == request.time;
+        allow update: if false;
+      }
+      match /stockMoves/{id} {
+        allow read, delete: if owner(uid);
+        allow create: if owner(uid) &&
+          request.resource.data.keys().hasOnly(['productId','tradeId','deltaMilli','reason','note','createdAt']) &&
+          request.resource.data.productId is string &&
+          request.resource.data.deltaMilli is int &&
+          request.resource.data.deltaMilli != 0 &&
+          request.resource.data.reason in ['sale','purchase','adjustment'] &&
+          request.resource.data.createdAt == request.time;
+        allow update: if false;
+      }
+      match /payments/{id} {
+        allow read, delete: if owner(uid);
+        allow create: if owner(uid) &&
+          request.resource.data.keys().hasOnly(['contactId','tradeId','type','amountMinor','auto','createdAt']) &&
+          request.resource.data.type in ['collection','payout'] &&
+          money(request.resource.data.amountMinor) &&
+          request.resource.data.amountMinor > 0 &&
+          request.resource.data.auto is bool &&
+          request.resource.data.createdAt == request.time;
+        allow update: if false;
+      }
+      match /billingEvents/{id} {
+        allow read, delete: if owner(uid);
+        allow create, update: if false;
+      }
     }
   }
 }

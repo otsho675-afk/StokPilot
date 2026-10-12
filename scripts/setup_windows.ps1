@@ -24,5 +24,5 @@ if (-not $flutterfire) { throw 'flutterfire bulunamadi. Terminali yeniden acin, 
 flutterfire configure --project=stokpilot-5bd2e --platforms=android,ios --android-package-name=com.yesildas.stokpilot --ios-bundle-id=com.yesildas.stokpilot
 if ($LASTEXITCODE -ne 0) { throw 'FlutterFire yapilandirma basarisiz.' }
 Write-Host 'Baslangic dosyalari hazir. Firebase servislerini Konsoldan etkinlestirin.' -ForegroundColor Green
-Write-Host 'Cloud Functions dagitimi (Blaze plani gerektirir): firebase deploy --only firestore,functions'
+Write-Host 'Spark (ucretsiz) Firestore dagitimi: firebase deploy --only firestore --project stokpilot-5bd2e'
 Write-Host 'Uygulamayi calistir: flutter run'

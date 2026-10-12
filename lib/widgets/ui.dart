@@ -81,7 +81,7 @@ Future<void> requestAccountDeletion(BuildContext context) async {
   if (!context.mounted) return;
   if (!await confirm(context, 'Son onay', 'Bu işlem geri alınamaz. Hesabınız ve kayıtlarınız silinsin mi?')) return;
   try {
-    await AppApi.instance.call('deleteAccount', {'confirm': 'HESABIMI SIL'});
+    await AppApi.instance.deleteAccount();
     await FirebaseAuth.instance.signOut();
   } catch (e) {
     if (context.mounted) notify(context, 'Hesap silinemedi. Son 5 dakika içinde yeniden giriş yapmanız gerekebilir: $e', error: true);
