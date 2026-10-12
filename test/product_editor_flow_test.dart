@@ -16,11 +16,11 @@ void main() {
     Map<String, dynamic>? saved;
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(
       builder: (outer) => FilledButton(
-        onPressed: () => showDialog<void>(context: outer,
+        onPressed: () => Navigator.of(outer).push<void>(MaterialPageRoute(
           builder: (_) => ProductEditorDialog(
             loadCatalog: () async => catalog,
             saveProduct: (data) async { saved = data; },
-          ),
+          )),
         ),
         child: const Text('Yeni ürün aç'),
       ),
@@ -49,11 +49,11 @@ void main() {
     addTearDown(() async => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(
       builder: (outer) => FilledButton(
-        onPressed: () => showDialog<void>(context: outer,
+        onPressed: () => Navigator.of(outer).push<void>(MaterialPageRoute(
           builder: (_) => ProductEditorDialog(
             loadCatalog: () async => catalog,
             saveProduct: (_) async {},
-          ),
+          )),
         ),
         child: const Text('Formu aç'),
       ),
@@ -79,7 +79,7 @@ void main() {
     var tries = 0;
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(
       builder: (outer) => FilledButton(
-        onPressed: () => showDialog<void>(context: outer,
+        onPressed: () => Navigator.of(outer).push<void>(MaterialPageRoute(
           builder: (_) => ProductEditorDialog(
             loadCatalog: () async {
               tries++;
@@ -87,7 +87,7 @@ void main() {
               return catalog;
             },
             saveProduct: (_) async {},
-          ),
+          )),
         ),
         child: const Text('Formu aç'),
       ),
@@ -106,11 +106,11 @@ void main() {
     int? recordedDelta;
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(
       builder: (outer) => FilledButton(
-        onPressed: () => showDialog<void>(context: outer,
+        onPressed: () => Navigator.of(outer).push<void>(MaterialPageRoute(
           builder: (_) => StockAdjustmentDialog(
             productName: 'Karton Bardak',
             adjustStock: (delta, note) async { recordedDelta = delta; },
-          ),
+          )),
         ),
         child: const Text('Stok işlemi aç'),
       ),

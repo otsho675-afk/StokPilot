@@ -361,8 +361,7 @@ class _ProductsPageState extends State<ProductsPage> {
 }
 
 Future<void> stockDialog(BuildContext context, QueryDocumentSnapshot<Map<String, dynamic>> item) =>
-  showDialog<void>(
-    context: context,
+  Navigator.of(context).push<void>(MaterialPageRoute(
     builder: (_) => StockAdjustmentDialog(
       productName: (item.data()['name'] ?? 'Ürün').toString(),
       adjustStock: (delta, note) async {
@@ -371,11 +370,10 @@ Future<void> stockDialog(BuildContext context, QueryDocumentSnapshot<Map<String,
         });
       },
     ),
-  );
+  ));
 
 Future<void> productDialog(BuildContext context, {QueryDocumentSnapshot<Map<String, dynamic>>? item}) =>
-  showDialog<void>(
-    context: context,
+  Navigator.of(context).push<void>(MaterialPageRoute(
     builder: (_) => ProductEditorDialog(
       existing: item?.data(),
       loadCatalog: ProductCatalog.fetch,
@@ -387,4 +385,4 @@ Future<void> productDialog(BuildContext context, {QueryDocumentSnapshot<Map<Stri
         }
       },
     ),
-  );
+  ));

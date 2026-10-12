@@ -4,6 +4,59 @@ import '../core/format.dart';
 import '../services/app_api.dart';
 import '../widgets/ui.dart';
 
+/// A full-screen, keyboard-safe form route. Avoids nested AlertDialog
+/// intrinsic measurement and inherited-widget teardown during modal pop.
+class ProductFormScaffold extends StatelessWidget {
+  const ProductFormScaffold({
+    super.key,
+    required this.title,
+    required this.content,
+    this.actions = const [],
+  });
+  final Widget title;
+  final Widget content;
+  final List<Widget> actions;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: title),
+    body: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                    child: content,
+                  ),
+                ),
+                if (actions.isNotEmpty) ...[
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 10,
+                      runSpacing: 8,
+                      children: actions,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 class ProductOption {
   const ProductOption(this.id, this.name, {this.taxRateBps = 0});
   final String id;
@@ -137,7 +190,7 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
     future: _catalog,
     builder: (context, snapshot) {
       if (snapshot.hasError) {
-        return ResponsiveFormDialog(
+        return ProductFormScaffold(
           title: const Text('Ürün seçenekleri yüklenemedi'),
           content: Text(snapshot.error.toString()),
           actions: [
@@ -150,7 +203,7 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
         );
       }
       if (!snapshot.hasData) {
-        return const ResponsiveFormDialog(
+        return const ProductFormScaffold(
           title: Text('Ürün bilgileri yükleniyor'),
           content: Padding(padding: EdgeInsets.symmetric(vertical: 36),
             child: Center(child: CircularProgressIndicator())),
@@ -168,7 +221,7 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
         }
       }
       final taxValue = options.taxes.any((o) => o.id == taxId) ? taxId : '';
-      return ResponsiveFormDialog(
+      return ProductFormScaffold(
         title: Text(widget.existing == null ? 'Yeni ürün' : 'Ürün düzenle'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -319,7 +372,7 @@ class _StockAdjustmentDialogState extends State<StockAdjustmentDialog> {
   }
 
   @override
-  Widget build(BuildContext context) => ResponsiveFormDialog(
+  Widget build(BuildContext context) => ProductFormScaffold(
     title: Text('${widget.productName} • Stok işlemi'),
     content: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
