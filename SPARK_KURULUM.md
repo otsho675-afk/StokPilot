@@ -27,7 +27,7 @@ Her cihazın aynı verileri okuması ve satışta stok miktarının eksiye düş
 
 Google Play ve App Store abonelik ürünlerini (hedef 50 TL/ay) RevenueCat ile eşleştirebilirsiniz. Ancak uygulama içinden satın alma yapıldığı bilgisini tek başına Pro erişimi olarak kabul etmek **güvensizdir**. Pro yetkisini yalnızca yetkili bir sunucunun, makbuz durumunu doğrulayıp Firestore `entitlements/current` belgesini güncellemesiyle veriyoruz. Firebase Spark bu sunucu kodunu Cloud Functions ile çalıştırmaya izin vermez.
 
-Bu test sürümünde `RC_VERIFIED_BACKEND_READY` varsayılan `false` olduğu için **gerçek ödeme butonu kapalıdır**. Sonraki aşamada bağımsız Cloudflare Workers veya diğer güvenilir bir sunucuda mağaza doğrulama entegrasyonu kurulup test edilmeden ödeme açılmamalıdır. Bu ayar tek başına güvenlik vermez; Firestore Pro kontrolü yalnızca `source=revenuecat`, `status=active` ve gelecekteki `expiresAt` özellikli sunucu yetkisine güvenir.
+Cloudflare Workers + RevenueCat abonelik köprüsünün kurulumu: [cloudflare-billing/README.md](cloudflare-billing/README.md). Bu test sürümünde `RC_VERIFIED_BACKEND_READY` varsayılan `false` olduğu için **gerçek ödeme butonu kapalıdır**. Sonraki aşamada bağımsız Cloudflare Workers veya diğer güvenilir bir sunucuda mağaza doğrulama entegrasyonu kurulup test edilmeden ödeme açılmamalıdır. Bu ayar tek başına güvenlik vermez; Firestore Pro kontrolü yalnızca `source=revenuecat`, `status=active` ve gelecekteki `expiresAt` özellikli sunucu yetkisine güvenir.
 
 ## Hesap silme
 

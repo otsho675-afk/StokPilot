@@ -25,3 +25,9 @@ functions/.env*
 *.pem
 *.mobileprovision
 .DS_Store
+
+# Never commit service account or receipt signing credentials
+*service-account*.json
+*service_account*.json
+*.p8
+cloudflare-billing/.wrangler/

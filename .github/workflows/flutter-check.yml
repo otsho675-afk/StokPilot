@@ -17,15 +17,14 @@ jobs:
       - run: dart format lib test
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
-  functions-check:
+  billing-worker-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: cd functions && npm install && npm run lint && npm test
-
+      - run: node --test cloudflare-billing/entitlement.test.js
   firestore-rules-spark:
     runs-on: ubuntu-latest
     steps:
