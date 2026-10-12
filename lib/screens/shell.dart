@@ -10,7 +10,6 @@ import 'contacts_page.dart';
 import 'trades_page.dart';
 import 'reports_page.dart';
 import 'settings_page.dart';
-import 'paywall_page.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -219,22 +218,22 @@ class OverviewPage extends StatelessWidget {
             final threshold = (m['minStockMilli'] as num?)?.toInt() ?? 0;
             return m['isActive'] != false && balance <= threshold;
           }).toList();
-          final inventoryValue = products.fold<int>(0, (sum, item) {
+          final inventoryValue = products.fold<int>(0, (total, item) {
             final m = item.data();
-            return sum + (((m['stockMilli'] as num? ?? 0) *
+            return total + (((m['stockMilli'] as num? ?? 0) *
               (m['purchasePriceMinor'] as num? ?? 0)) / 1000).round();
           });
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: AppApi.instance.watch('contacts'),
             builder: (context, contactState) {
               final contacts = contactState.data?.docs ?? [];
-              final receivable = contacts.fold<int>(0, (sum, c) {
+              final receivable = contacts.fold<int>(0, (total, c) {
                 final v = (c.data()['balanceMinor'] as num?)?.toInt() ?? 0;
-                return sum + (v > 0 ? v : 0);
+                return total + (v > 0 ? v : 0);
               });
               final payable = contacts.fold<int>(0, (sum, c) {
                 final v = (c.data()['balanceMinor'] as num?)?.toInt() ?? 0;
-                return sum + (v < 0 ? -v : 0);
+                return total + (v < 0 ? -v : 0);
               });
               return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 LayoutBuilder(builder: (context, c) {
