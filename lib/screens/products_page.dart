@@ -5,6 +5,7 @@ import '../core/format.dart';
 import '../services/app_api.dart';
 import '../widgets/ui.dart';
 import 'paywall_page.dart';
+import 'product_editor_dialog.dart';
 
 class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key});
@@ -19,11 +20,14 @@ class _ProductsPageState extends State<ProductsPage> {
   String sortBy = 'name';
   int visibleCount = 30;
   final search = TextEditingController();
+  bool _openingProduct = false;
 
   @override
   void dispose() { search.dispose(); super.dispose(); }
 
   Future<void> _addProduct() async {
+    if (_openingProduct) return;
+    setState(() => _openingProduct = true);
     try {
       final ws = await AppApi.instance.workspace.get();
       final ent = await AppApi.instance.collection('entitlements').doc('current').get();
@@ -40,6 +44,8 @@ class _ProductsPageState extends State<ProductsPage> {
       }
     } catch (e) {
       if (mounted) notify(context, 'Ürün limiti kontrol edilemedi: $e', error: true);
+    } finally {
+      if (mounted) setState(() => _openingProduct = false);
     }
   }
 
@@ -83,7 +89,7 @@ class _ProductsPageState extends State<ProductsPage> {
     crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       PageTitle(title: 'Ürünler ve stoklar',
         subtitle: 'Ürünlerini ara, düzenle, kritik seviyeleri takip et.',
-        action: FilledButton.icon(onPressed: _addProduct,
+        action: FilledButton.icon(onPressed: _openingProduct ? null : _addProduct,
           icon: const Icon(Icons.add_rounded), label: const Text('Yeni ürün'))),
       StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: AppApi.instance.workspace.snapshots(),
@@ -374,55 +380,18 @@ Future<void> stockDialog(BuildContext context, QueryDocumentSnapshot<Map<String,
   )));
   value.dispose(); note.dispose();
 }
-Future<void> productDialog(BuildContext context, {QueryDocumentSnapshot<Map<String,dynamic>>? item}) async {
-  final existing = item?.data();
-  final name = TextEditingController(text: existing?['name'] ?? ''), sku = TextEditingController(text: existing?['sku'] ?? ''),
-    barcode = TextEditingController(text: existing?['barcode'] ?? ''), purchase = TextEditingController(text: existing == null ? '0' : (existing['purchasePriceMinor'] / 100).toStringAsFixed(2).replaceAll('.', ',')),
-    sale = TextEditingController(text: existing == null ? '0' : (existing['salePriceMinor'] / 100).toStringAsFixed(2).replaceAll('.', ',')),
-    minimum = TextEditingController(text: existing == null ? '0' : quantity(existing['minStockMilli'] ?? 0));
-  String categoryId = existing?['categoryId'] ?? '', unitId = existing?['unitId'] ?? '', taxId = '';
-  bool isActive = existing?['isActive'] ?? true, saving = false;
-  final api = AppApi.instance;
-  final categoryDocs = (await api.collection('categories').get()).docs;
-  final unitDocs = (await api.collection('units').get()).docs;
-  final taxDocs = (await api.collection('taxRates').get()).docs;
-  if (!context.mounted) return;
-  if (categoryId.isNotEmpty && !categoryDocs.any((d) => d.id == categoryId)) categoryId = '';
-  if (unitId.isNotEmpty && !unitDocs.any((d) => d.id == unitId)) unitId = '';
-  if (existing != null) {
-    final matched = taxDocs.where((d) => d.data()['rateBps'] == existing['taxRateBps']);
-    if (matched.isNotEmpty) taxId = matched.first.id;
-  }
-  await showDialog<void>(context: context, builder: (dialogContext) => StatefulBuilder(builder: (context, update) => ResponsiveFormDialog(
-    title: Text(item == null ? 'Yeni ürün' : 'Ürün düzenle'),
-    content: SizedBox(width: 520, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-      TextField(controller: name, decoration: const InputDecoration(labelText: 'Ürün adı *')),
-      const SizedBox(height: 10), ResponsiveFields(first: TextField(controller: sku, decoration: const InputDecoration(labelText: 'Stok kodu (SKU)')), second: TextField(controller: barcode, decoration: const InputDecoration(labelText: 'Barkod'))),
-      const SizedBox(height: 10), DropdownButtonFormField<String>(initialValue: categoryId, isExpanded: true, decoration: const InputDecoration(labelText: 'Kategori'), items: [const DropdownMenuItem(value: '', child: Text('Seçiniz')), ...categoryDocs.map((d) => DropdownMenuItem(value: d.id, child: Text(d.data()['name'] ?? '')))], onChanged: (s) => update(() => categoryId = s ?? '')),
-      const SizedBox(height: 10), ResponsiveFields(
-        first: DropdownButtonFormField<String>(initialValue: unitId, isExpanded: true, decoration: const InputDecoration(labelText: 'Birim'), items: [const DropdownMenuItem(value: '', child: Text('Seçiniz')), ...unitDocs.map((d) => DropdownMenuItem(value: d.id, child: Text(d.data()['name'] ?? '')))], onChanged: (s) => update(() => unitId = s ?? '')),
-        second: DropdownButtonFormField<String>(initialValue: taxId, isExpanded: true, decoration: const InputDecoration(labelText: 'KDV oranı'), items: [const DropdownMenuItem(value: '', child: Text('%0')), ...taxDocs.map((d) => DropdownMenuItem(value: d.id, child: Text('${d.data()['name']}')))], onChanged: (s) => update(() => taxId = s ?? '')),
-      ),
-      const SizedBox(height: 10), ResponsiveFields(first: TextField(controller: purchase, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Alış fiyatı ₺ (KDV hariç)')), second: TextField(controller: sale, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Satış fiyatı ₺ (KDV hariç)'))),
-      const SizedBox(height: 10), TextField(controller: minimum, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Kritik stok eşiği')),
-      SwitchListTile.adaptive(contentPadding: EdgeInsets.zero, title: const Text('Ürün aktif'), value: isActive, onChanged: (v) => update(() => isActive = v)),
-      const Text('İlk stok miktarını ürün kaydından sonra “Stok düzelt” ile ekleyin.', style: TextStyle(color: Colors.blueGrey, fontSize: 12)),
-    ]))),
-    actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Vazgeç')),
-      FilledButton(onPressed: saving ? null : () async {
-        try {
-          if (name.text.trim().isEmpty) throw const FormatException('Ürün adı zorunlu.');
-          final rate = taxDocs.where((d) => d.id == taxId);
-          final data = <String, dynamic>{'name': name.text.trim(), 'sku': sku.text.trim(), 'barcode': barcode.text.trim(),
-            'categoryId': categoryId, 'unitId': unitId, 'taxRateBps': rate.isNotEmpty ? rate.first.data()['rateBps'] : 0,
-            'purchasePriceMinor': parseMoney(purchase.text), 'salePriceMinor': parseMoney(sale.text), 'minStockMilli': parseQty(minimum.text), 'isActive': isActive};
-          update(() => saving = true);
-          if (item == null) { await api.create('products', data); }
-          else { await api.edit('products', item.id, data); }
-          if (dialogContext.mounted) Navigator.pop(dialogContext);
-        } catch (e) { if (context.mounted) notify(context, e.toString().contains('resource-exhausted') ? '50 ürün sınırına ulaştınız. Pro aboneliği başlatın.' : '$e', error: true); update(() => saving = false); }
-      }, child: const Text('Kaydet')),
-    ],
-  )));
-  for (final c in [name, sku, barcode, purchase, sale, minimum]) { c.dispose(); }
-}
+Future<void> productDialog(BuildContext context, {QueryDocumentSnapshot<Map<String, dynamic>>? item}) =>
+  showDialog<void>(
+    context: context,
+    builder: (_) => ProductEditorDialog(
+      existing: item?.data(),
+      loadCatalog: ProductCatalog.fetch,
+      saveProduct: (values) async {
+        if (item == null) {
+          await AppApi.instance.create('products', values);
+        } else {
+          await AppApi.instance.edit('products', item.id, values);
+        }
+      },
+    ),
+  );
