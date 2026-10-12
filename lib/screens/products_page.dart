@@ -36,7 +36,7 @@ class _ProductsPageState extends State<ProductsPage> {
             if (!pro) LinearProgressIndicator(value: (count / 50).clamp(0.0, 1.0), minHeight: 5),
           ])),
           if (!pro) TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallPage())), child: const Text('Pro’ya geç')),
-        ]))));
+        ])));
       });
     }),
     StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(stream: AppApi.instance.watch('categories'), builder: (context, catSnap) {
