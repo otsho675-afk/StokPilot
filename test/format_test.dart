@@ -10,6 +10,6 @@ void main() {
   test('Stock precision is preserved in milli-units', () {
     expect(parseQty('1,250'), 1250);
     expect(quantity(1250), '1.25');
-    expect(parseQty('-1'), throwsFormatException);
+    expect(() => parseQty('-1'), throwsFormatException);
   });
 }
