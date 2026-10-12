@@ -123,10 +123,12 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
       await widget.saveProduct(values);
       if (mounted) Navigator.of(context).pop();
     } catch (exception) {
-      if (mounted) setState(() {
-        saving = false;
-        error = exception.toString().replaceFirst('FormatException: ', '');
-      });
+      if (mounted) {
+        setState(() {
+          saving = false;
+          error = exception.toString().replaceFirst('FormatException: ', '');
+        });
+      }
     }
   }
 
@@ -184,7 +186,7 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              key: ValueKey('category-' + categoryValue),
+              key: ValueKey('category-$categoryValue'),
               initialValue: categoryValue,
               isExpanded: true,
               decoration: const InputDecoration(labelText: 'Kategori'),
@@ -199,7 +201,7 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
             const SizedBox(height: 12),
             ResponsiveFields(
               first: DropdownButtonFormField<String>(
-                key: ValueKey('unit-' + unitValue),
+                key: ValueKey('unit-$unitValue'),
                 initialValue: unitValue,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Birim'),
@@ -212,7 +214,7 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
                 onChanged: saving ? null : (v) => setState(() => unitId = v ?? ''),
               ),
               second: DropdownButtonFormField<String>(
-                key: ValueKey('tax-' + taxValue),
+                key: ValueKey('tax-$taxValue'),
                 initialValue: taxValue,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'KDV oranı'),
@@ -307,16 +309,18 @@ class _StockAdjustmentDialogState extends State<StockAdjustmentDialog> {
       await widget.adjustStock(adding ? value : -value, note.text.trim());
       if (mounted) Navigator.of(context).pop();
     } catch (exception) {
-      if (mounted) setState(() {
-        saving = false;
-        error = exception.toString().replaceFirst('FormatException: ', '');
-      });
+      if (mounted) {
+        setState(() {
+          saving = false;
+          error = exception.toString().replaceFirst('FormatException: ', '');
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) => ResponsiveFormDialog(
-    title: Text(widget.productName + ' • Stok işlemi'),
+    title: Text('${widget.productName} • Stok işlemi'),
     content: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,

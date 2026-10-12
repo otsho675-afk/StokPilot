@@ -177,9 +177,11 @@ class _ProductsPageState extends State<ProductsPage> {
                     categoryFilter = s ?? ''; visibleCount = 30;
                   }),
                 );
-                if (c.maxWidth < 560) return Column(children: [
-                  searchField, const SizedBox(height: 10), category,
-                ]);
+                if (c.maxWidth < 560) {
+                  return Column(children: [
+                    searchField, const SizedBox(height: 10), category,
+                  ]);
+                }
                 return Row(children: [
                   Expanded(flex: 3, child: searchField),
                   const SizedBox(width: 12), Expanded(flex: 2, child: category),

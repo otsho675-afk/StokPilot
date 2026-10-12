@@ -72,9 +72,11 @@ class PageTitle extends StatelessWidget {
         const SizedBox(height: 5),
         Text(subtitle, style: const TextStyle(color: muted, fontSize: 13, height: 1.4)),
       ]);
-      if (narrow) return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        heading, if (action != null) ...[const SizedBox(height: 14), action!],
-      ]);
+      if (narrow) {
+        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          heading, if (action != null) ...[const SizedBox(height: 14), action!],
+        ]);
+      }
       return Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
         Expanded(child: heading),
         if (action != null) ...[const SizedBox(width: 14), action!],
@@ -266,7 +268,9 @@ Future<void> requestAccountDeletion(BuildContext context) async {
   }
   if (!context.mounted) return;
   if (!await confirm(context, 'Son onay',
-      'Bu işlem geri alınamaz. Hesabınız ve kayıtlarınız silinsin mi?')) return;
+      'Bu işlem geri alınamaz. Hesabınız ve kayıtlarınız silinsin mi?')) {
+    return;
+  }
   try {
     await AppApi.instance.deleteAccount();
     await FirebaseAuth.instance.signOut();

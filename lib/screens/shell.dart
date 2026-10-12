@@ -60,7 +60,9 @@ class _MainShellState extends State<MainShell> {
     final user = FirebaseAuth.instance.currentUser;
     if (user?.isAnonymous == true) {
       if (!await confirm(context, 'Misafir hesabından çık',
-          'Google veya Apple hesabına bağlanmadıysan mevcut misafir verilerine yeniden erişemeyebilirsin. Yine de çıkış yapılsın mı?')) return;
+          'Google veya Apple hesabına bağlanmadıysan mevcut misafir verilerine yeniden erişemeyebilirsin. Yine de çıkış yapılsın mı?')) {
+        return;
+      }
     }
     await BillingService.instance.logout();
     await FirebaseAuth.instance.signOut();
