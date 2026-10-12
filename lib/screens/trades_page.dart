@@ -129,7 +129,7 @@ Future<_Line?> _addLineDialog(BuildContext context, QueryDocumentSnapshot<Map<St
   _Line? result;
   await showDialog<void>(context: context, builder: (dialogContext) => AlertDialog(
     title: Text(m['name'] ?? 'Ürün'),
-    content: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 380), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+    content: SizedBox(width: 380, child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text('Mevcut stok: ${quantity(m['stockMilli'] ?? 0)}', style: const TextStyle(color: Colors.blueGrey)),
       const SizedBox(height: 14), TextField(controller: qty, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Miktar')),
       const SizedBox(height: 12), TextField(controller: price, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'KDV hariç birim fiyat (₺)')),
@@ -151,7 +151,7 @@ Future<_Line?> _addLineDialog(BuildContext context, QueryDocumentSnapshot<Map<St
 void showTradeDetails(BuildContext context, Map<String,dynamic> trade) {
   showDialog<void>(context: context, builder: (ctx) => AlertDialog(
     title: Text('${trade['type'] == 'sale' ? 'Satış' : 'Alış'} detayı'),
-    content: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 500), child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+    content: SizedBox(width: 500, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(dateOf(trade['createdAt'])), const SizedBox(height: 12),
       ...((trade['lines'] as List?) ?? []).map((raw) { final l = Map<String,dynamic>.from(raw as Map); return ListTile(contentPadding: EdgeInsets.zero, title: Text(l['name'] ?? ''), subtitle: Text('${quantity(l['quantityMilli'] ?? 0)} × ${money(l['priceMinor'] ?? 0)} + KDV %${(l['taxBps'] ?? 0) / 100}'), trailing: Text(money(l['totalMinor'] ?? 0))); }),
       const Divider(), Text('Ara toplam: ${money(trade['netMinor'] ?? 0)}'), Text('KDV: ${money(trade['taxMinor'] ?? 0)}'),

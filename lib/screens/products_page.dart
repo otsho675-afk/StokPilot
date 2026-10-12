@@ -356,7 +356,7 @@ Future<void> stockDialog(BuildContext context, QueryDocumentSnapshot<Map<String,
   final value = TextEditingController(), note = TextEditingController(); bool addition = true, busy = false;
   await showDialog<void>(context: context, builder: (dialogContext) => StatefulBuilder(builder: (context, update) => AlertDialog(
     title: Text('${item.data()['name']} • Stok düzelt'),
-    content: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 400), child: Column(mainAxisSize: MainAxisSize.min, children: [
+    content: SizedBox(width: 400, child: Column(mainAxisSize: MainAxisSize.min, children: [
       SegmentedButton<bool>(segments: const [ButtonSegment(value: true, label: Text('Giriş')), ButtonSegment(value: false, label: Text('Çıkış'))], selected: {addition}, onSelectionChanged: (s) => update(() => addition = s.first)),
       const SizedBox(height: 14), TextField(controller: value, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Miktar (ör: 2,5)')),
       const SizedBox(height: 12), TextField(controller: note, decoration: const InputDecoration(labelText: 'Açıklama')),
@@ -395,7 +395,7 @@ Future<void> productDialog(BuildContext context, {QueryDocumentSnapshot<Map<Stri
   }
   await showDialog<void>(context: context, builder: (dialogContext) => StatefulBuilder(builder: (context, update) => AlertDialog(
     title: Text(item == null ? 'Yeni ürün' : 'Ürün düzenle'),
-    content: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 520), child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+    content: SizedBox(width: 520, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
       TextField(controller: name, decoration: const InputDecoration(labelText: 'Ürün adı *')),
       const SizedBox(height: 10), ResponsiveFields(first: TextField(controller: sku, decoration: const InputDecoration(labelText: 'Stok kodu (SKU)')), second: TextField(controller: barcode, decoration: const InputDecoration(labelText: 'Barkod'))),
       const SizedBox(height: 10), DropdownButtonFormField<String>(initialValue: categoryId, isExpanded: true, decoration: const InputDecoration(labelText: 'Kategori'), items: [const DropdownMenuItem(value: '', child: Text('Seçiniz')), ...categoryDocs.map((d) => DropdownMenuItem(value: d.id, child: Text(d.data()['name'] ?? '')))], onChanged: (s) => update(() => categoryId = s ?? '')),

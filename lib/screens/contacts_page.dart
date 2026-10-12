@@ -203,7 +203,7 @@ Future<void> contactDialog(BuildContext context, {QueryDocumentSnapshot<Map<Stri
   String type = m?['type'] ?? 'customer'; bool busy = false;
   await showDialog<void>(context: context, builder: (dc) => StatefulBuilder(builder: (context, update) => AlertDialog(
     title: Text(item == null ? 'Cari ekle' : 'Cari düzenle'),
-    content: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 470), child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+    content: SizedBox(width: 470, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
       TextField(controller: name, decoration: const InputDecoration(labelText: 'Ad / firma ünvanı *')),
       const SizedBox(height: 10), DropdownButtonFormField<String>(initialValue: type, decoration: const InputDecoration(labelText: 'Cari türü'), items: const [
         DropdownMenuItem(value: 'customer', child: Text('Müşteri')), DropdownMenuItem(value: 'supplier', child: Text('Tedarikçi')), DropdownMenuItem(value: 'both', child: Text('Her ikisi')),
@@ -232,7 +232,7 @@ Future<void> paymentDialog(BuildContext context, QueryDocumentSnapshot<Map<Strin
   final input = TextEditingController(); String type = 'collection'; bool busy = false;
   await showDialog<void>(context: context, builder: (dc) => StatefulBuilder(builder: (context, update) => AlertDialog(
     title: Text('${contact.data()['name']} • Cari hareket'),
-    content: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 380), child: Column(mainAxisSize: MainAxisSize.min, children: [
+    content: SizedBox(width: 380, child: Column(mainAxisSize: MainAxisSize.min, children: [
       DropdownButtonFormField<String>(initialValue: type, decoration: const InputDecoration(labelText: 'İşlem'), items: const [
         DropdownMenuItem(value: 'collection', child: Text('Tahsilat al (alacağı düşür)')),
         DropdownMenuItem(value: 'payout', child: Text('Ödeme yap (borcu düşür)')),
