@@ -7,7 +7,12 @@ import '../widgets/ui.dart';
 
 // Anonymous account linking retains the same UID and all its stock data.
 class AuthActions {
-  static final Future<void> _googleInitialized = GoogleSignIn.instance.initialize();
+  // Android may read the Web OAuth client from google-services.json. If it
+  // cannot, pass GOOGLE_WEB_CLIENT_ID via --dart-define (web OAuth client).
+  static const _googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
+  static final Future<void> _googleInitialized = GoogleSignIn.instance.initialize(
+    serverClientId: _googleWebClientId.isEmpty ? null : _googleWebClientId,
+  );
   static Future<void> guest() async => FirebaseAuth.instance.signInAnonymously();
 
   static Future<void> google({bool link = false}) async {
@@ -51,6 +56,23 @@ class AuthActions {
   }
 
   static String errorMessage(Object error) {
+    if (error is GoogleSignInException) {
+      final description = error.description ?? '';
+      if (error.code == GoogleSignInExceptionCode.canceled &&
+          (description.contains('Account reauth failed') ||
+              description.contains('[16]'))) {
+        return 'Google hesabı yeniden doğrulanamadı (16). Bu normal bir iptal '
+            'olmayabilir. Firebase Google girişini, Android SHA-1/SHA-256 '
+            'imzalarını, paket adını ve Web OAuth istemci kimliğini kontrol edin. '
+            'Google Play Hizmetleri veya cihaz hesabı da bu hataya yol açabilir.';
+      }
+      if (error.code == GoogleSignInExceptionCode.canceled) {
+        return 'Google ile giriş iptal edildi. Hesap seçiminden sonra kendiliğinden '
+            'kapanıyorsa Firebase/OAuth yapılandırmasını kontrol edin.';
+      }
+      return 'Google ile giriş başarısız: '
+          '${description.isNotEmpty ? description : error.code.name}';
+    }
     if (error is FirebaseAuthException) {
       if (error.code == 'operation-not-allowed') {
         return 'Bu giriş yöntemi Firebase Authentication > Sign-in method bölümünde kapalı. Anonymous, Google, Apple veya Email/Password yöntemini açın.';
