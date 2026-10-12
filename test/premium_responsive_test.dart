@@ -36,10 +36,8 @@ void main() {
     expect(find.byType(TextField), findsNWidgets(2));
     expect(tester.takeException(), isNull);
   });
-}
 
-
-testWidgets('Product editor dialog keeps paired form fields laid out on a narrow window', (tester) async {
+  testWidgets('Product editor dialog keeps paired form fields laid out on a narrow window', (tester) async {
   await tester.binding.setSurfaceSize(const Size(320, 640));
   addTearDown(() async => tester.binding.setSurfaceSize(null));
   await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(
@@ -99,3 +97,5 @@ testWidgets('Sales item dialog lays out input fields in constrained landscape', 
   expect(find.byType(TextField), findsNWidgets(2));
   expect(tester.takeException(), isNull);
 });
+
+}
