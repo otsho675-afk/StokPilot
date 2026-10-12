@@ -265,3 +265,91 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
     },
   );
 }
+
+/// Stable stock dialog. A previous implementation disposed controllers while
+/// the Navigator was still animating the old route out of the element tree.
+class StockAdjustmentDialog extends StatefulWidget {
+  const StockAdjustmentDialog({
+    super.key,
+    required this.productName,
+    required this.adjustStock,
+  });
+
+  final String productName;
+  final Future<void> Function(int deltaMilli, String note) adjustStock;
+
+  @override
+  State<StockAdjustmentDialog> createState() => _StockAdjustmentDialogState();
+}
+
+class _StockAdjustmentDialogState extends State<StockAdjustmentDialog> {
+  final amount = TextEditingController();
+  final note = TextEditingController();
+  bool adding = true;
+  bool saving = false;
+  String? error;
+
+  @override
+  void dispose() {
+    amount.dispose();
+    note.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (saving) return;
+    try {
+      final value = parseQty(amount.text);
+      if (value <= 0) {
+        throw const FormatException('Miktar sıfırdan büyük olmalıdır.');
+      }
+      setState(() { saving = true; error = null; });
+      await widget.adjustStock(adding ? value : -value, note.text.trim());
+      if (mounted) Navigator.of(context).pop();
+    } catch (exception) {
+      if (mounted) setState(() {
+        saving = false;
+        error = exception.toString().replaceFirst('FormatException: ', '');
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => ResponsiveFormDialog(
+    title: Text(widget.productName + ' • Stok işlemi'),
+    content: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SegmentedButton<bool>(
+          segments: const [
+            ButtonSegment(value: true, label: Text('Stok giriş')),
+            ButtonSegment(value: false, label: Text('Stok çıkış')),
+          ],
+          selected: {adding},
+          onSelectionChanged: saving ? null : (value) =>
+              setState(() => adding = value.first),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: amount,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(labelText: 'Miktar (ör: 2,5)'),
+        ),
+        const SizedBox(height: 12),
+        TextField(controller: note,
+          decoration: const InputDecoration(labelText: 'Açıklama')),
+        if (error != null) ...[
+          const SizedBox(height: 12),
+          Text(error!, style: const TextStyle(color: Color(0xFFB73232))),
+        ],
+      ],
+    ),
+    actions: [
+      TextButton(onPressed: saving ? null : () => Navigator.pop(context),
+        child: const Text('Vazgeç')),
+      FilledButton(onPressed: saving ? null : _save,
+        child: Text(saving ? 'Kaydediliyor...' : 'Kaydet')),
+    ],
+  );
+}

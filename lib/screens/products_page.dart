@@ -358,28 +358,19 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 }
 
-Future<void> stockDialog(BuildContext context, QueryDocumentSnapshot<Map<String,dynamic>> item) async {
-  final value = TextEditingController(), note = TextEditingController(); bool addition = true, busy = false;
-  await showDialog<void>(context: context, builder: (dialogContext) => StatefulBuilder(builder: (context, update) => ResponsiveFormDialog(
-    title: Text('${item.data()['name']} • Stok düzelt'),
-    content: SizedBox(width: 400, child: Column(mainAxisSize: MainAxisSize.min, children: [
-      SegmentedButton<bool>(segments: const [ButtonSegment(value: true, label: Text('Giriş')), ButtonSegment(value: false, label: Text('Çıkış'))], selected: {addition}, onSelectionChanged: (s) => update(() => addition = s.first)),
-      const SizedBox(height: 14), TextField(controller: value, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Miktar (ör: 2,5)')),
-      const SizedBox(height: 12), TextField(controller: note, decoration: const InputDecoration(labelText: 'Açıklama')),
-    ])),
-    actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Kapat')),
-      FilledButton(onPressed: busy ? null : () async {
-        try {
-          final qty = parseQty(value.text); if (qty <= 0) throw const FormatException('Miktar sıfırdan büyük olmalı.');
-          update(() => busy = true);
-          await AppApi.instance.call('adjustStock', {'productId': item.id, 'deltaMilli': addition ? qty : -qty, 'note': note.text.trim()});
-          if (dialogContext.mounted) Navigator.pop(dialogContext);
-        } catch (e) { if (context.mounted) notify(context, '$e', error: true); update(() => busy = false); }
-      }, child: const Text('Kaydet')),
-    ],
-  )));
-  value.dispose(); note.dispose();
-}
+Future<void> stockDialog(BuildContext context, QueryDocumentSnapshot<Map<String, dynamic>> item) =>
+  showDialog<void>(
+    context: context,
+    builder: (_) => StockAdjustmentDialog(
+      productName: (item.data()['name'] ?? 'Ürün').toString(),
+      adjustStock: (delta, note) async {
+        await AppApi.instance.call('adjustStock', {
+          'productId': item.id, 'deltaMilli': delta, 'note': note,
+        });
+      },
+    ),
+  );
+
 Future<void> productDialog(BuildContext context, {QueryDocumentSnapshot<Map<String, dynamic>>? item}) =>
   showDialog<void>(
     context: context,

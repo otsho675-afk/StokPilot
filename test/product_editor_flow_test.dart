@@ -100,4 +100,29 @@ void main() {
     expect(find.text('Yeni ürün'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('Real stock movement dialog can save and close safely', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() async => tester.binding.setSurfaceSize(null));
+    int? recordedDelta;
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(
+      builder: (outer) => FilledButton(
+        onPressed: () => showDialog<void>(context: outer,
+          builder: (_) => StockAdjustmentDialog(
+            productName: 'Karton Bardak',
+            adjustStock: (delta, note) async { recordedDelta = delta; },
+          ),
+        ),
+        child: const Text('Stok işlemi aç'),
+      ),
+    ))));
+    await tester.tap(find.text('Stok işlemi aç'));
+    await tester.pumpAndSettle();
+    expect(find.text('Karton Bardak • Stok işlemi'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).first, '2,5');
+    await tester.tap(find.text('Kaydet'));
+    await tester.pumpAndSettle();
+    expect(recordedDelta, 2500);
+    expect(find.text('Karton Bardak • Stok işlemi'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 }
