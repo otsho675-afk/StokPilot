@@ -23,6 +23,24 @@ Misafir hesabı aynı Firebase UID üzerinde `linkWithCredential` (Google) veya 
 - RevenueCat webhook doğrulanmış `pro` entitlement ile `status=active`, `source=revenuecat`, `expiresAt` yazar. Mağaza fiyatı **koddan değiştirilmez**.
 - Gerçek mağaza/RevenueCat/Apple/Google kurulumları tamamlanana kadar canlı para çekimi **etkin değildir**.
 
+## Açılışta `[firebase_functions/not-found] NOT_FOUND` hatası
+
+Bu hata Flutter'ın `initializeWorkspace` callable fonksiyonunu bulamadığını gösterir. Kaynak kodda fonksiyon `functions/index.js` içinde, istemci çağrısı `lib/services/app_api.dart` içinde **europe-west1** bölgesinde tanımlıdır. GitHub'a kodu göndermek Firebase'e dağıtım yapmak **değildir**.
+
+Firebase projesi **stokpilot-5bd2e** için PowerShell'de, GitHub'dan güncellediğiniz proje klasöründe:
+
+```powershell
+git pull origin main
+firebase login
+firebase functions:list --project stokpilot-5bd2e
+Set-ExecutionPolicy -Scope Process Bypass
+.\scripts\deploy_backend_windows.ps1
+```
+
+Bu betik Firestore kuralları ile gerekli **6 callable** fonksiyonu dağıtır ve sonunda `firebase functions:list` ile kontrol eder. Fonksiyonlar **2. nesil** ve `europe-west1` bölgesindedir. Firebase projesinde **Blaze** planı ve gerekli Google Cloud API servisleri etkin olmalıdır. Betik RevenueCat ödeme webhook'unu, `REVENUECAT_WEBHOOK_SECRET` kurulana kadar dağıtmaz.
+
+Uygulama hâlâ aynı hatayı veriyorsa `flutterfire configure --project=stokpilot-5bd2e --platforms=android,ios --android-package-name=com.yesildas.stokpilot --ios-bundle-id=com.yesildas.stokpilot` komutunu çalıştırın. Android `android/app/google-services.json` dosyasındaki `project_info.project_id` alanının **stokpilot-5bd2e** olduğunu doğrulayın; ardından uygulamayı yeniden başlatın. Firebase Console → Build → Functions içinde `initializeWorkspace` fonksiyonunun **europe-west1** bölgesinde yayımlanmış olması gerekir. Fonksiyon hiçbir yerde görünmüyorsa GitHub'da çalıştırılmış Flutter testleri canlı Firebase dağıtımının yerini tutmaz.
+
 ## Firebase Auth giriş hatasının çözümü
 
 Uyarı `This operation is not allowed ... sign-in provider is disabled` Firebase projesindeki ilgili sağlayıcının devre dışı olduğunu gösterir. Console: <https://console.firebase.google.com/project/stokpilot-5bd2e/authentication/providers> → Authentication → Sign-in method, **Anonymous**, **Google**, **Email/Password** (isteğe bağlı), **Apple** (Apple Developer yapılandırması sonrasında) → Enable.

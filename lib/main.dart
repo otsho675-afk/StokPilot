@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -42,6 +43,30 @@ class StokPilotApp extends StatelessWidget {
     ),
   );
 }
+String readableInitializationError(Object error) {
+  if (error is FirebaseFunctionsException) {
+    final project = Firebase.app().options.projectId;
+    if (error.code == 'not-found') {
+      return 'Sunucuda initializeWorkspace fonksiyonu bulunamadı. '
+          'Bağlı Firebase projesi: $project. Bölge: europe-west1. '
+          'Önce PowerShell içinde scripts/deploy_backend_windows.ps1 dosyasını '
+          'çalıştırarak Firebase Cloud Functions dağıtımını tamamlayın. '
+          'Başka Firebase projesine bağlandıysanız flutterfire configure ile düzeltin.';
+    }
+    if (error.code == 'unauthenticated') {
+      return 'Oturum doğrulanamadı. Hesaptan çıkıp yeniden giriş yapın.';
+    }
+    if (error.code == 'permission-denied') {
+      return 'Firebase erişimi reddedildi. Proje ve kullanıcı yetkilerini kontrol edin.';
+    }
+    if (error.code == 'unavailable' || error.code == 'deadline-exceeded') {
+      return 'Firebase sunucusuna şu an ulaşılamıyor. İnternet bağlantınızı ve servis durumunu kontrol edip tekrar deneyin.';
+    }
+    return 'Firebase sunucusu hata verdi (' + error.code + '). ' + (error.message ?? '');
+  }
+  return 'Başlatma başarısız oldu. ' + error.toString();
+}
+
 class WorkspaceInitializer extends StatefulWidget {
   const WorkspaceInitializer({super.key, required this.uid});
   final String uid;
@@ -60,7 +85,7 @@ class _WorkspaceInitializerState extends State<WorkspaceInitializer> {
     builder: (context, snapshot) {
       if (snapshot.hasError) { return Scaffold(body: Center(child: Padding(padding: const EdgeInsets.all(25), child: Column(mainAxisSize: MainAxisSize.min, children: [
         const Icon(Icons.cloud_off_outlined, size: 45), const SizedBox(height: 14), const Text('Başlatma sırasında bağlantı hatası oluştu.'),
-        const SizedBox(height: 8), Text('${snapshot.error}', textAlign: TextAlign.center),
+        const SizedBox(height: 8), Text(readableInitializationError(snapshot.error!), textAlign: TextAlign.center),
         FilledButton(onPressed: () => setState(() => future = setup()), child: const Text('Tekrar dene')),
       ])))); }
       if (snapshot.connectionState != ConnectionState.done) { return const Scaffold(body: Center(child: CircularProgressIndicator())); }
