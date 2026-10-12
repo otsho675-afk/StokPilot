@@ -231,7 +231,7 @@ class OverviewPage extends StatelessWidget {
                 final v = (c.data()['balanceMinor'] as num?)?.toInt() ?? 0;
                 return total + (v > 0 ? v : 0);
               });
-              final payable = contacts.fold<int>(0, (sum, c) {
+              final payable = contacts.fold<int>(0, (total, c) {
                 final v = (c.data()['balanceMinor'] as num?)?.toInt() ?? 0;
                 return total + (v < 0 ? -v : 0);
               });
