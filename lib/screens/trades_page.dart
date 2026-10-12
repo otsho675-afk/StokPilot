@@ -27,14 +27,14 @@ class _TradesPageState extends State<TradesPage> {
   int get total => lines.fold(0, (s, line) => s + line.total);
   @override void dispose() { paid.dispose(); note.dispose(); super.dispose(); }
   @override Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    PageTitle(title: sale ? 'Satış işlemleri' : 'Alış işlemleri', subtitle: sale ? 'Ürün seçin, KDV hesaplayın, satışı stoktan düşün.' : 'Tedarikçi alışlarını kaydedin, stokları otomatik artırın.'),
+    PageTitle(title: sale ? 'Hızlı satış' : 'Tedarikçi alışı', subtitle: sale ? 'Ürün seç, miktarı belirle ve stoğu otomatik güncelle.' : 'Alış kaydını gir, stoklarını anında artır.'),
     StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: AppApi.instance.watch('products'), builder: (context, productSnap) {
       if (!productSnap.hasData) return const LinearProgressIndicator();
       final products = productSnap.data!.docs.where((d) => d.data()['isActive'] != false).toList();
       return StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: AppApi.instance.watch('contacts'), builder: (context, contactSnap) {
         final contacts = contactSnap.data?.docs.where((d) => d.data()['type'] == 'both' || d.data()['type'] == (sale ? 'customer' : 'supplier')).toList() ?? [];
         return DataPanel(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Yeni işlem', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: ink)),
+          SectionHeading(title: sale ? 'Yeni satış' : 'Yeni alış', subtitle: 'Adım 1: cari seç • Adım 2: ürün ekle • Adım 3: işlemi onayla'),
           const SizedBox(height: 14),
           DropdownButtonFormField<String>(key: ValueKey('${widget.type}-$contactId'), initialValue: contactId, isExpanded: true, decoration: InputDecoration(labelText: sale ? 'Müşteri / Cari' : 'Tedarikçi / Cari'),
             items: [const DropdownMenuItem(value: '', child: Text('Peşin • cari olmadan')), ...contacts.map((d) => DropdownMenuItem(value: d.id, child: Text(d.data()['name'] ?? '')))],
@@ -47,14 +47,33 @@ class _TradesPageState extends State<TradesPage> {
             fieldViewBuilder: (ctx, controller, focus, onSubmit) => TextField(controller: controller, focusNode: focus, decoration: const InputDecoration(labelText: 'Ürün seç • ad / barkod / stok kodu', prefixIcon: Icon(Icons.add_circle_outline), suffixIcon: Icon(Icons.search))),
           ),
           const SizedBox(height: 14),
-          if (lines.isEmpty) const BlankState(message: 'İşlem oluşturmak için yukarıdan ürün seçin.', icon: Icons.shopping_basket_outlined),
-          ...lines.map((line) => ListTile(contentPadding: EdgeInsets.zero, title: Text(line.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Text('${quantity(line.qtyMilli)} × ${money(line.priceMinor)} + KDV %${line.taxBps / 100}'),
-            trailing: Row(mainAxisSize: MainAxisSize.min, children: [Text(money(line.total), style: const TextStyle(fontWeight: FontWeight.bold)), IconButton(onPressed: () => setState(() => lines.remove(line)), icon: const Icon(Icons.close, size: 20))]))),
+          if (lines.isEmpty) const BlankState(title: 'Sepet henüz boş', message: 'Ürün adı veya barkod ile arayıp ilk kalemi ekle.', icon: Icons.shopping_basket_outlined),
+          ...lines.map((line) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              decoration: BoxDecoration(color: canvas,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: line)),
+              child: Row(children: [
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(line.name, maxLines: 2, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w800, color: ink)),
+                    Text('${quantity(line.qtyMilli)} × ${money(line.priceMinor)} • KDV %${line.taxBps / 100}',
+                      style: const TextStyle(color: muted, fontSize: 12)),
+                    const SizedBox(height: 3),
+                    Text(money(line.total),
+                      style: const TextStyle(fontWeight: FontWeight.w800, color: green)),
+                  ])),
+                IconButton(tooltip: 'Ürünü çıkar',
+                  onPressed: () => setState(() => lines.remove(line)),
+                  icon: const Icon(Icons.close_rounded, size: 20)),
+              ])),
+          )),
           const Divider(),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Matrah', style: TextStyle(fontWeight: FontWeight.w500)), Text(money(lines.fold(0, (s,l) => s + l.net)))]),
-          const SizedBox(height: 5), Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('KDV'), Text(money(lines.fold(0, (s,l) => s + l.tax)))]),
-          const SizedBox(height: 8), Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Genel toplam', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)), Text(money(total), style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w900, color: green))]),
+          _totalRow('Matrah', money(lines.fold(0, (s,l) => s + l.net))),
+          const SizedBox(height: 5), _totalRow('KDV', money(lines.fold(0, (s,l) => s + l.tax))),
+          const SizedBox(height: 8), _totalRow('Genel toplam', money(total), highlight: true),
           const SizedBox(height: 16),
           if (contactId.isNotEmpty) TextField(controller: paid, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: sale ? 'Alınan tahsilat (₺)' : 'Yapılan ödeme (₺)', helperText: 'Boş bırakırsanız bakiye veresiye/cariye işlenir.')),
           const SizedBox(height: 10), TextField(controller: note, maxLines: 2, decoration: const InputDecoration(labelText: 'İşlem notu (opsiyonel)')),
@@ -76,6 +95,18 @@ class _TradesPageState extends State<TradesPage> {
       }).toList()));
     }),
   ]);
+  Widget _totalRow(String title, String value, {bool highlight = false}) =>
+    Row(children: [
+      Expanded(child: Text(title, style: TextStyle(color: ink,
+        fontSize: highlight ? 16 : 14,
+        fontWeight: highlight ? FontWeight.w800 : FontWeight.w500))),
+      Flexible(child: FittedBox(fit: BoxFit.scaleDown,
+        child: Text(value, style: TextStyle(
+          fontSize: highlight ? 22 : 15,
+          fontWeight: FontWeight.w900,
+          color: highlight ? green : ink)))),
+    ]);
+
   Future<void> save() async {
     if (busy || lines.isEmpty) return;
     try {
@@ -98,7 +129,7 @@ Future<_Line?> _addLineDialog(BuildContext context, QueryDocumentSnapshot<Map<St
   _Line? result;
   await showDialog<void>(context: context, builder: (dialogContext) => AlertDialog(
     title: Text(m['name'] ?? 'Ürün'),
-    content: SizedBox(width: 380, child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+    content: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 380), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text('Mevcut stok: ${quantity(m['stockMilli'] ?? 0)}', style: const TextStyle(color: Colors.blueGrey)),
       const SizedBox(height: 14), TextField(controller: qty, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Miktar')),
       const SizedBox(height: 12), TextField(controller: price, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'KDV hariç birim fiyat (₺)')),
@@ -120,7 +151,7 @@ Future<_Line?> _addLineDialog(BuildContext context, QueryDocumentSnapshot<Map<St
 void showTradeDetails(BuildContext context, Map<String,dynamic> trade) {
   showDialog<void>(context: context, builder: (ctx) => AlertDialog(
     title: Text('${trade['type'] == 'sale' ? 'Satış' : 'Alış'} detayı'),
-    content: SizedBox(width: 500, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+    content: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 500), child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(dateOf(trade['createdAt'])), const SizedBox(height: 12),
       ...((trade['lines'] as List?) ?? []).map((raw) { final l = Map<String,dynamic>.from(raw as Map); return ListTile(contentPadding: EdgeInsets.zero, title: Text(l['name'] ?? ''), subtitle: Text('${quantity(l['quantityMilli'] ?? 0)} × ${money(l['priceMinor'] ?? 0)} + KDV %${(l['taxBps'] ?? 0) / 100}'), trailing: Text(money(l['totalMinor'] ?? 0))); }),
       const Divider(), Text('Ara toplam: ${money(trade['netMinor'] ?? 0)}'), Text('KDV: ${money(trade['taxMinor'] ?? 0)}'),

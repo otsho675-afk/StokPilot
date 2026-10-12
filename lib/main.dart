@@ -22,15 +22,52 @@ class StokPilotApp extends StatelessWidget {
     locale: const Locale('tr', 'TR'), supportedLocales: const [Locale('tr', 'TR')],
     localizationsDelegates: GlobalMaterialLocalizations.delegates,
     theme: ThemeData(
-      useMaterial3: true, scaffoldBackgroundColor: canvas,
-      colorScheme: ColorScheme.fromSeed(seedColor: green, primary: green, surface: Colors.white),
+      useMaterial3: true,
       fontFamily: 'Roboto',
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(13)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+      scaffoldBackgroundColor: canvas,
+      colorScheme: ColorScheme.fromSeed(seedColor: green, primary: green,
+        surface: Colors.white),
+      textTheme: const TextTheme(
+        bodyMedium: TextStyle(color: ink),
+        bodyLarge: TextStyle(color: ink),
+        titleLarge: TextStyle(color: ink, fontWeight: FontWeight.w800),
       ),
-      filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))),
-      cardTheme: CardThemeData(color: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.white,
+        foregroundColor: ink,
+        elevation: 0,
+        centerTitle: false,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: line)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: line)),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: green, width: 1.5)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+      ),
+      filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 19, vertical: 15),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)))),
+      outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)))),
+      cardTheme: CardThemeData(color: Colors.white, elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22))),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: Colors.white,
+        indicatorColor: softGreen,
+        labelTextStyle: WidgetStateProperty.all(
+          const TextStyle(color: ink, fontWeight: FontWeight.w700, fontSize: 11)),
+      ),
+      dialogTheme: DialogThemeData(backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
     ),
     home: StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
