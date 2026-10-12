@@ -139,7 +139,7 @@ class _MainShellState extends State<MainShell> {
               ListTile(leading: const Icon(Icons.logout_rounded, color: Colors.white),
                 title: const Text('Çıkış yap', style: TextStyle(color: Colors.white)),
                 onTap: () async { Navigator.of(context).pop(); await _signOut(); }),
-            ]))),
+            ]))) : null,
           body: Row(children: [
             if (showSide) SizedBox(width: wide ? 252 : 76, child: _sidebar(condensed: rail)),
             Expanded(child: SafeArea(child: Column(children: [
