@@ -616,8 +616,7 @@ class _ProductsPageState extends State<ProductsPage> {
                   ),
                 StatusPill(
                   label:
-                      'KDV %${((m['taxRateBps'] ?? 0) / 100).toStringAsFixed(0)}'
-            '${_markup(m) == null ? '' : '   •   Alışa göre %${_markup(m)!.toStringAsFixed(1)}'}',
+                      'KDV %${((m['taxRateBps'] ?? 0) / 100).toStringAsFixed(0)}',
                   color: ink,
                 ),
               ],
@@ -676,7 +675,8 @@ class _ProductsPageState extends State<ProductsPage> {
           subtitle: Text(
             'SKU: ${m['sku'] ?? '—'}   •   ${m['barcode'] ?? ''}\n'
             'Satış ${money((m['salePriceMinor'] as num?)?.toInt() ?? 0)}   •   '
-            'KDV %${((m['taxRateBps'] ?? 0) / 100).toStringAsFixed(0)}',
+            'KDV %${((m['taxRateBps'] ?? 0) / 100).toStringAsFixed(0)}'
+            '${_markup(m) == null ? '' : '   •   Alışa göre %${_markup(m)!.toStringAsFixed(1)}'}',
           ),
           isThreeLine: true,
           trailing: Row(
