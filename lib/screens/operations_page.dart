@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/format.dart';
+import '../core/sales_tools.dart';
 import '../erp/erp_metrics.dart';
 import '../services/app_api.dart';
 import '../widgets/ui.dart';
@@ -406,6 +407,12 @@ class _TradeDetail extends StatelessWidget {
                 _amountLine('KDV', _minor(record['taxMinor'])),
                 const Divider(),
                 _amountLine('GENEL TOPLAM', total, prominent: true),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text('Ödeme yöntemi: ' +
+                    paymentMethodLabel(record['paymentMethod']?.toString()),
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                ),
                 _amountLine('Ödenen', paid),
                 _amountLine('Açık bakiye', total - paid),
                 if ((record['note'] ?? '').toString().isNotEmpty) ...[

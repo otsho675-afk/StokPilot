@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../core/format.dart';
+import '../core/sales_tools.dart';
 import '../services/app_api.dart';
 import '../widgets/ui.dart';
 
@@ -22,6 +23,7 @@ class _TradesPageState extends State<TradesPage> {
   final lines = <_Line>[];
   final paid = TextEditingController(), note = TextEditingController();
   String contactId = '';
+  String saleMethod = 'cash';
   bool busy = false;
   bool get sale => widget.type == 'sale';
   int get total => lines.fold(0, (s, line) => s + line.total);
@@ -34,17 +36,87 @@ class _TradesPageState extends State<TradesPage> {
       return StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: AppApi.instance.watch('contacts'), builder: (context, contactSnap) {
         final contacts = contactSnap.data?.docs.where((d) => d.data()['type'] == 'both' || d.data()['type'] == (sale ? 'customer' : 'supplier')).toList() ?? [];
         return DataPanel(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          SectionHeading(title: sale ? 'Yeni satış' : 'Yeni alış', subtitle: 'Adım 1: cari seç • Adım 2: ürün ekle • Adım 3: işlemi onayla'),
+          SectionHeading(title: sale ? 'Hızlı satış • yeni fiş' : 'Tedarikçi alışı',
+            subtitle: sale ? 'Barkodla ürün bul, sepet oluştur ve ödeme türünü seç.' :
+              'Ürünleri ekle, tedarikçiyi seç ve stok girişini kaydet.'),
           const SizedBox(height: 14),
           DropdownButtonFormField<String>(key: ValueKey('${widget.type}-$contactId'), initialValue: contactId, isExpanded: true, decoration: InputDecoration(labelText: sale ? 'Müşteri / Cari' : 'Tedarikçi / Cari'),
-            items: [const DropdownMenuItem(value: '', child: Text('Peşin • cari olmadan')), ...contacts.map((d) => DropdownMenuItem(value: d.id, child: Text(d.data()['name'] ?? '')))],
+            items: [const DropdownMenuItem(value: '', child: Text('Cari olmadan (peşin)')), ...contacts.map((d) => DropdownMenuItem(value: d.id, child: Text(d.data()['name'] ?? '')))],
             onChanged: (s) => setState(() => contactId = s ?? '')),
           const SizedBox(height: 14),
           Autocomplete<QueryDocumentSnapshot<Map<String,dynamic>>>(
-            displayStringForOption: (p) => p.data()['name'] ?? '',
-            optionsBuilder: (value) => products.where((p) => !lines.any((l) => l.id == p.id) && [p.data()['name'], p.data()['sku'], p.data()['barcode']].any((s) => (s ?? '').toString().toLowerCase().contains(value.text.toLowerCase()))).take(15),
-            onSelected: (p) async { final line = await _addLineDialog(context, p, sale); if (mounted && line != null) setState(() => lines.add(line)); },
-            fieldViewBuilder: (ctx, controller, focus, onSubmit) => TextField(controller: controller, focusNode: focus, decoration: const InputDecoration(labelText: 'Ürün seç • ad / barkod / stok kodu', prefixIcon: Icon(Icons.add_circle_outline), suffixIcon: Icon(Icons.search))),
+            displayStringForOption: (product) =>
+              (product.data()['name'] ?? '').toString(),
+            optionsBuilder: (value) {
+              final entries = products.where((p) =>
+                !lines.any((line) => line.id == p.id)).map((p) {
+                  final m = p.data();
+                  return ProductSearchEntry(
+                    id: p.id,
+                    name: (m['name'] ?? '').toString(),
+                    sku: (m['sku'] ?? '').toString(),
+                    barcode: (m['barcode'] ?? '').toString(),
+                    stockMilli: (m['stockMilli'] as num?)?.toInt() ?? 0,
+                  );
+                });
+              final ranked = findProducts(entries, value.text);
+              final byId = {for (final p in products) p.id: p};
+              return ranked.map((entry) => byId[entry.id]!).toList();
+            },
+            onSelected: (p) async {
+              final item = await _addLineDialog(context, p, sale);
+              if (mounted && item != null) setState(() => lines.add(item));
+            },
+            optionsViewBuilder: (context, onSelected, options) {
+              final result = options.toList();
+              return Align(
+                alignment: Alignment.topLeft,
+                child: Material(
+                  elevation: 7,
+                  borderRadius: BorderRadius.circular(14),
+                  clipBehavior: Clip.antiAlias,
+                  child: SizedBox(
+                    width: (MediaQuery.sizeOf(context).width - 32)
+                        .clamp(220.0, 520.0).toDouble(),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 300),
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        padding: EdgeInsets.zero,
+                        itemCount: result.length,
+                        itemBuilder: (context, index) {
+                          final product = result[index];
+                          final m = product.data();
+                          return ListTile(
+                            dense: true,
+                            leading: const Icon(Icons.inventory_2_outlined, color: green),
+                            title: Text((m['name'] ?? '').toString(),
+                              maxLines: 1, overflow: TextOverflow.ellipsis),
+                            subtitle: Text('Barkod: '+(m['barcode'] ?? '—').toString()+
+                              ' • Stok: '+quantity((m['stockMilli'] as num?)?.toInt() ?? 0),
+                              maxLines: 1, overflow: TextOverflow.ellipsis),
+                            trailing: Text(money((m[sale ? 'salePriceMinor' :
+                              'purchasePriceMinor'] as num?)?.toInt() ?? 0)),
+                            onTap: () => onSelected(product),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+            fieldViewBuilder: (ctx, controller, focus, onSubmit) => TextField(
+              controller: controller,
+              focusNode: focus,
+              textInputAction: TextInputAction.search,
+              decoration: const InputDecoration(
+                labelText: 'Ürün ara • barkod / stok kodu / ürün adı',
+                prefixIcon: Icon(Icons.qr_code_scanner_outlined),
+                suffixIcon: Icon(Icons.search),
+                helperText: 'Tam barkod ve stok kodu eşleşmeleri önce gösterilir.',
+              ),
+            ),
           ),
           const SizedBox(height: 14),
           if (lines.isEmpty) const BlankState(title: 'Sepet henüz boş', message: 'Ürün adı veya barkod ile arayıp ilk kalemi ekle.', icon: Icons.shopping_basket_outlined),
@@ -75,8 +147,39 @@ class _TradesPageState extends State<TradesPage> {
           const SizedBox(height: 5), _totalRow('KDV', money(lines.fold(0, (s,l) => s + l.tax))),
           const SizedBox(height: 8), _totalRow('Genel toplam', money(total), highlight: true),
           const SizedBox(height: 16),
-          if (contactId.isNotEmpty) TextField(controller: paid, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: sale ? 'Alınan tahsilat (₺)' : 'Yapılan ödeme (₺)', helperText: 'Boş bırakırsanız bakiye veresiye/cariye işlenir.')),
-          const SizedBox(height: 10), TextField(controller: note, maxLines: 2, decoration: const InputDecoration(labelText: 'İşlem notu (opsiyonel)')),
+          if (sale) ...[
+            const Text('ÖDEME YÖNTEMİ', style: TextStyle(
+              fontSize: 12, color: muted, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 8),
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              _methodChoice('cash', 'Nakit', Icons.payments_outlined),
+              _methodChoice('card', 'Kart', Icons.credit_card_outlined),
+              _methodChoice('credit', 'Veresiye', Icons.receipt_long_outlined),
+            ]),
+            const SizedBox(height: 9),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: saleMethod == 'credit' ? const Color(0xFFFFF6E9) :
+                  const Color(0xFFEAF8F2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(saleMethod == 'credit'
+                ? (contactId.isEmpty ? 'Veresiye için önce müşteri/cari seçin.' :
+                  'Tutar tahsil edilmeden cari hesabın alacağına eklenecek.')
+                : 'Tahsil edilecek: '+money(total)+' • '+paymentMethodLabel(saleMethod),
+                style: const TextStyle(fontWeight: FontWeight.w700, color: ink)),
+            ),
+          ] else if (contactId.isNotEmpty) ...[
+            TextField(controller: paid, keyboardType:
+              const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Ödenen tutar (₺)',
+                helperText: 'Boş bırakılırsa tutar tedarikçi carisine yazılır.')),
+          ],
+          const SizedBox(height: 10),
+          TextField(controller: note, maxLines: 2,
+            decoration: const InputDecoration(labelText: 'İşlem notu (opsiyonel)')),
           const SizedBox(height: 15), SizedBox(width: double.infinity, child: FilledButton.icon(icon: const Icon(Icons.check_circle_outline), label: Text(busy ? 'Kaydediliyor...' : (sale ? 'Satışı tamamla' : 'Alışı tamamla')), onPressed: busy || lines.isEmpty ? null : save)),
         ]));
       });
@@ -90,11 +193,20 @@ class _TradesPageState extends State<TradesPage> {
       return DataPanel(child: Column(children: docs.take(30).map((d) {
         final m = d.data();
         return ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.receipt_long_outlined, color: green),
-          title: Text('${sale ? 'Satış' : 'Alış'} • ${money(m['totalMinor'] ?? 0)}'), subtitle: Text('${dateOf(m['createdAt'])} • ${(m['lines'] as List?)?.length ?? 0} kalem'),
+          title: Text('${sale ? 'Satış' : 'Alış'} • ${money(m['totalMinor'] ?? 0)}'), subtitle: Text('${dateOf(m['createdAt'])} • ${(m['lines'] as List?)?.length ?? 0} kalem • ${paymentMethodLabel(m['paymentMethod']?.toString())}'),
           trailing: const Icon(Icons.chevron_right), onTap: () => showTradeDetails(context, m));
       }).toList()));
     }),
   ]);
+  Widget _methodChoice(String value, String title, IconData symbol) =>
+    ChoiceChip(
+      selected: saleMethod == value,
+      avatar: Icon(symbol, size: 18, color: saleMethod == value ? green : muted),
+      label: Text(title),
+      onSelected: busy ? null : (_) => setState(() => saleMethod = value),
+      selectedColor: softGreen,
+    );
+
   Widget _totalRow(String title, String value, {bool highlight = false}) =>
     Row(children: [
       Expanded(child: Text(title, style: TextStyle(color: ink,
@@ -110,13 +222,19 @@ class _TradesPageState extends State<TradesPage> {
   Future<void> save() async {
     if (busy || lines.isEmpty) return;
     try {
-      final payment = contactId.isEmpty ? total : (paid.text.trim().isEmpty ? 0 : parseMoney(paid.text));
+      final payment = sale
+          ? salePaidMinor(saleMethod, total, hasContact: contactId.isNotEmpty)
+          : (contactId.isEmpty ? total :
+              (paid.text.trim().isEmpty ? 0 : parseMoney(paid.text)));
       if (payment > total) throw const FormatException('Tahsilat / ödeme toplamdan fazla olamaz.');
-      if (!await confirm(context, sale ? 'Satışı onayla' : 'Alışı onayla', '${lines.length} kalem, toplam ${money(total)}. İşlem stok ve cari hesaplara işlenecek.')) return;
+      if (!await confirm(context, sale ? 'Satışı onayla' : 'Alışı onayla',
+        '${lines.length} kalem • ${money(total)} • ${sale ? paymentMethodLabel(saleMethod) : 'Alış'}. Stok ve cari kayıtlar güncellenecek.')) return;
       setState(() => busy = true);
-      await AppApi.instance.call('commitTrade', {'type': widget.type, 'contactId': contactId.isEmpty ? null : contactId, 'lines': lines.map((l) => l.json).toList(), 'paidMinor': payment, 'note': note.text.trim()});
+      await AppApi.instance.call('commitTrade', {'type': widget.type, 'contactId': contactId.isEmpty ? null : contactId, 'lines': lines.map((l) => l.json).toList(), 'paidMinor': payment,
+        'paymentMethod': sale ? saleMethod : 'partial',
+        'note': note.text.trim()});
       if (!mounted) return;
-      setState(() { lines.clear(); paid.clear(); note.clear(); contactId = ''; });
+      setState(() { lines.clear(); paid.clear(); note.clear(); contactId = ''; saleMethod = 'cash'; });
       notify(context, sale ? 'Satış kaydedildi.' : 'Alış kaydedildi.');
     } catch (e) { if (mounted) notify(context, '$e', error: true); }
     finally { if (mounted) setState(() => busy = false); }
@@ -156,6 +274,7 @@ void showTradeDetails(BuildContext context, Map<String,dynamic> trade) {
       ...((trade['lines'] as List?) ?? []).map((raw) { final l = Map<String,dynamic>.from(raw as Map); return ListTile(contentPadding: EdgeInsets.zero, title: Text(l['name'] ?? ''), subtitle: Text('${quantity(l['quantityMilli'] ?? 0)} × ${money(l['priceMinor'] ?? 0)} + KDV %${(l['taxBps'] ?? 0) / 100}'), trailing: Text(money(l['totalMinor'] ?? 0))); }),
       const Divider(), Text('Ara toplam: ${money(trade['netMinor'] ?? 0)}'), Text('KDV: ${money(trade['taxMinor'] ?? 0)}'),
       Text('TOPLAM: ${money(trade['totalMinor'] ?? 0)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      Text('Ödeme türü: ${paymentMethodLabel(trade['paymentMethod']?.toString())}'),
       Text('Ödenen: ${money(trade['paidMinor'] ?? 0)}'),
       if ((trade['note'] ?? '').toString().isNotEmpty) Text('Not: ${trade['note']}'),
     ]))), actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Kapat'))],
