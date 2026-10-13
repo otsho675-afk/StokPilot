@@ -74,8 +74,9 @@ class _ContactsPageState extends State<ContactsPage> {
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: AppApi.instance.watch('contacts'),
         builder: (context, snap) {
-          if (snap.hasError)
+          if (snap.hasError) {
             return DataPanel(child: Text('Cariler yüklenemedi: ${snap.error}'));
+          }
           if (!snap.hasData) return const LinearProgressIndicator();
           final all = snap.data!.docs;
           final entries =
@@ -517,10 +518,11 @@ Future<void> contactDialog(
                             ? null
                             : () async {
                               try {
-                                if (name.text.trim().isEmpty)
+                                if (name.text.trim().isEmpty) {
                                   throw const FormatException(
                                     'Firma adı zorunlu.',
                                   );
+                                }
                                 update(() => busy = true);
                                 final data = {
                                   'name': name.text.trim(),
@@ -547,8 +549,9 @@ Future<void> contactDialog(
                                 }
                                 if (dc.mounted) Navigator.pop(dc);
                               } catch (e) {
-                                if (context.mounted)
+                                if (context.mounted) {
                                   notify(context, '$e', error: true);
+                                }
                                 update(() => busy = false);
                               }
                             },
@@ -675,10 +678,11 @@ Future<void> paymentDialog(
                             : () async {
                               try {
                                 final amount = parseMoney(input.text);
-                                if (amount <= 0)
+                                if (amount <= 0) {
                                   throw const FormatException(
                                     'Sıfırdan büyük tutar girin.',
                                   );
+                                }
                                 update(() => busy = true);
                                 await AppApi.instance.call('postPayment', {
                                   'contactId': contact.id,
@@ -690,8 +694,9 @@ Future<void> paymentDialog(
                                 });
                                 if (dc.mounted) Navigator.pop(dc);
                               } catch (e) {
-                                if (context.mounted)
+                                if (context.mounted) {
                                   notify(context, '$e', error: true);
+                                }
                                 update(() => busy = false);
                               }
                             },
@@ -889,10 +894,11 @@ Future<void> accountEntryDialog(
                             : () async {
                               try {
                                 final minor = parseMoney(amount.text);
-                                if (minor <= 0)
+                                if (minor <= 0) {
                                   throw const FormatException(
                                     'Sıfırdan büyük tutar girin.',
                                   );
+                                }
                                 update(() => busy = true);
                                 await AppApi.instance
                                     .call('recordAccountEntry', {
@@ -908,8 +914,9 @@ Future<void> accountEntryDialog(
                                     });
                                 if (dc.mounted) Navigator.pop(dc);
                               } catch (e) {
-                                if (context.mounted)
+                                if (context.mounted) {
                                   notify(context, '$e', error: true);
+                                }
                                 if (dc.mounted) update(() => busy = false);
                               }
                             },
@@ -952,11 +959,13 @@ class PartnerCardPage extends StatelessWidget {
                       .doc(contactId)
                       .snapshots(),
               builder: (context, snapshot) {
-                if (snapshot.hasError)
+                if (snapshot.hasError) {
                   return Text('Firma kartı açılamadı: ${snapshot.error}');
+                }
                 if (!snapshot.hasData) return const LinearProgressIndicator();
-                if (!snapshot.data!.exists)
+                if (!snapshot.data!.exists) {
                   return const Text('Firma bulunamadı.');
+                }
                 final data = snapshot.data!.data()!;
                 final balance = (data['balanceMinor'] as num?)?.toInt() ?? 0;
                 return Column(
@@ -1065,8 +1074,9 @@ class PartnerCardPage extends StatelessWidget {
                 .where('contactId', isEqualTo: contactId)
                 .snapshots(),
         builder: (context, payments) {
-          if (payments.hasError)
+          if (payments.hasError) {
             return Text('Ödemeler okunamadı: ${payments.error}');
+          }
           if (!payments.hasData) return const LinearProgressIndicator();
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream:
@@ -1075,8 +1085,9 @@ class PartnerCardPage extends StatelessWidget {
                     .where('contactId', isEqualTo: contactId)
                     .snapshots(),
             builder: (context, entries) {
-              if (entries.hasError)
+              if (entries.hasError) {
                 return Text('Geçmiş borçlar okunamadı: ${entries.error}');
+              }
               if (!entries.hasData) return const LinearProgressIndicator();
               final rows = <Map<String, dynamic>>[
                 for (final d in trades.data!.docs)
