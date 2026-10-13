@@ -33,11 +33,12 @@ class AuthActions {
     final googleUser = await GoogleSignIn.instance.authenticate();
     final googleAuth = googleUser.authentication;
     final token = googleAuth.idToken;
-    if (token == null)
+    if (token == null) {
       throw FirebaseAuthException(
         code: 'missing-token',
         message: 'Google kimlik belirteci alınamadı.',
       );
+    }
     final credential = GoogleAuthProvider.credential(idToken: token);
     if (link && FirebaseAuth.instance.currentUser?.isAnonymous == true) {
       await FirebaseAuth.instance.currentUser!.linkWithCredential(credential);
