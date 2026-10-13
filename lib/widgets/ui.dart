@@ -3,12 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/app_api.dart';
 
 // StokPilot design system: consistent contrast and mobile-safe components.
-const ink = Color(0xFF172638);
-const green = Color(0xFF087C68);
-const canvas = Color(0xFFF1F5F9);
-const muted = Color(0xFF637589);
-const line = Color(0xFFDDE6EE);
-const softGreen = Color(0xFFE0F5ED);
+const ink = Color(0xFF182B46);
+const green = Color(0xFF1357C5);
+const canvas = Color(0xFFF4F7FC);
+const muted = Color(0xFF64748B);
+const line = Color(0xFFE1E8F2);
+const softGreen = Color(0xFFE8F0FF);
 const amber = Color(0xFFBA741A);
 
 class MetricCard extends StatelessWidget {
