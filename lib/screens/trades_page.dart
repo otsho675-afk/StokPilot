@@ -311,8 +311,9 @@ class _TradesPageState extends State<TradesPage> {
                                           'Sepeti temizle',
                                           'Kaydedilmemiş ${lines.length} kalem silinsin mi?',
                                         );
-                                        if (approved && mounted)
+                                        if (approved && mounted) {
                                           setState(() => lines.clear());
+                                        }
                                       },
                               icon: const Icon(
                                 Icons.delete_sweep_outlined,
