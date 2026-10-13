@@ -141,8 +141,10 @@ service cloud.firestore {
       match /trades/{id} {
         allow read, delete: if owner(uid);
         allow create: if owner(uid) &&
-          request.resource.data.keys().hasOnly(['type','contactId','lines','paidMinor','netMinor','taxMinor','totalMinor','note','createdAt']) &&
+          request.resource.data.keys().hasOnly(['type','contactId','lines','paidMinor','paymentMethod','netMinor','taxMinor','totalMinor','note','createdAt']) &&
           request.resource.data.type in ['sale','purchase'] &&
+          (!('paymentMethod' in request.resource.data) ||
+            request.resource.data.paymentMethod in ['cash','card','credit','partial']) &&
           request.resource.data.lines is list &&
           request.resource.data.lines.size() > 0 &&
           request.resource.data.lines.size() <= 30 &&
@@ -168,8 +170,10 @@ service cloud.firestore {
       match /payments/{id} {
         allow read, delete: if owner(uid);
         allow create: if owner(uid) &&
-          request.resource.data.keys().hasOnly(['contactId','tradeId','type','amountMinor','auto','createdAt']) &&
+          request.resource.data.keys().hasOnly(['contactId','tradeId','type','amountMinor','auto','method','createdAt']) &&
           request.resource.data.type in ['collection','payout'] &&
+          (!('method' in request.resource.data) ||
+            request.resource.data.method in ['cash','card','credit','partial']) &&
           money(request.resource.data.amountMinor) &&
           request.resource.data.amountMinor > 0 &&
           request.resource.data.auto is bool &&

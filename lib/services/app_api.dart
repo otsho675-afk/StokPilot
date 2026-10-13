@@ -162,6 +162,11 @@ class AppApi {
     }
     final contactId = data['contactId']?.toString() ?? '';
     final paid = _int(data['paidMinor'] ?? 0);
+    final requestedPaymentMethod = (data['paymentMethod'] ?? '').toString();
+    if (type == 'sale' && !const ['cash', 'card', 'credit']
+        .contains(requestedPaymentMethod)) {
+      throw const FormatException('Ödeme yöntemi seçiniz.');
+    }
     final contactRef = contactId.isEmpty ? null : collection('contacts').doc(contactId);
     final productRefs = ids.map((id) => collection('products').doc(id)).toList();
     final tradeRef = collection('trades').doc();
@@ -216,9 +221,20 @@ class AppApi {
       if (grossTotal > 1000000000000 || paid > grossTotal) {
         throw const FormatException('Ödenen tutar geçersiz.');
       }
-      if (contactRef == null && paid != grossTotal) {
-        throw const FormatException('Veresiye işlem için cari seçmelisiniz.');
+      if (type == 'sale') {
+        if (requestedPaymentMethod == 'credit') {
+          if (contactRef == null || paid != 0) {
+            throw const FormatException('Veresiye için cari seçin ve tahsilatı sıfır bırakın.');
+          }
+        } else if (paid != grossTotal) {
+          throw const FormatException('Nakit/kart satışta tüm tutar tahsil edilmelidir.');
+        }
+      } else if (contactRef == null && paid != grossTotal) {
+        throw const FormatException('Veresiye alış için tedarikçi seçmelisiniz.');
       }
+      final paymentMethod = type == 'sale'
+        ? requestedPaymentMethod
+        : (paid == grossTotal ? 'cash' : (paid == 0 ? 'credit' : 'partial'));
       for (var i = 0; i < recordedLines.length; i++) {
         tx.update(productRefs[i], {'stockMilli': nextStocks[i]});
         tx.set(moveRefs[i], {
@@ -242,6 +258,7 @@ class AppApi {
         'contactId': contactRef?.id,
         'lines': recordedLines,
         'paidMinor': paid,
+        'paymentMethod': paymentMethod,
         'netMinor': netTotal,
         'taxMinor': taxTotal,
         'totalMinor': grossTotal,
@@ -255,6 +272,7 @@ class AppApi {
           'type': type == 'sale' ? 'collection' : 'payout',
           'amountMinor': paid,
           'auto': true,
+          'method': paymentMethod,
           'createdAt': FieldValue.serverTimestamp(),
         });
       }
