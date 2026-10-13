@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/format.dart';
+import '../core/sales_tools.dart';
 import '../erp/erp_metrics.dart';
 import '../services/app_api.dart';
 import '../widgets/ui.dart';
@@ -59,7 +60,23 @@ class _ReportsPageState extends State<ReportsPage> {
                   }).toList()..sort((a,b) =>
                     ((a.data()['stockMilli'] as num?)?.toInt() ?? 0).compareTo(
                       (b.data()['stockMilli'] as num?)?.toInt() ?? 0));
-                  return _body(context, metrics, warningProducts);
+                  final now = DateTime.now();
+                  final since = period == 'all' ? null :
+                    now.subtract(Duration(days: int.parse(period)));
+                  final totals = <String, int>{
+                    'cash': 0, 'card': 0, 'credit': 0, 'other': 0,
+                  };
+                  for (final doc in trades.data!.docs) {
+                    final trade = doc.data();
+                    if (trade['type'] != 'sale') continue;
+                    final date = (trade['createdAt'] as Timestamp?)?.toDate();
+                    if (since != null && (date == null || date.isBefore(since))) continue;
+                    final method = trade['paymentMethod']?.toString() ?? '';
+                    final key = totals.containsKey(method) ? method : 'other';
+                    totals[key] = totals[key]! +
+                      ((trade['totalMinor'] as num?)?.toInt() ?? 0);
+                  }
+                  return _body(context, metrics, warningProducts, totals);
                 },
               );
             },
@@ -110,7 +127,8 @@ class _ReportsPageState extends State<ReportsPage> {
   }
 
   Widget _body(BuildContext context, ErpMetrics m,
-      List<QueryDocumentSnapshot<Map<String, dynamic>>> warnings) {
+      List<QueryDocumentSnapshot<Map<String, dynamic>>> warnings,
+      Map<String, int> paymentTotals) {
     final periodName = period == 'all' ? 'Tüm dönem' : 'Son $period gün';
     final sortedDates = m.byDay.keys.toList()..sort();
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -151,6 +169,27 @@ class _ReportsPageState extends State<ReportsPage> {
           icon: Icons.account_balance_wallet_outlined,
           subtext: 'Güncel cari bakiyeler • tüm zamanlar'),
       ]),
+      const SizedBox(height: 14),
+      DataPanel(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SectionHeading(title: 'Ödeme yöntemleri',
+            subtitle: 'Seçilen dönemde ödeme tiplerine göre satış hacmi'),
+          const SizedBox(height: 12),
+          Wrap(spacing: 10, runSpacing: 10, children: [
+            _paymentSummary('Nakit', paymentTotals['cash'] ?? 0,
+              Icons.payments_outlined),
+            _paymentSummary('Kart', paymentTotals['card'] ?? 0,
+              Icons.credit_card_outlined),
+            _paymentSummary('Veresiye', paymentTotals['credit'] ?? 0,
+              Icons.receipt_long_outlined),
+            if ((paymentTotals['other'] ?? 0) > 0)
+              _paymentSummary('Eski kayıtlar', paymentTotals['other'] ?? 0,
+                Icons.history),
+          ]),
+          const SizedBox(height: 6),
+          const Text('Buradaki tutarlar satış toplamıdır. Veresiye, tahsilat anlamına gelmez.',
+            style: TextStyle(color: muted, fontSize: 11)),
+        ])),
       const SizedBox(height: 14),
       DataPanel(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -234,6 +273,26 @@ class _ReportsPageState extends State<ReportsPage> {
       ),
     ]);
   }
+
+  Widget _paymentSummary(String method, int amount, IconData symbol) =>
+    Container(
+      constraints: const BoxConstraints(minWidth: 145),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(color: canvas,
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: line)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(symbol, size: 17, color: green),
+          const SizedBox(width: 7),
+          Text(method, style: const TextStyle(
+            fontSize: 12, color: muted, fontWeight: FontWeight.w700)),
+        ]),
+        const SizedBox(height: 6),
+        Text(money(amount), style: const TextStyle(
+          fontSize: 18, fontWeight: FontWeight.w900, color: ink)),
+      ]),
+    );
 
   Widget _metricGrid(List<Widget> cards) => LayoutBuilder(
     builder: (context, c) {
