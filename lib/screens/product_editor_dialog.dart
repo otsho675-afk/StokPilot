@@ -146,6 +146,7 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
   late String unitId;
   late int taxRateBps;
   bool active = true;
+  bool pricesIncludeVat = false;
   bool saving = false;
   String? error;
 
@@ -183,12 +184,33 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
     if (mounted && !saving) setState(() {});
   }
 
+  int _enteredNetPrice(String text) {
+    final amount = parseMoney(text);
+    return pricesIncludeVat
+        ? netFromGrossMinor(amount, taxRateBps)
+        : amount;
+  }
+
   int? _tryPrice(String text) {
     try {
-      return parseMoney(text);
+      return _enteredNetPrice(text);
     } catch (_) {
       return null;
     }
+  }
+
+  void _setPriceIncludesVat(bool include) {
+    if (pricesIncludeVat == include) return;
+    for (final field in [purchase, sale]) {
+      final entered = _tryPrice(field.text);
+      if (entered == null) continue;
+      final displayAmount = include
+          ? grossMinor(entered, taxRateBps)
+          : entered;
+      field.text = (displayAmount / 100)
+          .toStringAsFixed(2).replaceAll('.', ',');
+    }
+    setState(() => pricesIncludeVat = include);
   }
 
   @override
@@ -223,8 +245,8 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
         'categoryId': categoryId,
         'unitId': unitId,
         'taxRateBps': taxRateBps,
-        'purchasePriceMinor': parseMoney(purchase.text),
-        'salePriceMinor': parseMoney(sale.text),
+        'purchasePriceMinor': _enteredNetPrice(purchase.text),
+        'salePriceMinor': _enteredNetPrice(sale.text),
         'minStockMilli': parseQty(minimum.text),
         'isActive': active,
       };
@@ -435,23 +457,38 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
               ),
             ),
             const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F8F6),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFD6ECE4))),
+              child: SwitchListTile.adaptive(
+                key: const ValueKey('vat-inclusive-input'),
+                title: const Text('Fiyatları KDV dâhil gir',
+                  style: TextStyle(color: ink, fontWeight: FontWeight.w800)),
+                subtitle: const Text('Değiştirince girilmiş tutarlar dönüştürülür; kayıtlarda net fiyat saklanır.',
+                  style: TextStyle(color: muted, fontSize: 11)),
+                value: pricesIncludeVat,
+                onChanged: saving ? null : _setPriceIncludesVat,
+              )),
+            const SizedBox(height: 12),
             ResponsiveFields(
               first: TextField(
                 controller: purchase,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: const InputDecoration(
-                  labelText: 'KDV hariç alış (₺)',
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: pricesIncludeVat
+                    ? 'KDV dâhil alış (₺)'
+                    : 'KDV hariç alış (₺)',
                 ),
               ),
               second: TextField(
                 controller: sale,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: const InputDecoration(
-                  labelText: 'KDV hariç satış (₺)',
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: pricesIncludeVat
+                    ? 'KDV dâhil satış (₺)'
+                    : 'KDV hariç satış (₺)',
                 ),
               ),
             ),
