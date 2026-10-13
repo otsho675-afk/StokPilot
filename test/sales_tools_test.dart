@@ -38,6 +38,18 @@ void main() {
     expect(findProducts(items, 'bardak').single.id, 'barcode');
     expect(findProducts(items, 'yok'), isEmpty);
   });
+  test('VAT inclusive entry stores exact net unit prices', () {
+    expect(netFromGrossMinor(12000, 2000), 10000);
+    expect(netFromGrossMinor(18000, 2000), 15000);
+    expect(netFromGrossMinor(10500, 0), 10500);
+    expect(netFromGrossMinor(11000, 1000), 10000);
+    expect(() => netFromGrossMinor(-1, 2000), throwsArgumentError);
+    for (var net = 0; net <= 10000; net += 17) {
+      final gross = grossMinor(net, 2000);
+      final restored = netFromGrossMinor(gross, 2000);
+      expect(grossMinor(restored, 2000), gross);
+    }
+  });
   test('cash/card are collected, credit requires customer account', () {
     expect(salePaidMinor('cash', 5000, hasContact: false), 5000);
     expect(salePaidMinor('card', 5000, hasContact: false), 5000);
