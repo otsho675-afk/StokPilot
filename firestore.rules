@@ -153,6 +153,16 @@ service cloud.firestore {
           money(request.resource.data.totalMinor) &&
           money(request.resource.data.paidMinor) &&
           request.resource.data.paidMinor <= request.resource.data.totalMinor &&
+          // When a new payment method is supplied, settled and credit
+          // sales must be internally consistent.
+          (request.resource.data.type != 'sale' ||
+            !('paymentMethod' in request.resource.data) ||
+            (request.resource.data.paymentMethod in ['cash','card'] &&
+              request.resource.data.paidMinor == request.resource.data.totalMinor) ||
+            (request.resource.data.paymentMethod == 'credit' &&
+              request.resource.data.paidMinor == 0 &&
+              request.resource.data.contactId is string &&
+              request.resource.data.contactId.size() > 0)) &&
           request.resource.data.createdAt == request.time;
         allow update: if false;
       }
