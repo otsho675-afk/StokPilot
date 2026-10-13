@@ -3,12 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/app_api.dart';
 
 // StokPilot design system: consistent contrast and mobile-safe components.
-const ink = Color(0xFF152C35);
+const ink = Color(0xFF172638);
 const green = Color(0xFF087C68);
-const canvas = Color(0xFFF4F7F8);
-const muted = Color(0xFF657982);
-const line = Color(0xFFE5ECEE);
-const softGreen = Color(0xFFE6F6F0);
+const canvas = Color(0xFFF1F5F9);
+const muted = Color(0xFF637589);
+const line = Color(0xFFDDE6EE);
+const softGreen = Color(0xFFE0F5ED);
 const amber = Color(0xFFBA741A);
 
 class MetricCard extends StatelessWidget {
@@ -35,16 +35,16 @@ class MetricCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 148),
-        padding: const EdgeInsets.all(18),
+        constraints: const BoxConstraints(minHeight: 156),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: line),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x0B132F36),
-              blurRadius: 22,
-              offset: Offset(0, 7),
+              color: Color(0x0A132F36),
+              blurRadius: 28,
+              offset: Offset(0, 9),
             ),
           ],
         ),
@@ -87,7 +87,7 @@ class MetricCard extends StatelessWidget {
                   value,
                   key: ValueKey<String>(value),
                   style: const TextStyle(
-                    fontSize: 26,
+                    fontSize: 28,
                     color: ink,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.8,
@@ -144,7 +144,7 @@ class PageTitle extends StatelessWidget {
   final Widget? action;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 20),
+    padding: const EdgeInsets.only(bottom: 24),
     child: LayoutBuilder(
       builder: (context, constraints) {
         final narrow = constraints.maxWidth < 480;
@@ -245,7 +245,7 @@ class DataPanel extends StatelessWidget {
     width: double.infinity,
     decoration: BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(18),
       border: Border.all(color: line),
       boxShadow: const [
         BoxShadow(
