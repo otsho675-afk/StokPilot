@@ -10,9 +10,11 @@ import '../services/review_prompt.dart';
 import '../widgets/ui.dart';
 
 class _Line {
-  _Line(this.id, this.name, this.qtyMilli, this.priceMinor, this.taxBps);
+  _Line(this.id, this.name, this.qtyMilli, this.priceMinor, this.taxBps, [int? productVat])
+      : productTaxBps = productVat ?? taxBps;
   String id, name;
   int qtyMilli, priceMinor, taxBps;
+  final int productTaxBps;
   int get net => (qtyMilli * priceMinor / 1000).round();
   int get tax => (net * taxBps / 10000).round();
   int get total => net + tax;
@@ -40,9 +42,18 @@ class _TradesPageState extends State<TradesPage> {
   String contactId = '';
   String saleMethod = 'cash';
   String purchaseMethod = 'cash', documentKind = 'receipt';
+  bool addVatToSale = false;
   bool busy = false;
   bool get sale => widget.type == 'sale';
   int get total => lines.fold(0, (s, line) => s + line.total);
+  void _setSaleVat(bool enabled) {
+    setState(() {
+      addVatToSale = enabled;
+      for (final line in lines) {
+        line.taxBps = enabled ? line.productTaxBps : 0;
+      }
+    });
+  }
   int get cartVatMinor => lines.fold<int>(0, (sum, line) => sum + line.tax);
   int get cartUnitMilli => lines.fold<int>(0, (sum, line) => sum + line.qtyMilli);
 
@@ -185,6 +196,25 @@ class _TradesPageState extends State<TradesPage> {
                         ),
                       ),
                     ],
+                    if (sale)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: line),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: SwitchListTile.adaptive(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Satışa KDV ekle',
+                            style: TextStyle(fontWeight: FontWeight.w800)),
+                          subtitle: Text(addVatToSale
+                            ? 'Üründeki KDV oranı satış tutarına ayrıca eklenir.'
+                            : 'Kapalı: Ürüne yazdığın satış fiyatı aynen alınır.'),
+                          value: addVatToSale,
+                          onChanged: busy ? null : _setSaleVat,
+                        ),
+                      ),
                     const SizedBox(height: 14),
                     Autocomplete<QueryDocumentSnapshot<Map<String, dynamic>>>(
                       displayStringForOption:
@@ -209,7 +239,7 @@ class _TradesPageState extends State<TradesPage> {
                         return ranked.map((entry) => byId[entry.id]!).toList();
                       },
                       onSelected: (p) async {
-                        final item = await _addLineDialog(context, p, sale);
+                        final item = await _addLineDialog(context, p, sale, addVatToSale);
                         if (mounted && item != null) {
                           setState(() => lines.add(item));
                         }
@@ -801,6 +831,7 @@ Future<_Line?> _addLineDialog(
   BuildContext context,
   QueryDocumentSnapshot<Map<String, dynamic>> product,
   bool sale,
+  bool addVat,
 ) async {
   final m = product.data();
   final qty = TextEditingController(text: '1');
@@ -837,11 +868,14 @@ Future<_Line?> _addLineDialog(
                   controller: price,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
-                    labelText: 'KDV hariç birim fiyat (₺)',
+                    labelText: 'Birim satış/alış fiyatı (₺)',
+                    helperText: 'Ürüne girilen fiyat aynen kullanılır.',
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text('KDV: %${(m['taxRateBps'] ?? 0) / 100}'),
+                Text(sale
+                    ? (addVat ? 'KDV ayrıca eklenecek: %${(m['taxRateBps'] ?? 0) / 100}' : 'KDV eklenmeyecek · fiyat değişmez')
+                    : 'Alış KDV: %${(m['taxRateBps'] ?? 0) / 100}'),
               ],
             ),
           ),
@@ -867,7 +901,8 @@ Future<_Line?> _addLineDialog(
                     m['name'] ?? '',
                     q,
                     parseMoney(price.text),
-                    (m['taxRateBps'] ?? 0) as int,
+                    sale && !addVat ? 0 : (m['taxRateBps'] as num?)?.toInt() ?? 0,
+                    (m['taxRateBps'] as num?)?.toInt() ?? 0,
                   );
                   Navigator.pop(dialogContext);
                 } catch (e) {
