@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../core/dashboard_insights.dart';
+import '../core/inventory_forecast.dart';
 import '../core/format.dart';
 import '../services/app_api.dart';
 import '../widgets/ui.dart';
@@ -102,6 +103,21 @@ class _OverviewPageState extends State<OverviewPage> {
                     ts.data!.docs.map((item) => item.data()),
                     days: periodDays,
                   );
+                  final sold = InventoryForecast.soldByProduct(
+                    ts.data!.docs.map((doc) => doc.data()),
+                    now: DateTime.now(),
+                    periodDays: 30,
+                  );
+                  final forecast = <String, SalesVelocity>{
+                    for (final product in products)
+                      product.id: InventoryForecast.forProduct(
+                        productId: product.id,
+                        stockMilli: (product.data()['stockMilli'] as num?)?.toInt() ?? 0,
+                        minimumMilli: (product.data()['minStockMilli'] as num?)?.toInt() ?? 0,
+                        soldMilli: sold[product.id] ?? 0,
+                        periodDays: 30,
+                      ),
+                  };
                   final cards = <_Kpi>[
                     _Kpi(
                       'Satış cirosu',
@@ -223,6 +239,7 @@ class _OverviewPageState extends State<OverviewPage> {
                         builder: (context, c) {
                           final restockPanel = _RestockPanel(
                             restocks: restocks,
+                            forecast: forecast,
                             onNavigate: widget.onNavigate,
                           );
                           final recent = _RecentPanel(
@@ -559,8 +576,9 @@ class _PaymentPanel extends StatelessWidget {
 }
 
 class _RestockPanel extends StatelessWidget {
-  const _RestockPanel({required this.restocks, required this.onNavigate});
+  const _RestockPanel({required this.restocks, required this.forecast, required this.onNavigate});
   final List<RestockSuggestion> restocks;
+  final Map<String, SalesVelocity> forecast;
   final ValueChanged<int> onNavigate;
   @override
   Widget build(BuildContext context) => DataPanel(
@@ -569,7 +587,7 @@ class _RestockPanel extends StatelessWidget {
       children: [
         SectionHeading(
           title: 'Akıllı stok planı',
-          subtitle: 'Önce tükenenler · önerilen alım miktarı',
+          subtitle: 'Satış geçmişinden stok ihtiyacı tahmini',
           trailing: IconButton(
             onPressed: () => onNavigate(1),
             tooltip: 'Ürünlere git',
@@ -621,7 +639,8 @@ class _RestockPanel extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'Mevcut: ${quantity(item.stockMilli)} · Min: ${quantity(item.minimumMilli)}',
+                          'Mevcut: ${quantity(item.stockMilli)} · '
+                          '${forecast[item.id]?.daysOfCover == null ? 'Satış geçmişi yok' : 'Yaklaşık ${forecast[item.id]!.daysOfCover!.toStringAsFixed(0)} gün yeter'}',
                           style: const TextStyle(color: muted, fontSize: 11),
                         ),
                       ],
@@ -632,7 +651,7 @@ class _RestockPanel extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '+${quantity(item.orderMilli)}',
+                        '+${quantity(forecast[item.id]?.recommendedOrderMilli ?? item.orderMilli)}',
                         style: const TextStyle(
                           color: green,
                           fontWeight: FontWeight.w900,
@@ -666,7 +685,7 @@ class _RestockPanel extends StatelessWidget {
         ],
         const SizedBox(height: 8),
         const Text(
-          'Öneri: minimum stoğun 2 katına tamamlama (min. 0 ise 1 adet). Otomatik sipariş verilmez.',
+          'Tahmin: son 30 gün satış hızı; 7 gün tedarik + 14 gün hedef stok. Geçmiş yoksa asgari stok kullanılır. Otomatik sipariş verilmez.',
           style: TextStyle(color: muted, fontSize: 11, height: 1.4),
         ),
       ],
@@ -686,7 +705,7 @@ class _RestockPanel extends StatelessWidget {
     for (final p in restocks) {
       rows.add(
         '${safe(p.name)};${quantity(p.stockMilli)};'
-        '${quantity(p.minimumMilli)};${quantity(p.orderMilli)}',
+        '${quantity(p.minimumMilli)};${quantity(forecast[p.id]?.recommendedOrderMilli ?? p.orderMilli)}',
       );
     }
     await Clipboard.setData(ClipboardData(text: '\uFEFF${rows.join('\r\n')}'));
