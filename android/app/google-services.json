@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "289925788761",
+    "project_id": "stokpilot-5bd2e",
+    "storage_bucket": "stokpilot-5bd2e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:289925788761:android:ef660340d8802d05f5ad48",
+        "android_client_info": {
+          "package_name": "com.stokpilot.stokpilot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "289925788761-qt9cf0v6n29gshq0vs3sd7kiaird1v4k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3iMMHujPUeAQjgoA08lGTj9OjQAAlTlQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "289925788761-qt9cf0v6n29gshq0vs3sd7kiaird1v4k.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "289925788761-as2bbg2itfg88unnmdh9sadkbmrhp03n.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.yesildas.stokpilot"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:289925788761:android:d565b95ac20e2b75f5ad48",
+        "android_client_info": {
+          "package_name": "com.yesildas.stokpilot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "289925788761-r3u9ip3iaj7s5e8bk6eiipsrjkqf4biu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.yesildas.stokpilot",
+            "certificate_hash": "20ffb8f6181f90fe59ac56e58bbd292640e6afe7"
+          }
+        },
+        {
+          "client_id": "289925788761-qt9cf0v6n29gshq0vs3sd7kiaird1v4k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3iMMHujPUeAQjgoA08lGTj9OjQAAlTlQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "289925788761-qt9cf0v6n29gshq0vs3sd7kiaird1v4k.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "289925788761-as2bbg2itfg88unnmdh9sadkbmrhp03n.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.yesildas.stokpilot"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

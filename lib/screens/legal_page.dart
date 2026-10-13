@@ -3,37 +3,46 @@ import 'package:flutter/material.dart';
 class LegalPage extends StatelessWidget {
   const LegalPage({super.key, required this.privacy});
   final bool privacy;
-  @override Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(privacy ? 'Gizlilik bildirimi' : 'Kullanım koşulları')),
-    body: SingleChildScrollView(padding: const EdgeInsets.all(22), child: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 720), child: SelectableText(
-      privacy
-        ? '''STOKPILOT GIZLILIK BILDIRIMI - TASLAK
 
-Bu metin yayın öncesi gerçek işletmeci ve veri işleme süreçleriyle güncellenmelidir.
-
-Toplanabilecek bilgiler: Hesap e-postası ve giriş bilgileri; işletmenin kaydettiği ürün, cari, alım, satım ve stok hareketleri; abonelik durumunu doğrulamak için Google Play / App Store ve RevenueCat olayları.
-
-Amaç: Kimlik doğrulama, senkronizasyon, stok/cari yönetimi, abonelik erişimi, güvenlik, hata teşhisi.
-
-Altyapı: Firebase Authentication, Cloud Firestore ve Firebase Authentication. Mağaza içi ödemelerin doğrulaması için RevenueCat kullanılır. Kart bilgileri StokPilot içinde tutulmaz.
-
-Saklama: Hesap var oldukça ilgili kayıtlar saklanabilir. Uygulamada hesap silme talep edildiğinde işletme verileri ve hesap kaldırılır. Yasal saklama yükümlülükleri ayrıca değerlendirilmelidir.
-
-Haklar ve iletişim: Veri sorumlusu adı, iletişim e-postası, KVKK aydınlatma metni, veri aktarım şartları ve talep süreci yayın öncesinde eklenmelidir.'''
-        : '''STOKPILOT KULLANIM KOŞULLARI - TASLAK
-
-Bu metin uygulama yayınından önce işletmecinin hukuki bilgileriyle tamamlanmalıdır.
-
-Hizmet: Stok ve cari takibi, işlem kaydı ve raporlama yazılımıdır. E-fatura veya mali müşavirlik hizmeti değildir. Raporlar resmî muhasebe ve KDV beyannamesi yerine geçmez.
-
-Abonelik: Ücretsiz hesaplar (misafir, Google, Apple ve e-posta) en fazla 50 ürün ekleyebilir; diğer temel özellikler ücretsiz kullanılabilir. 50 üründen daha fazla kayıt oluşturmak için StokPilot Pro aylık aboneliği gerekir. Türkiye için hedef fiyat 50 TL/ay olup bağlayıcı tutar ödeme ekranında mağazanın gösterdiği fiyattır. Gerçek tutar, para birimi, yenileme ve deneme bilgisi satın almadan önce mağaza ödeme ekranında gösterilir. Abonelik mağaza hesabı üzerinden otomatik yenilenir; iptal mağazanın abonelik ayarlarından yapılabilir.
-
-Hesap silme: Hesabı silmek mağaza aboneliğini kendiliğinden iptal etmez. Önce Apple veya Google aboneliklerinden iptal edilmelidir.
-
-Verilerin doğruluğu: Kullanıcı ürün, fiyat, stok, KDV ve cari bilgilerinin doğruluğundan sorumludur.
-
-Düzenleyici bilgiler: İşletmeci ünvanı, adres, iletişim, iadeler ve yürürlük tarihi yayın öncesi tamamlanmalıdır.''',
-      style: const TextStyle(height: 1.55, fontSize: 15),
-    )))),
-  );
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: Text(privacy ? 'Gizlilik bildirimi' : 'Kullanım koşulları')),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(22),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: SelectableText(
+                privacy ? _privacy : _terms,
+                style: const TextStyle(height: 1.55, fontSize: 15),
+              ),
+            ),
+          ),
+        ),
+      );
 }
+
+const _privacy = '''STOKPILOT GİZLİLİK BİLDİRİMİ
+Son güncelleme: 13 Ekim 2026
+İşletmeci: Hazim Yesildas
+İletişim: otsho675@gmail.com
+Tam metin: https://stokpilot-5bd2e.web.app/privacy.html
+
+Hesap ve giriş bilgilerinizi, uygulamaya eklediğiniz ürün, stok, firma, müşteri, tedarikçi, alış, satış, fiş, proje, gider, borç ve ödeme kayıtlarını hizmeti sağlamak için işleriz. Firma kartına girilen ad, ilgili kişi, telefon, e-posta, adres, vergi numarası ve IBAN da saklanır. Bu kayıtlar Firebase Authentication ve Cloud Firestore ile saklanır. Cari işlemlerde nakit/kart seçimi yalnızca kayıt etiketidir; kart numarası uygulamaya girilmez.
+
+Pro aboneliği açıldığında satın alma durumu Apple App Store veya Google Play üzerinden RevenueCat ile doğrulanır. Kart bilgileri StokPilot'a aktarılmaz. Hesap silme işlemi işletme alt kayıtlarını ve giriş hesabını kaldırır. Ücretsiz ürün kotasının yeniden kullanılmasını engellemek için kimlik ve sayaçtan oluşan sınırlı teknik kayıt tutulur.
+
+Veri erişimi, düzeltme ve silme talepleri için otsho675@gmail.com adresine yazabilirsiniz. Hesap silme adımları: https://stokpilot-5bd2e.web.app/delete-account.html''';
+
+const _terms = '''STOKPILOT KULLANIM KOŞULLARI
+Son güncelleme: 13 Ekim 2026
+İşletmeci: Hazim Yesildas
+İletişim: otsho675@gmail.com
+Tam metin: https://stokpilot-5bd2e.web.app/terms.html
+
+StokPilot ürün, stok, müşteri, tedarikçi, alış, satış, fiş ve işletme içi finans kayıtları için bir yazılımdır. Fişler resmî e-fatura, e-arşiv fatura veya muhasebe defteri değildir. Vergi ve kayıt doğruluğunu kullanıcı kontrol eder.
+
+Ücretsiz hesap 50 ürün oluşturabilir. Daha fazla ürün için aylık StokPilot Pro aboneliği gerekir. Kesin fiyat ve yenileme koşulları satın alma öncesinde Apple App Store veya Google Play tarafından gösterilir. Abonelik mağaza hesabından iptal edilir; hesabı silmek aboneliği otomatik iptal etmez. Güvenli abonelik doğrulaması hazır olana kadar yeni ödeme başlatılmaz.
+
+Gizlilik: https://stokpilot-5bd2e.web.app/privacy.html
+Hesap silme: https://stokpilot-5bd2e.web.app/delete-account.html''';

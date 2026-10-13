@@ -7,6 +7,7 @@ import '../core/sales_tools.dart';
 import '../erp/erp_metrics.dart';
 import '../services/app_api.dart';
 import '../widgets/ui.dart';
+import 'trades_page.dart' show tradeSlipText;
 
 /// Unified, read-only ERP journal. All changes still go through the existing
 /// validated sale/purchase/stock transactions and Firebase security rules.
@@ -372,7 +373,19 @@ class _TradeDetail extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(dateOf(record['createdAt']), style: const TextStyle(color: muted)),
                 const SizedBox(height: 12),
-                Text('İşlem no: $id', style: const TextStyle(color: muted, fontSize: 12)),
+                Text('Fiş no: ${record['documentNo'] ?? id}',
+                  style: const TextStyle(color: muted, fontSize: 12)),
+                if ((record['externalDocumentNo'] ?? '').toString().isNotEmpty)
+                  Text('Fatura no: ${record['externalDocumentNo']}'),
+                if ((record['projectName'] ?? '').toString().isNotEmpty)
+                  Text('Proje: ${record['projectName']}'),
+                const SizedBox(height: 10),
+                OutlinedButton.icon(onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: tradeSlipText(
+                    {...record, 'contactName': record['contactName'] ?? contactName})));
+                  if (context.mounted) notify(context, 'Fiş panoya kopyalandı.');
+                }, icon: const Icon(Icons.copy_all_outlined),
+                  label: const Text('Fişi kopyala')),
               ])),
             const SizedBox(height: 14),
             DataPanel(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch,

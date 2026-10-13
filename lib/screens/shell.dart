@@ -10,6 +10,7 @@ import 'contacts_page.dart';
 import 'trades_page.dart';
 import 'reports_page.dart';
 import 'operations_page.dart';
+import 'finance_page.dart';
 import 'settings_page.dart';
 
 class MainShell extends StatefulWidget {
@@ -20,12 +21,14 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int selected = 0;
-  static const names = ['Genel Bakış', 'Ürünler', 'Satış', 'Alış', 'Cariler', 'Raporlar', 'ERP İşlemleri', 'Ayarlar'];
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  static const names = ['Genel Bakış', 'Ürünler', 'Satış', 'Alış', 'Müşteri carileri', 'Tedarikçiler', 'Finans', 'Raporlar', 'ERP İşlemleri', 'Ayarlar'];
   static const icons = [
     Icons.space_dashboard_rounded, Icons.inventory_2_outlined,
     Icons.point_of_sale_rounded, Icons.shopping_bag_outlined,
-    Icons.people_alt_outlined, Icons.insert_chart_outlined,
-    Icons.assignment_outlined, Icons.tune_rounded,
+    Icons.people_alt_outlined, Icons.local_shipping_outlined,
+    Icons.account_balance_wallet_outlined,
+    Icons.insert_chart_outlined, Icons.assignment_outlined, Icons.tune_rounded,
   ];
   static const mobileTabs = [0, 1, 2, 4];
 
@@ -38,9 +41,11 @@ class _MainShellState extends State<MainShell> {
     1 => const ProductsPage(),
     2 => const TradesPage(type: 'sale'),
     3 => const TradesPage(type: 'purchase'),
-    4 => const ContactsPage(),
-    5 => const ReportsPage(),
-    6 => const OperationsPage(),
+    4 => const ContactsPage(kind: 'customer'),
+    5 => const ContactsPage(kind: 'supplier'),
+    6 => const FinancePage(),
+    7 => const ReportsPage(),
+    8 => const OperationsPage(),
     _ => const SettingsPage(),
   };
 
@@ -132,6 +137,7 @@ class _MainShellState extends State<MainShell> {
         final showSide = wide || rail;
         final mobile = !showSide;
         return Scaffold(
+          key: _scaffoldKey,
           drawer: mobile ? Drawer(backgroundColor: ink,
             child: SafeArea(child: ListView(children: [
               Padding(padding: const EdgeInsets.all(20), child: _brand()),
@@ -162,7 +168,7 @@ class _MainShellState extends State<MainShell> {
                   const Spacer(),
                   IconButton(tooltip: 'Alış kaydı', onPressed: () => navigate(3),
                     icon: const Icon(Icons.add_shopping_cart_outlined, color: green)),
-                  IconButton(tooltip: 'Ayarlar', onPressed: () => navigate(7),
+                  IconButton(tooltip: 'Ayarlar', onPressed: () => navigate(9),
                     icon: const Icon(Icons.settings_outlined)),
                 ]))),
               Expanded(child: SingleChildScrollView(
@@ -181,8 +187,14 @@ class _MainShellState extends State<MainShell> {
             backgroundColor: Colors.white,
             labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
             selectedIndex: mobileTabs.contains(selected)
-              ? mobileTabs.indexOf(selected) : 0,
-            onDestinationSelected: (index) => navigate(mobileTabs[index]),
+              ? mobileTabs.indexOf(selected) : 4,
+            onDestinationSelected: (index) {
+              if (index == 4) {
+                _scaffoldKey.currentState?.openDrawer();
+              } else {
+                navigate(mobileTabs[index]);
+              }
+            },
             destinations: const [
               NavigationDestination(icon: Icon(Icons.space_dashboard_outlined),
                 selectedIcon: Icon(Icons.space_dashboard_rounded), label: 'Panel'),
@@ -192,6 +204,8 @@ class _MainShellState extends State<MainShell> {
                 selectedIcon: Icon(Icons.point_of_sale_rounded), label: 'Satış'),
               NavigationDestination(icon: Icon(Icons.people_outline),
                 selectedIcon: Icon(Icons.people_alt), label: 'Cariler'),
+              NavigationDestination(icon: Icon(Icons.menu_rounded),
+                label: 'Menü'),
             ],
           ) : null,
         );
@@ -257,7 +271,7 @@ class OverviewPage extends StatelessWidget {
                       subtext: 'Müşteri cari bakiyeleri', onTap: () => onNavigate(4))),
                     SizedBox(width: width, child: MetricCard(title: 'Borçlar',
                       value: money(payable), icon: Icons.trending_down_rounded,
-                      subtext: 'Tedarikçi cari bakiyeleri', onTap: () => onNavigate(4))),
+                      subtext: 'Tedarikçi cari bakiyeleri', onTap: () => onNavigate(5))),
                   ]);
                 }),
                 const SizedBox(height: 22),

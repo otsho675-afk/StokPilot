@@ -7,10 +7,11 @@ import 'services/billing.dart';
 import 'screens/auth_page.dart';
 import 'screens/shell.dart';
 import 'widgets/ui.dart';
+import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // flutterfire configure installs native config files.
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const StokPilotApp());
 }
 

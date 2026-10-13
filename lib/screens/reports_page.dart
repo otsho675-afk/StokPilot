@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../core/format.dart';
 import '../erp/erp_metrics.dart';
+import '../erp/finance_ledger.dart';
 import '../services/app_api.dart';
 import '../widgets/ui.dart';
 
@@ -86,7 +87,9 @@ class _ReportsPageState extends State<ReportsPage> {
   );
 
   Widget _failure(Object? error) => DataPanel(
-    child: Text('Rapor verisi alınamadı: $error',
+    child: Text(error.toString().contains('permission-denied')
+      ? 'Raporlara erişim reddedildi. Oturumu yenileyip tekrar deneyin.'
+      : 'Rapor verisi alınamadı: $error',
       style: const TextStyle(color: Color(0xFFB73232))));
 
   Widget _period(String code, String text) => ChoiceChip(
@@ -168,6 +171,8 @@ class _ReportsPageState extends State<ReportsPage> {
           icon: Icons.account_balance_wallet_outlined,
           subtext: 'Güncel cari bakiyeler • tüm zamanlar'),
       ]),
+      const SizedBox(height: 14),
+      _financeSummary(),
       const SizedBox(height: 14),
       DataPanel(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -292,6 +297,43 @@ class _ReportsPageState extends State<ReportsPage> {
           fontSize: 18, fontWeight: FontWeight.w900, color: ink)),
       ]),
     );
+
+  Widget _financeSummary() => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+    stream: AppApi.instance.watch('payments'),
+    builder: (context, payments) {
+      if (payments.hasError) return _failure(payments.error);
+      if (!payments.hasData) return const LinearProgressIndicator();
+      return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: AppApi.instance.watch('expenses'),
+        builder: (context, expenses) {
+          if (expenses.hasError) return _failure(expenses.error);
+          if (!expenses.hasData) return const LinearProgressIndicator();
+          final since = period == 'all' ? null : DateTime.now()
+            .subtract(Duration(days: int.parse(period)));
+          final totals = FinanceTotals.compute(
+            payments: payments.data!.docs.map((d) => d.data()),
+            expenses: expenses.data!.docs.map((d) => d.data()),
+            since: since,
+          );
+          return DataPanel(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SectionHeading(title: 'Para hareketi özeti',
+                subtitle: 'Seçilen dönemde kaydedilen tahsilat, ödeme ve giderler'),
+              const SizedBox(height: 10),
+              _summaryRow('Tahsilatlar', money(totals.collectionsMinor)),
+              _summaryRow('Tedarikçi ödemeleri', money(totals.payoutsMinor)),
+              _summaryRow('İşletme giderleri', money(totals.expensesMinor)),
+              const Divider(),
+              _summaryRow('Net para hareketi', money(totals.netMinor),
+                highlighted: true),
+              const SizedBox(height: 7),
+              const Text('Bu tutar kayıtlı para hareketlerinin farkıdır; kâr veya banka bakiyesi değildir.',
+                style: TextStyle(color: muted, fontSize: 11)),
+            ]));
+        },
+      );
+    },
+  );
 
   Widget _metricGrid(List<Widget> cards) => LayoutBuilder(
     builder: (context, c) {

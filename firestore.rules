@@ -127,22 +127,44 @@ service cloud.firestore {
       match /contacts/{id} {
         allow read, delete: if owner(uid);
         allow create: if owner(uid) &&
-          request.resource.data.keys().hasOnly(['name','type','phone','email','taxNumber','address','balanceMinor','createdAt']) &&
+          request.resource.data.keys().hasOnly(['name','type','phone','email','taxNumber','address','contactPerson','taxOffice','iban','balanceMinor','createdAt']) &&
           named(request.resource.data.name) &&
           request.resource.data.type in ['customer','supplier','both'] &&
+          (!('contactPerson' in request.resource.data) ||
+            request.resource.data.contactPerson is string && request.resource.data.contactPerson.size() <= 150) &&
+          (!('taxOffice' in request.resource.data) ||
+            request.resource.data.taxOffice is string && request.resource.data.taxOffice.size() <= 100) &&
+          (!('iban' in request.resource.data) ||
+            request.resource.data.iban is string && request.resource.data.iban.size() <= 34) &&
           request.resource.data.balanceMinor == 0 &&
           request.resource.data.createdAt == request.time;
         allow update: if owner(uid) &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','type','phone','email','taxNumber','address','balanceMinor']) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','type','phone','email','taxNumber','address','contactPerson','taxOffice','iban','balanceMinor']) &&
           named(request.resource.data.name) &&
           request.resource.data.type in ['customer','supplier','both'] &&
+          (!('contactPerson' in request.resource.data) ||
+            request.resource.data.contactPerson is string && request.resource.data.contactPerson.size() <= 150) &&
+          (!('taxOffice' in request.resource.data) ||
+            request.resource.data.taxOffice is string && request.resource.data.taxOffice.size() <= 100) &&
+          (!('iban' in request.resource.data) ||
+            request.resource.data.iban is string && request.resource.data.iban.size() <= 34) &&
           signedMoney(request.resource.data.balanceMinor);
       }
       match /trades/{id} {
         allow read, delete: if owner(uid);
         allow create: if owner(uid) &&
-          request.resource.data.keys().hasOnly(['type','contactId','lines','paidMinor','paymentMethod','netMinor','taxMinor','totalMinor','note','createdAt']) &&
+          request.resource.data.keys().hasOnly(['type','contactId','contactName','lines','paidMinor','paymentMethod','documentKind','documentNo','externalDocumentNo','projectName','netMinor','taxMinor','totalMinor','note','createdAt']) &&
           request.resource.data.type in ['sale','purchase'] &&
+          (!('contactName' in request.resource.data) ||
+            request.resource.data.contactName is string && request.resource.data.contactName.size() <= 150) &&
+          (!('documentKind' in request.resource.data) ||
+            request.resource.data.documentKind in ['receipt','invoice','project']) &&
+          (!('documentNo' in request.resource.data) ||
+            request.resource.data.documentNo is string && request.resource.data.documentNo.size() <= 150) &&
+          (!('externalDocumentNo' in request.resource.data) ||
+            request.resource.data.externalDocumentNo is string && request.resource.data.externalDocumentNo.size() <= 100) &&
+          (!('projectName' in request.resource.data) ||
+            request.resource.data.projectName is string && request.resource.data.projectName.size() <= 150) &&
           (!('paymentMethod' in request.resource.data) ||
             request.resource.data.paymentMethod in ['cash','card','credit','partial']) &&
           request.resource.data.lines is list &&
@@ -180,15 +202,63 @@ service cloud.firestore {
       match /payments/{id} {
         allow read, delete: if owner(uid);
         allow create: if owner(uid) &&
-          request.resource.data.keys().hasOnly(['contactId','tradeId','type','amountMinor','auto','method','createdAt']) &&
+          request.resource.data.keys().hasOnly(['contactId','tradeId','accountEntryId','type','amountMinor','auto','method','note','createdAt']) &&
           request.resource.data.type in ['collection','payout'] &&
+          (!('accountEntryId' in request.resource.data) ||
+            request.resource.data.accountEntryId == null ||
+            (request.resource.data.accountEntryId is string &&
+              request.resource.data.accountEntryId.size() > 0)) &&
           (!('method' in request.resource.data) ||
             request.resource.data.method in ['cash','card','credit','partial']) &&
+          (!('note' in request.resource.data) ||
+            request.resource.data.note is string && request.resource.data.note.size() <= 500) &&
           money(request.resource.data.amountMinor) &&
           request.resource.data.amountMinor > 0 &&
           request.resource.data.auto is bool &&
           request.resource.data.createdAt == request.time;
         allow update: if false;
+      }
+      match /accountEntries/{id} {
+        allow read, delete: if owner(uid);
+        allow create: if owner(uid) &&
+          request.resource.data.keys().hasAll(['contactId','kind','documentKind','reference','projectName','note','amountMinor','settledMinor','effectiveAt','createdAt']) &&
+          request.resource.data.keys().hasOnly(['contactId','kind','documentKind','reference','projectName','note','amountMinor','settledMinor','effectiveAt','dueAt','createdAt']) &&
+          request.resource.data.contactId is string && request.resource.data.contactId.size() > 0 &&
+          request.resource.data.kind in ['supplierDebt','customerReceivable'] &&
+          request.resource.data.documentKind in ['opening','invoice','project'] &&
+          request.resource.data.reference is string && request.resource.data.reference.size() <= 100 &&
+          request.resource.data.projectName is string && request.resource.data.projectName.size() <= 150 &&
+          request.resource.data.note is string && request.resource.data.note.size() <= 500 &&
+          money(request.resource.data.amountMinor) && request.resource.data.amountMinor > 0 &&
+          request.resource.data.settledMinor == 0 &&
+          request.resource.data.effectiveAt is timestamp &&
+          request.resource.data.effectiveAt <= request.time &&
+          (!('dueAt' in request.resource.data) ||
+            request.resource.data.dueAt == null ||
+            (request.resource.data.dueAt is timestamp &&
+              request.resource.data.dueAt >= request.resource.data.effectiveAt)) &&
+          request.resource.data.createdAt == request.time;
+        allow update: if owner(uid) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['settledMinor']) &&
+          money(request.resource.data.settledMinor) &&
+          request.resource.data.settledMinor >= resource.data.settledMinor &&
+          request.resource.data.settledMinor <= resource.data.amountMinor;
+      }
+      match /expenses/{id} {
+        allow read: if owner(uid);
+        allow create: if owner(uid) &&
+          request.resource.data.keys().hasAll(['title','category','method','amountMinor','note','createdAt']) &&
+          request.resource.data.keys().hasOnly(['title','category','method','amountMinor','note','createdAt']) &&
+          named(request.resource.data.title) &&
+          request.resource.data.category in ['rent','utilities','salary','transport','marketing','other'] &&
+          request.resource.data.method in ['cash','card','bank'] &&
+          money(request.resource.data.amountMinor) &&
+          request.resource.data.amountMinor > 0 &&
+          request.resource.data.note is string &&
+          request.resource.data.note.size() <= 500 &&
+          request.resource.data.createdAt == request.time;
+        allow update: if false;
+        allow delete: if owner(uid);
       }
       match /billingEvents/{id} {
         allow read, delete: if owner(uid);

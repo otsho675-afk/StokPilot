@@ -9,6 +9,9 @@ Responsive, çok platformlu stok ve cari yönetimi. **Firebase Blaze yükseltmes
 - Kritik stok takibi, manuel stok giriş/çıkış ve hareket geçmişi.
 - Çok kalemli alış/satış, stok güncellemeleri, cari borç-alacak, tahsilat ve ödeme.
 - Responsive masaüstü/tablet/telefon ekranları, raporlar.
+- Finans ve giderler: dönemlik tahsilat, tedarikçi ödemesi, işletme gideri ve para hareketi defteri.
+- Ayrı müşteri ve tedarikçi ekranları, firma kartları, geçmiş borç/alacak ve belgeye bağlı ödemeler.
+- Numaralı satış/alış fişleri; fatura veya proje bilgisi, nakit/kart/veresiye ve kalan tutar takibi.
 - **50 ücretsiz ürün**: ürün sayacı Firestore transaction + kurallarla korunur. Ürün silmek kotayı geri kazandırmaz. Başka misafir UID'si açmak yeni ücretsiz kota sağlayabilir.
 - **StokPilot Pro aylık 50 TL hedef fiyatı**: mağazaya ait ürünler RevenueCat ile bağlanır, Cloudflare Worker bağımsız ve doğrulamalı ödeme köprüsünü sunar. Ödeme kurulum ve Sandbox doğrulaması yapılmadan devre dışıdır.
 

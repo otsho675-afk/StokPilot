@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../core/format.dart';
 import '../core/sales_tools.dart';
 import '../services/app_api.dart';
@@ -21,20 +22,26 @@ class TradesPage extends StatefulWidget {
 }
 class _TradesPageState extends State<TradesPage> {
   final lines = <_Line>[];
-  final paid = TextEditingController(), note = TextEditingController();
+  final paid = TextEditingController(), note = TextEditingController(),
+    externalNo = TextEditingController(), projectName = TextEditingController();
   String contactId = '';
   String saleMethod = 'cash';
+  String purchaseMethod = 'cash', documentKind = 'receipt';
   bool busy = false;
   bool get sale => widget.type == 'sale';
   int get total => lines.fold(0, (s, line) => s + line.total);
-  @override void dispose() { paid.dispose(); note.dispose(); super.dispose(); }
+  @override void dispose() { paid.dispose(); note.dispose(); externalNo.dispose();
+    projectName.dispose(); super.dispose(); }
   @override Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
     PageTitle(title: sale ? 'Hızlı satış' : 'Tedarikçi alışı', subtitle: sale ? 'Ürün seç, miktarı belirle ve stoğu otomatik güncelle.' : 'Alış kaydını gir, stoklarını anında artır.'),
     StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: AppApi.instance.watch('products'), builder: (context, productSnap) {
+      if (productSnap.hasError) return DataPanel(child: Text('Ürünler okunamadı: ${productSnap.error}'));
       if (!productSnap.hasData) return const LinearProgressIndicator();
       final products = productSnap.data!.docs.where((d) => d.data()['isActive'] != false).toList();
       return StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: AppApi.instance.watch('contacts'), builder: (context, contactSnap) {
-        final contacts = contactSnap.data?.docs.where((d) => d.data()['type'] == 'both' || d.data()['type'] == (sale ? 'customer' : 'supplier')).toList() ?? [];
+        if (contactSnap.hasError) return DataPanel(child: Text('Firmalar okunamadı: ${contactSnap.error}'));
+        if (!contactSnap.hasData) return const LinearProgressIndicator();
+        final contacts = contactSnap.data!.docs.where((d) => d.data()['type'] == 'both' || d.data()['type'] == (sale ? 'customer' : 'supplier')).toList();
         return DataPanel(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           SectionHeading(title: sale ? 'Hızlı satış • yeni fiş' : 'Tedarikçi alışı',
             subtitle: sale ? 'Barkodla ürün bul, sepet oluştur ve ödeme türünü seç.' :
@@ -42,7 +49,28 @@ class _TradesPageState extends State<TradesPage> {
           const SizedBox(height: 14),
           DropdownButtonFormField<String>(key: ValueKey('${widget.type}-$contactId'), initialValue: contactId, isExpanded: true, decoration: InputDecoration(labelText: sale ? 'Müşteri / Cari' : 'Tedarikçi / Cari'),
             items: [const DropdownMenuItem(value: '', child: Text('Cari olmadan (peşin)')), ...contacts.map((d) => DropdownMenuItem(value: d.id, child: Text(d.data()['name'] ?? '')))],
-            onChanged: (s) => setState(() => contactId = s ?? '')),
+            onChanged: (s) => setState(() {
+              contactId = s ?? '';
+              if (contactId.isEmpty && purchaseMethod == 'credit') purchaseMethod = 'cash';
+            })),
+          const SizedBox(height: 14),
+          DropdownButtonFormField<String>(initialValue: documentKind,
+            decoration: const InputDecoration(labelText: 'Belge türü'), items: const [
+              DropdownMenuItem(value: 'receipt', child: Text('Satış / alış fişi')),
+              DropdownMenuItem(value: 'invoice', child: Text('Fatura kaydı')),
+              DropdownMenuItem(value: 'project', child: Text('Proje işlemi')),
+            ], onChanged: (value) => setState(() => documentKind = value ?? documentKind)),
+          if (documentKind == 'invoice') ...[
+            const SizedBox(height: 10),
+            TextField(controller: externalNo, maxLength: 100,
+              decoration: const InputDecoration(labelText: 'Mevcut fatura numarası *',
+                helperText: 'Resmî fatura oluşturmaz; fatura bilgisini kaydeder.')),
+          ],
+          if (documentKind == 'project') ...[
+            const SizedBox(height: 10),
+            TextField(controller: projectName, maxLength: 150,
+              decoration: const InputDecoration(labelText: 'Proje adı *')),
+          ],
           const SizedBox(height: 14),
           Autocomplete<QueryDocumentSnapshot<Map<String,dynamic>>>(
             displayStringForOption: (product) =>
@@ -171,11 +199,23 @@ class _TradesPageState extends State<TradesPage> {
                 : 'Tahsil edilecek: '+money(total)+' • '+paymentMethodLabel(saleMethod),
                 style: const TextStyle(fontWeight: FontWeight.w700, color: ink)),
             ),
-          ] else if (contactId.isNotEmpty) ...[
-            TextField(controller: paid, keyboardType:
-              const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'Ödenen tutar (₺)',
-                helperText: 'Boş bırakılırsa tutar tedarikçi carisine yazılır.')),
+          ] else ...[
+            const Text('ALIŞ ÖDEME YÖNTEMİ', style: TextStyle(
+              fontSize: 12, color: muted, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 8),
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              _purchaseChoice('cash', 'Nakit', Icons.payments_outlined),
+              _purchaseChoice('card', 'Kart', Icons.credit_card_outlined),
+              if (contactId.isNotEmpty)
+                _purchaseChoice('credit', 'Veresiye', Icons.receipt_long_outlined),
+            ]),
+            if (contactId.isNotEmpty && purchaseMethod != 'credit') ...[
+              const SizedBox(height: 10),
+              TextField(controller: paid, keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(labelText: 'İlk ödeme (₺)',
+                  helperText: 'Boş bırakılırsa tamamı ödenir; kısmi ödeme yazılabilir.')),
+            ],
           ],
           const SizedBox(height: 10),
           TextField(controller: note, maxLines: 2,
@@ -187,13 +227,15 @@ class _TradesPageState extends State<TradesPage> {
     const SizedBox(height: 22),
     Text(sale ? 'Son satışlar' : 'Son alışlar', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), const SizedBox(height: 10),
     StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: AppApi.instance.watch('trades'), builder: (context, snap) {
+      if (snap.hasError) return DataPanel(child: Text('Fişler okunamadı: ${snap.error}'));
       if (!snap.hasData) return const LinearProgressIndicator();
       final docs = snap.data!.docs.where((d) => d.data()['type'] == widget.type).toList()..sort((a,b) => (((b.data()['createdAt'] as Timestamp?)?.millisecondsSinceEpoch) ?? 0).compareTo(((a.data()['createdAt'] as Timestamp?)?.millisecondsSinceEpoch) ?? 0));
       if (docs.isEmpty) return const DataPanel(child: BlankState(message: 'Henüz işlem yapılmadı.', icon: Icons.receipt_long_outlined));
       return DataPanel(child: Column(children: docs.take(30).map((d) {
         final m = d.data();
         return ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.receipt_long_outlined, color: green),
-          title: Text('${sale ? 'Satış' : 'Alış'} • ${money(m['totalMinor'] ?? 0)}'), subtitle: Text('${dateOf(m['createdAt'])} • ${(m['lines'] as List?)?.length ?? 0} kalem • ${paymentMethodLabel(m['paymentMethod']?.toString())}'),
+          title: Text('${sale ? 'Satış' : 'Alış'} • ${money(m['totalMinor'] ?? 0)}'), subtitle: Text('${m['documentNo'] ?? d.id} • ${dateOf(m['createdAt'])} • ${(m['lines'] as List?)?.length ?? 0} kalem • ${paymentMethodLabel(m['paymentMethod']?.toString())}',
+            maxLines: 2, overflow: TextOverflow.ellipsis),
           trailing: const Icon(Icons.chevron_right), onTap: () => showTradeDetails(context, m));
       }).toList()));
     }),
@@ -206,6 +248,14 @@ class _TradesPageState extends State<TradesPage> {
       onSelected: busy ? null : (_) => setState(() => saleMethod = value),
       selectedColor: softGreen,
     );
+
+  Widget _purchaseChoice(String value, String title, IconData symbol) => ChoiceChip(
+    selected: purchaseMethod == value,
+    avatar: Icon(symbol, size: 18, color: purchaseMethod == value ? green : muted),
+    label: Text(title),
+    onSelected: busy ? null : (_) => setState(() => purchaseMethod = value),
+    selectedColor: softGreen,
+  );
 
   Widget _totalRow(String title, String value, {bool highlight = false}) =>
     Row(children: [
@@ -224,17 +274,21 @@ class _TradesPageState extends State<TradesPage> {
     try {
       final payment = sale
           ? salePaidMinor(saleMethod, total, hasContact: contactId.isNotEmpty)
-          : (contactId.isEmpty ? total :
-              (paid.text.trim().isEmpty ? 0 : parseMoney(paid.text)));
+          : (purchaseMethod == 'credit' ? 0 :
+              (contactId.isEmpty || paid.text.trim().isEmpty ? total : parseMoney(paid.text)));
       if (payment > total) throw const FormatException('Tahsilat / ödeme toplamdan fazla olamaz.');
       if (!await confirm(context, sale ? 'Satışı onayla' : 'Alışı onayla',
         '${lines.length} kalem • ${money(total)} • ${sale ? paymentMethodLabel(saleMethod) : 'Alış'}. Stok ve cari kayıtlar güncellenecek.')) return;
       setState(() => busy = true);
       await AppApi.instance.call('commitTrade', {'type': widget.type, 'contactId': contactId.isEmpty ? null : contactId, 'lines': lines.map((l) => l.json).toList(), 'paidMinor': payment,
-        'paymentMethod': sale ? saleMethod : 'partial',
+        'paymentMethod': sale ? saleMethod : purchaseMethod,
+        'documentKind': documentKind, 'externalDocumentNo': externalNo.text,
+        'projectName': projectName.text,
         'note': note.text.trim()});
       if (!mounted) return;
-      setState(() { lines.clear(); paid.clear(); note.clear(); contactId = ''; saleMethod = 'cash'; });
+      setState(() { lines.clear(); paid.clear(); note.clear(); externalNo.clear();
+        projectName.clear(); contactId = ''; saleMethod = 'cash';
+        purchaseMethod = 'cash'; documentKind = 'receipt'; });
       notify(context, sale ? 'Satış kaydedildi.' : 'Alış kaydedildi.');
     } catch (e) { if (mounted) notify(context, '$e', error: true); }
     finally { if (mounted) setState(() => busy = false); }
@@ -266,17 +320,85 @@ Future<_Line?> _addLineDialog(BuildContext context, QueryDocumentSnapshot<Map<St
   ));
   return result;
 }
+String tradeSlipText(Map<String, dynamic> trade) {
+  final lines = (trade['lines'] as List?) ?? [];
+  final total = (trade['totalMinor'] as num?)?.toInt() ?? 0;
+  final paid = (trade['paidMinor'] as num?)?.toInt() ?? 0;
+  final kind = trade['type'] == 'sale' ? 'SATIŞ FİŞİ' : 'ALIŞ FİŞİ';
+  return [
+    'STOKPILOT • $kind',
+    'Fiş no: ${trade['documentNo'] ?? 'Eski kayıt'}',
+    'Tarih: ${dateOf(trade['createdAt'])}',
+    'Firma: ${trade['contactName'] ?? 'Peşin işlem'}',
+    if ((trade['externalDocumentNo'] ?? '').toString().isNotEmpty)
+      'Fatura no: ${trade['externalDocumentNo']}',
+    if ((trade['projectName'] ?? '').toString().isNotEmpty)
+      'Proje: ${trade['projectName']}',
+    '------------------------------',
+    for (final raw in lines)
+      if (raw is Map)
+        '${raw['name'] ?? 'Ürün'} • ${quantity((raw['quantityMilli'] as num?)?.toInt() ?? 0)} × '
+        '${money((raw['priceMinor'] as num?)?.toInt() ?? 0)} = '
+        '${money((raw['totalMinor'] as num?)?.toInt() ?? 0)}',
+    '------------------------------',
+    'Ara toplam: ${money((trade['netMinor'] as num?)?.toInt() ?? 0)}',
+    'KDV: ${money((trade['taxMinor'] as num?)?.toInt() ?? 0)}',
+    'Genel toplam: ${money(total)}',
+    'Ödeme: ${paymentMethodLabel(trade['paymentMethod']?.toString())}',
+    'Ödenen: ${money(paid)}',
+    'Kalan: ${money(total - paid)}',
+    if ((trade['note'] ?? '').toString().isNotEmpty) 'Not: ${trade['note']}',
+    'Bu belge uygulama işlem kaydıdır; resmî e-Fatura/e-Arşiv değildir.',
+  ].join('\n');
+}
+
 void showTradeDetails(BuildContext context, Map<String,dynamic> trade) {
-  showDialog<void>(context: context, builder: (ctx) => AlertDialog(
-    title: Text('${trade['type'] == 'sale' ? 'Satış' : 'Alış'} detayı'),
-    content: SizedBox(width: 500, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(dateOf(trade['createdAt'])), const SizedBox(height: 12),
-      ...((trade['lines'] as List?) ?? []).map((raw) { final l = Map<String,dynamic>.from(raw as Map); return ListTile(contentPadding: EdgeInsets.zero, title: Text(l['name'] ?? ''), subtitle: Text('${quantity(l['quantityMilli'] ?? 0)} × ${money(l['priceMinor'] ?? 0)} + KDV %${(l['taxBps'] ?? 0) / 100}'), trailing: Text(money(l['totalMinor'] ?? 0))); }),
-      const Divider(), Text('Ara toplam: ${money(trade['netMinor'] ?? 0)}'), Text('KDV: ${money(trade['taxMinor'] ?? 0)}'),
-      Text('TOPLAM: ${money(trade['totalMinor'] ?? 0)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-      Text('Ödeme türü: ${paymentMethodLabel(trade['paymentMethod']?.toString())}'),
-      Text('Ödenen: ${money(trade['paidMinor'] ?? 0)}'),
-      if ((trade['note'] ?? '').toString().isNotEmpty) Text('Not: ${trade['note']}'),
-    ]))), actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Kapat'))],
+  showDialog<void>(context: context, builder: (ctx) => ResponsiveFormDialog(
+    title: Text(trade['type'] == 'sale' ? 'Satış fişi' : 'Alış fişi'),
+    content: Column(mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text((trade['documentNo'] ?? 'Eski işlem kaydı').toString(),
+          style: const TextStyle(fontWeight: FontWeight.w900, color: green)),
+        const SizedBox(height: 4),
+        Text(dateOf(trade['createdAt']), style: const TextStyle(color: muted)),
+        Text((trade['contactName'] ?? 'Peşin işlem').toString(),
+          style: const TextStyle(fontWeight: FontWeight.w800)),
+        if ((trade['externalDocumentNo'] ?? '').toString().isNotEmpty)
+          Text('Fatura no: ${trade['externalDocumentNo']}'),
+        if ((trade['projectName'] ?? '').toString().isNotEmpty)
+          Text('Proje: ${trade['projectName']}'),
+        const Divider(height: 24),
+        for (final raw in (trade['lines'] as List?) ?? [])
+          if (raw is Map) Padding(padding: const EdgeInsets.only(bottom: 12),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text((raw['name'] ?? 'Ürün').toString(),
+                style: const TextStyle(fontWeight: FontWeight.w800)),
+              Text('${quantity((raw['quantityMilli'] as num?)?.toInt() ?? 0)} × '
+                '${money((raw['priceMinor'] as num?)?.toInt() ?? 0)} • '
+                'KDV %${((raw['taxBps'] as num?)?.toInt() ?? 0) / 100}',
+                style: const TextStyle(color: muted, fontSize: 12)),
+              Text(money((raw['totalMinor'] as num?)?.toInt() ?? 0)),
+            ])),
+        const Divider(),
+        Text('Ara toplam: ${money((trade['netMinor'] as num?)?.toInt() ?? 0)}'),
+        Text('KDV: ${money((trade['taxMinor'] as num?)?.toInt() ?? 0)}'),
+        const SizedBox(height: 5),
+        Text('Genel toplam: ${money((trade['totalMinor'] as num?)?.toInt() ?? 0)}',
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+        Text('Ödeme: ${paymentMethodLabel(trade['paymentMethod']?.toString())}'),
+        Text('Ödenen: ${money((trade['paidMinor'] as num?)?.toInt() ?? 0)}'),
+        Text('Kalan: ${money(((trade['totalMinor'] as num?)?.toInt() ?? 0) -
+          ((trade['paidMinor'] as num?)?.toInt() ?? 0))}'),
+        if ((trade['note'] ?? '').toString().isNotEmpty) Text('Not: ${trade['note']}'),
+        const SizedBox(height: 12),
+        const Text('Bu fiş uygulama işlem kaydıdır; resmî e-Fatura/e-Arşiv değildir.',
+          style: TextStyle(color: muted, fontSize: 11)),
+      ]),
+    actions: [TextButton(onPressed: () => Navigator.pop(ctx),
+      child: const Text('Kapat')),
+      FilledButton.icon(onPressed: () async {
+        await Clipboard.setData(ClipboardData(text: tradeSlipText(trade)));
+        if (ctx.mounted) notify(ctx, 'Fiş panoya kopyalandı.');
+      }, icon: const Icon(Icons.copy_all_outlined), label: const Text('Fişi kopyala'))],
   ));
 }

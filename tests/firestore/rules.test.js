@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
-const { doc, collection, runTransaction, getDoc, setDoc, updateDoc, serverTimestamp, writeBatch } = require('firebase/firestore');
+const { doc, collection, runTransaction, getDoc, setDoc, updateDoc, serverTimestamp, writeBatch, Timestamp } = require('firebase/firestore');
 
 let env;
 before(async () => {
@@ -101,4 +101,42 @@ test('sale settlement rules distinguish cash, card and veresiye', async () => {
     ...base, paidMinor: 12000, contactId: 'customer-1', paymentMethod: 'credit',
   }));
   await assertFails(setDoc(ref(), {...base, paymentMethod: 'crypto'}));
+});
+
+test('expenses require owned, valid records and block updates', async () => {
+  const db = env.authenticatedContext('expense-owner').firestore();
+  const ref = () => doc(collection(db, 'workspaces/expense-owner/expenses'));
+  const valid = {title: 'Kira', category: 'rent', method: 'bank',
+    amountMinor: 500000, note: '', createdAt: serverTimestamp()};
+  const expense = ref();
+  await assertSucceeds(setDoc(expense, valid));
+  await assertSucceeds(getDoc(expense));
+  await assertFails(setDoc(ref(), {...valid, amountMinor: -1}));
+  await assertFails(setDoc(ref(), {...valid, category: 'invalid'}));
+  await assertFails(updateDoc(expense, {amountMinor: 1}));
+  await assertSucceeds(require('firebase/firestore').deleteDoc(expense));
+  const other = env.authenticatedContext('another-user').firestore();
+  await assertFails(getDoc(doc(other, expense.path)));
+});
+
+test('historical debt records validate amount, date and ownership', async () => {
+  const db = env.authenticatedContext('debt-owner').firestore();
+  const ref = () => doc(collection(db, 'workspaces/debt-owner/accountEntries'));
+  const valid = {
+    contactId: 'supplier-1', kind: 'supplierDebt', documentKind: 'invoice',
+    reference: 'F-2025-42', projectName: '', note: 'Geçmiş bakiye',
+    amountMinor: 125000, settledMinor: 0,
+    effectiveAt: Timestamp.fromDate(new Date('2025-08-01T00:00:00Z')),
+    createdAt: serverTimestamp(),
+  };
+  const entry = ref();
+  await assertSucceeds(setDoc(entry, valid));
+  await assertSucceeds(getDoc(entry));
+  await assertFails(setDoc(ref(), {...valid, amountMinor: 0}));
+  await assertFails(setDoc(ref(), {...valid, documentKind: 'unknown'}));
+  await assertSucceeds(updateDoc(entry, {settledMinor: 50000}));
+  await assertFails(updateDoc(entry, {settledMinor: 130000}));
+  await assertFails(updateDoc(entry, {amountMinor: 1}));
+  const other = env.authenticatedContext('other-debt-user').firestore();
+  await assertFails(getDoc(doc(other, entry.path)));
 });

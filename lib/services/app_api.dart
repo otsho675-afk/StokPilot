@@ -113,6 +113,10 @@ class AppApi {
         return _commitTrade(data);
       case 'postPayment':
         return _postPayment(data);
+      case 'recordAccountEntry':
+        return _recordAccountEntry(data);
+      case 'recordExpense':
+        return _recordExpense(data);
       case 'deleteAccount':
         return deleteAccount();
       default:
@@ -167,6 +171,19 @@ class AppApi {
         .contains(requestedPaymentMethod)) {
       throw const FormatException('Ödeme yöntemi seçiniz.');
     }
+    if (type == 'purchase' && !const ['cash', 'card', 'credit']
+        .contains(requestedPaymentMethod)) {
+      throw const FormatException('Alış için ödeme yöntemi seçiniz.');
+    }
+    final documentKind = (data['documentKind'] ?? 'receipt').toString();
+    final projectName = (data['projectName'] ?? '').toString().trim();
+    final externalDocumentNo = (data['externalDocumentNo'] ?? '').toString().trim();
+    if (!const ['receipt', 'invoice', 'project'].contains(documentKind) ||
+        projectName.length > 150 || externalDocumentNo.length > 100 ||
+        (documentKind == 'project' && projectName.isEmpty) ||
+        (documentKind == 'invoice' && externalDocumentNo.isEmpty)) {
+      throw const FormatException('Fiş, fatura veya proje bilgilerini tamamlayın.');
+    }
     final contactRef = contactId.isEmpty ? null : collection('contacts').doc(contactId);
     final productRefs = ids.map((id) => collection('products').doc(id)).toList();
     final tradeRef = collection('trades').doc();
@@ -180,6 +197,13 @@ class AppApi {
       }
       if (contactRef != null && (contact == null || !contact.exists)) {
         throw StateError('Cari bulunamadı.');
+      }
+      if (contact != null) {
+        final contactType = contact.data()?['type'];
+        if (contactType != 'both' && contactType !=
+            (type == 'sale' ? 'customer' : 'supplier')) {
+          throw const FormatException('Seçilen firma bu işlem türüne uygun değil.');
+        }
       }
       var netTotal = 0, taxTotal = 0, grossTotal = 0;
       final recordedLines = <Map<String, dynamic>>[];
@@ -229,12 +253,18 @@ class AppApi {
         } else if (paid != grossTotal) {
           throw const FormatException('Nakit/kart satışta tüm tutar tahsil edilmelidir.');
         }
-      } else if (contactRef == null && paid != grossTotal) {
-        throw const FormatException('Veresiye alış için tedarikçi seçmelisiniz.');
+      } else {
+        if (contactRef == null && paid != grossTotal) {
+          throw const FormatException('Veresiye alış için tedarikçi seçmelisiniz.');
+        }
+        if (requestedPaymentMethod == 'credit' && paid != 0) {
+          throw const FormatException('Veresiye alışta ilk ödeme sıfır olmalıdır.');
+        }
+        if (requestedPaymentMethod != 'credit' && paid == 0) {
+          throw const FormatException('Ödeme yoksa veresiye yöntemini seçin.');
+        }
       }
-      final paymentMethod = type == 'sale'
-        ? requestedPaymentMethod
-        : (paid == grossTotal ? 'cash' : (paid == 0 ? 'credit' : 'partial'));
+      final paymentMethod = requestedPaymentMethod;
       for (var i = 0; i < recordedLines.length; i++) {
         tx.update(productRefs[i], {'stockMilli': nextStocks[i]});
         tx.set(moveRefs[i], {
@@ -255,6 +285,11 @@ class AppApi {
       }
       tx.set(tradeRef, {
         'type': type,
+        'contactName': (contact?.data()?['name'] ?? 'Peşin işlem').toString(),
+        'documentKind': documentKind,
+        'documentNo': '${type == 'sale' ? 'SAT' : 'ALS'}-${tradeRef.id}',
+        'externalDocumentNo': externalDocumentNo,
+        'projectName': projectName,
         'contactId': contactRef?.id,
         'lines': recordedLines,
         'paidMinor': paid,
@@ -282,16 +317,41 @@ class AppApi {
 
   Future<Map<String, dynamic>> _postPayment(Map<String, dynamic> data) async {
     final id = data['contactId']?.toString() ?? '';
+    final accountEntryId = data['accountEntryId']?.toString() ?? '';
     final type = data['type'];
     final amount = _int(data['amountMinor'], min: 1);
-    if (id.isEmpty || (type != 'collection' && type != 'payout')) {
+    final method = (data['method'] ?? '').toString();
+    final note = (data['note'] ?? '').toString().trim();
+    if (id.isEmpty || (type != 'collection' && type != 'payout') ||
+        !const ['cash', 'card'].contains(method) || note.length > 500) {
       throw const FormatException('Ödeme bilgileri geçersiz.');
     }
     final contactRef = collection('contacts').doc(id);
+    final entryRef = accountEntryId.isEmpty ? null :
+        collection('accountEntries').doc(accountEntryId);
     final paymentRef = collection('payments').doc();
     await firestore.runTransaction((tx) async {
       final contact = await tx.get(contactRef);
+      final entry = entryRef == null ? null : await tx.get(entryRef);
       if (!contact.exists) throw StateError('Cari bulunamadı.');
+      if (entryRef != null) {
+        if (entry == null || !entry.exists || entry.data()?['contactId'] != id ||
+            entry.data()?['kind'] !=
+              (type == 'payout' ? 'supplierDebt' : 'customerReceivable')) {
+          throw StateError('Bağlı borç kaydı bulunamadı.');
+        }
+        final entryAmount = (entry.data()?['amountMinor'] as num?)?.toInt() ?? 0;
+        final settled = (entry.data()?['settledMinor'] as num?)?.toInt() ?? 0;
+        if (amount > entryAmount - settled) {
+          throw const FormatException('Ödeme, bu belgenin kalan tutarını aşamaz.');
+        }
+        tx.update(entryRef, {'settledMinor': settled + amount});
+      }
+      final contactType = contact.data()?['type'];
+      if (contactType != 'both' && contactType !=
+          (type == 'collection' ? 'customer' : 'supplier')) {
+        throw const FormatException('Cari türü ödeme işlemine uygun değil.');
+      }
       final balance = (contact.data()?['balanceMinor'] as num?)?.toInt() ?? 0;
       final updated = balance + (type == 'collection' ? -amount : amount);
       if (updated.abs() > 1000000000000) {
@@ -301,13 +361,93 @@ class AppApi {
       tx.set(paymentRef, {
         'contactId': id,
         'tradeId': null,
+        'accountEntryId': entryRef?.id,
         'type': type,
         'amountMinor': amount,
         'auto': false,
+        'method': method,
+        'note': note,
         'createdAt': FieldValue.serverTimestamp(),
       });
     });
     return {'id': paymentRef.id};
+  }
+
+  Future<Map<String, dynamic>> _recordAccountEntry(Map<String, dynamic> data) async {
+    final contactId = (data['contactId'] ?? '').toString();
+    final kind = (data['kind'] ?? '').toString();
+    final documentKind = (data['documentKind'] ?? '').toString();
+    final reference = (data['reference'] ?? '').toString().trim();
+    final projectName = (data['projectName'] ?? '').toString().trim();
+    final note = (data['note'] ?? '').toString().trim();
+    final effectiveAt = data['effectiveAt'];
+    final dueAt = data['dueAt'];
+    final amount = _int(data['amountMinor'], min: 1);
+    if (contactId.isEmpty || !const ['supplierDebt', 'customerReceivable'].contains(kind) ||
+        !const ['opening', 'invoice', 'project'].contains(documentKind) ||
+        reference.length > 100 || projectName.length > 150 || note.length > 500 ||
+        (documentKind == 'invoice' && reference.isEmpty) ||
+        (documentKind == 'project' && projectName.isEmpty) ||
+        effectiveAt is! DateTime || effectiveAt.isAfter(DateTime.now()) ||
+        effectiveAt.isBefore(DateTime(2000)) ||
+        (dueAt != null && (dueAt is! DateTime || dueAt.isBefore(effectiveAt) ||
+          dueAt.isAfter(DateTime(2100))))) {
+      throw const FormatException('Cari borç kaydı bilgileri geçersiz.');
+    }
+    final contactRef = collection('contacts').doc(contactId);
+    final entryRef = collection('accountEntries').doc();
+    await firestore.runTransaction((tx) async {
+      final contact = await tx.get(contactRef);
+      if (!contact.exists) throw StateError('Firma bulunamadı.');
+      final type = contact.data()?['type'];
+      if (type != 'both' && type !=
+          (kind == 'supplierDebt' ? 'supplier' : 'customer')) {
+        throw const FormatException('Firma türü borç kaydına uygun değil.');
+      }
+      final oldBalance = (contact.data()?['balanceMinor'] as num?)?.toInt() ?? 0;
+      final next = oldBalance + (kind == 'supplierDebt' ? -amount : amount);
+      if (next.abs() > 1000000000000) {
+        throw const FormatException('Cari bakiye limiti aşıldı.');
+      }
+      tx.update(contactRef, {'balanceMinor': next});
+      tx.set(entryRef, {
+        'contactId': contactId,
+        'kind': kind,
+        'documentKind': documentKind,
+        'reference': reference,
+        'projectName': projectName,
+        'note': note,
+        'amountMinor': amount,
+        'settledMinor': 0,
+        'effectiveAt': Timestamp.fromDate(effectiveAt),
+        'dueAt': dueAt == null ? null : Timestamp.fromDate(dueAt),
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    });
+    return {'id': entryRef.id};
+  }
+
+  Future<Map<String, dynamic>> _recordExpense(Map<String, dynamic> data) async {
+    final title = (data['title'] ?? '').toString().trim();
+    final category = (data['category'] ?? '').toString();
+    final method = (data['method'] ?? '').toString();
+    final note = (data['note'] ?? '').toString().trim();
+    final amount = _int(data['amountMinor'], min: 1);
+    if (title.isEmpty || title.length > 150 || note.length > 500 ||
+        !const ['rent', 'utilities', 'salary', 'transport', 'marketing', 'other'].contains(category) ||
+        !const ['cash', 'card', 'bank'].contains(method)) {
+      throw const FormatException('Gider bilgileri geçersiz.');
+    }
+    final ref = collection('expenses').doc();
+    await ref.set({
+      'title': title,
+      'category': category,
+      'method': method,
+      'amountMinor': amount,
+      'note': note,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    return {'id': ref.id};
   }
 
   /// Delete known Firestore collections in chunks (Spark has no Admin recursiveDelete).
@@ -320,7 +460,7 @@ class AppApi {
     }
     const names = [
       'categories', 'units', 'taxRates', 'products', 'contacts',
-      'trades', 'stockMoves', 'payments', 'entitlements', 'billingEvents',
+      'trades', 'stockMoves', 'payments', 'accountEntries', 'expenses', 'entitlements', 'billingEvents',
     ];
     for (final name in names) {
       while (true) {
