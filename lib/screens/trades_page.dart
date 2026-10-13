@@ -143,9 +143,13 @@ class _TradesPageState extends State<TradesPage> {
                       onChanged:
                           (s) => setState(() {
                             contactId = s ?? '';
-                            if (contactId.isEmpty &&
-                                purchaseMethod == 'credit') {
-                              purchaseMethod = 'cash';
+                            if (contactId.isEmpty) {
+                              if (purchaseMethod == 'credit') {
+                                purchaseMethod = 'cash';
+                              }
+                              if (saleMethod == 'credit') {
+                                saleMethod = 'cash';
+                              }
                             }
                           }),
                     ),
