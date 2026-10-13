@@ -47,6 +47,9 @@ class _MainShellState extends State<MainShell> {
     Icons.tune_rounded,
   ];
   static const mobileTabs = [0, 1, 2, 4];
+  static const _groups = ['YÖNETİM', 'STOK VE SATIŞ', 'İŞ ORTAKLARI', 'ANALİZ VE SİSTEM'];
+  static const _groupStarts = [0, 1, 4, 6];
+
 
   void navigate(int index) {
     if (selected != index && mounted) setState(() => selected = index);
@@ -201,7 +204,23 @@ class _MainShellState extends State<MainShell> {
                   ),
                 ...List.generate(names.length, (i) {
                   final active = selected == i;
-                  return Padding(
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (!condensed && _groupStarts.contains(i))
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 19, 8, 10),
+                          child: Text(
+                            _groups[_groupStarts.indexOf(i)],
+                            style: const TextStyle(
+                              color: Color(0xFF9BB2BF),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 10,
+                              letterSpacing: 1.3,
+                            ),
+                          ),
+                        ),
+                      Padding(
                     padding: const EdgeInsets.only(bottom: 5),
                     child: Tooltip(
                       message: condensed ? names[i] : '',
@@ -255,6 +274,8 @@ class _MainShellState extends State<MainShell> {
                         ),
                       ),
                     ),
+                  ),
+                    ],
                   );
                 }),
               ],
