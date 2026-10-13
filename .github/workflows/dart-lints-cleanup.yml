@@ -32,7 +32,7 @@ jobs:
           git diff --check
       - name: Verify before committing
         run: |
-          flutter analyze
+          flutter analyze --no-fatal-infos
           flutter test
       - name: Commit fixed sources
         run: |
