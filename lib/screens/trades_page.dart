@@ -43,6 +43,9 @@ class _TradesPageState extends State<TradesPage> {
   bool busy = false;
   bool get sale => widget.type == 'sale';
   int get total => lines.fold(0, (s, line) => s + line.total);
+  int get cartVatMinor => lines.fold<int>(0, (sum, line) => sum + line.tax);
+  int get cartUnitMilli => lines.fold<int>(0, (sum, line) => sum + line.qtyMilli);
+
   @override
   void dispose() {
     paid.dispose();
@@ -286,6 +289,39 @@ class _TradesPageState extends State<TradesPage> {
                           ),
                     ),
                     const SizedBox(height: 14),
+                    if (lines.isNotEmpty) ...[
+                      Container(
+                        key: const ValueKey('pos-cart-summary'),
+                        padding: const EdgeInsets.all(15),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF102F39),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('AKTİF SEPET',
+                              style: TextStyle(color: Color(0xFFC0DED9),
+                                fontWeight: FontWeight.w800, fontSize: 11,
+                                letterSpacing: 1.2)),
+                            const SizedBox(height: 8),
+                            Text(money(total),
+                              style: const TextStyle(color: Colors.white,
+                                fontSize: 29, fontWeight: FontWeight.w900)),
+                            const SizedBox(height: 7),
+                            Wrap(spacing: 12, runSpacing: 7, children: [
+                              Text('${lines.length} ürün kalemi',
+                                style: const TextStyle(color: Color(0xFFDBEEE9))),
+                              Text('Miktar: ${quantity(cartUnitMilli)}',
+                                style: const TextStyle(color: Color(0xFFDBEEE9))),
+                              Text('KDV: ${money(cartVatMinor)}',
+                                style: const TextStyle(color: Color(0xFFDBEEE9))),
+                            ]),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                     if (lines.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
