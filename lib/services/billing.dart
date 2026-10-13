@@ -41,10 +41,11 @@ class BillingService {
   }
 
   Future<void> purchase(Package package) async {
-    if (!verifiedBackendReady)
+    if (!verifiedBackendReady) {
       throw StateError(
         'Güvenli ödeme doğrulaması kurulmadığı için satın alma kapalı.',
       );
+    }
     // Local callback does NOT grant access. RevenueCat webhook updates Firestore.
     await Purchases.purchase(PurchaseParams.package(package));
   }
