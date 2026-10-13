@@ -412,7 +412,7 @@ class _TradesPageState extends State<TradesPage> {
                           decoration: BoxDecoration(
                             color: canvas,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: line),
+                            border: Border.all(color: const Color(0xFFE1E8F2)),
                           ),
                           child: Row(
                             children: [
