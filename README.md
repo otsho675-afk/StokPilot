@@ -7,6 +7,8 @@ Responsive, çok platformlu stok ve cari yönetimi. **Firebase Blaze yükseltmes
 - Misafir, Google, Apple (iOS/uygun platformlar) ve e-posta hesabı.
 - Ürün, barkod, kategori, birim, alış/satış fiyatı, KDV oranı.
 - Kritik stok takibi, manuel stok giriş/çıkış ve hareket geçmişi.
+- Kullanıcının seçtiği kritik stok ve 30/45/60/90/180 günlük fiyat güncelleme uyarıları; aynı ürün adı, barkod veya SKU için kayıt öncesi uyarı.
+- Tamamlanan alış/satış işlemlerinden sonra, uygun zamanda ve seyrek gösterilen yerel mağaza değerlendirme isteği.
 - Çok kalemli alış/satış, stok güncellemeleri, cari borç-alacak, tahsilat ve ödeme.
 - Responsive masaüstü/tablet/telefon ekranları, raporlar.
 - Finans ve giderler: dönemlik tahsilat, tedarikçi ödemesi, işletme gideri ve para hareketi defteri.
@@ -36,7 +38,9 @@ flutter run
 
 Ücretsiz katmanlı Cloudflare Worker ve RevenueCat bağlantısı: [cloudflare-billing/README.md](cloudflare-billing/README.md).
 
-Bu hizmet kullanıcı hesabınızda henüz kurulmamıştır. Flutter istemcisi güvenilir ödeme doğrulaması olmadan abonelik açmayı reddeder. Google Play ve App Store'da ürünleri oluşturup test ettikten sonra `RC_VERIFIED_BACKEND_READY=true` bayrağı kullanılabilir. Gerçek mağaza fiyatını uygulama mağaza SDK'sından alır.
+RevenueCat Google Play doğrulaması, Cloudflare Worker ve Firebase yetki köprüsü kuruludur. Google Play abonelik planı taslak durumundadır; iOS RevenueCat bağlantısı ve gerçek mağaza satın alma testleri tamamlanmamıştır. Bu nedenle `RC_VERIFIED_BACKEND_READY=false` kalır ve uygulama henüz aylık ödeme almaz. Gerçek mağaza fiyatı açıldığında mağaza SDK'sından gelir.
+
+`.github/workflows/store-release.yml` manuel Android/iOS seçimi veya `v*` etiketiyle imzalı Android AAB ve macOS üzerinde iOS IPA oluşturup test kanallarına yüklemek için hazırlanmıştır. Mağaza sırları GitHub Actions Secrets alanındadır; iOS yükleme anahtarı tamamlanmadan Apple işi çalıştırılamaz. Android ilk otomatik yükleme de Play Console üzerinde doğrulanmalıdır.
 
 ## Güvenlik ve sınırlamalar
 
@@ -45,7 +49,7 @@ Bu hizmet kullanıcı hesabınızda henüz kurulmamıştır. Flutter istemcisi g
 - Müşteri kendine ait stok ve muhasebe verisini SDK üzerinden değiştirebilir; bu sistem değiştirilemez, resmî muhasebe/yasal defter değildir.
 - Hesap silindiğinde detaylı ürün/cari/ödeme verileri temizlenir; kötüye kullanımı engelleyen UID ile ilişkili minimal kota bilgileri tutulur. Silme/recent sign-in ve hukuki saklama süreçleri mağaza yayını öncesinde gözden geçirilmelidir.
 - Firebase Spark'ın Firestore günlük okuma/yazma ve depolama kotaları vardır; kotayı aşarsa hizmet durabilir.
-- Firebase gizlilik/KVKK metinleri ve kullanım koşulları henüz yayına çıkmadan özelleştirilmelidir.
+- Gizlilik, kullanım koşulları ve hesap silme sayfaları Firebase Hosting'de yayımlanmıştır; mağaza incelemesi ve gerçek satın alma testi henüz sonuçlanmamıştır.
 
 ## Testler
 

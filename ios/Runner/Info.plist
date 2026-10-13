@@ -16,6 +16,8 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>stokpilot</string>
+	<key>GIDClientID</key>
+	<string>289925788761-as2bbg2itfg88unnmdh9sadkbmrhp03n.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

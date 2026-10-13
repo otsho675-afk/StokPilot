@@ -1,7 +1,7 @@
 name: stokpilot
 description: Profesyonel stok, cari, satis ve tedarik yonetimi.
 publish_to: none
-version: 1.0.0+4
+version: 1.0.0+5
 environment:
   sdk: '>=3.7.0 <4.0.0'
 dependencies:
@@ -19,6 +19,8 @@ dependencies:
   fl_chart: ^1.1.1
   collection: ^1.19.1
   cupertino_icons: ^1.0.8
+  in_app_review: 2.0.12
+  shared_preferences: ^2.5.6
 dev_dependencies:
   flutter_test:
     sdk: flutter

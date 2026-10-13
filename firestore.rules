@@ -50,6 +50,14 @@ service cloud.firestore {
         // A store-receipt-verifying external server must write Pro entitlement.
         allow create, update: if false;
       }
+      match /settings/{id} {
+        allow read: if owner(uid);
+        allow create, update: if owner(uid) && id == 'alerts' &&
+          request.resource.data.keys().hasOnly(['priceReminderDays','lowStockAlerts']) &&
+          request.resource.data.priceReminderDays in [30,45,60,90,180] &&
+          request.resource.data.lowStockAlerts is bool;
+        allow delete: if owner(uid);
+      }
       match /categories/{id} {
         allow read, delete: if owner(uid);
         allow create: if owner(uid) &&
@@ -94,7 +102,7 @@ service cloud.firestore {
           request.resource.data.keys().hasOnly([
             'name','sku','barcode','categoryId','unitId','taxRateBps',
             'purchasePriceMinor','salePriceMinor','minStockMilli',
-            'isActive','stockMilli','createdAt'
+            'isActive','stockMilli','priceChangedAt','createdAt'
           ]) &&
           named(request.resource.data.name) &&
           request.resource.data.sku is string &&
@@ -107,12 +115,13 @@ service cloud.firestore {
           money(request.resource.data.minStockMilli) &&
           request.resource.data.isActive is bool &&
           request.resource.data.stockMilli == 0 &&
+          request.resource.data.priceChangedAt == request.time &&
           request.resource.data.createdAt == request.time;
         allow update: if owner(uid) &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly([
             'name','sku','barcode','categoryId','unitId','taxRateBps',
             'purchasePriceMinor','salePriceMinor','minStockMilli',
-            'isActive','stockMilli'
+            'isActive','stockMilli','priceChangedAt'
           ]) &&
           named(request.resource.data.name) &&
           request.resource.data.sku is string &&
@@ -124,7 +133,11 @@ service cloud.firestore {
           money(request.resource.data.purchasePriceMinor) &&
           money(request.resource.data.salePriceMinor) &&
           money(request.resource.data.minStockMilli) &&
-          money(request.resource.data.stockMilli);
+          money(request.resource.data.stockMilli) &&
+          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['priceChangedAt']) ||
+            (request.resource.data.priceChangedAt == request.time &&
+              request.resource.data.diff(resource.data).affectedKeys().hasAny([
+                'purchasePriceMinor','salePriceMinor'])));
       }
       match /contacts/{id} {
         allow read, delete: if owner(uid);

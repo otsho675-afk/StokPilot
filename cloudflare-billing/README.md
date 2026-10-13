@@ -50,4 +50,4 @@ iOS için `RC_IOS_PUBLIC_KEY=appl_SIZIN_ANAHTARINIZ`. `RC_VERIFIED_BACKEND_READY
 - Sunucu olay zamanına göre eski/duble olayları reddeder; Firestore optimistic concurrency kullanılır.
 - `CANCELLATION` otomatik yenileme iptali demektir, mevcut ödenmiş süre bitmeden Pro kapanmaz. `EXPIRATION` veya süre sonu kurallarca erişimi kapatır.
 - Kullanıcı hesabını Firebase Auth'tan silmek, mağaza aboneliğini otomatik iptal etmez.
-- RevenueCat'i ve bu Worker'ı gerçek satın alma testleri olmadan üretime almayın. Worker yayına otomatik kurulmaz.
+- Worker `https://stokpilot-billing.otsho675.workers.dev` adresinde yayındadır; `/health`, kimlik doğrulama ve sentetik webhook yetki döngüsü test edilmiştir. Gerçek Apple/Google satın alma, yenileme ve iptal akışı doğrulanmadan ödeme bayrağını açmayın.
