@@ -457,11 +457,12 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
               ),
             ),
             const SizedBox(height: 12),
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F8F6),
+            Material(
+              color: const Color(0xFFF1F8F6),
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFD6ECE4))),
+                side: const BorderSide(color: Color(0xFFD6ECE4))),
+              clipBehavior: Clip.antiAlias,
               child: SwitchListTile.adaptive(
                 key: const ValueKey('vat-inclusive-input'),
                 title: const Text('Fiyatları KDV dâhil gir',
