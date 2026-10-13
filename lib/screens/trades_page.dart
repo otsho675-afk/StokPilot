@@ -54,8 +54,8 @@ class _TradesPageState extends State<TradesPage> {
       }
     });
   }
-  int get cartVatMinor => lines.fold<int>(0, (sum, line) => sum + line.tax);
-  int get cartUnitMilli => lines.fold<int>(0, (sum, line) => sum + line.qtyMilli);
+  int get cartVatMinor => lines.fold<int>(0, (totalVat, line) => totalVat + line.tax);
+  int get cartUnitMilli => lines.fold<int>(0, (totalQty, line) => totalQty + line.qtyMilli);
 
   @override
   void dispose() {
