@@ -120,10 +120,11 @@ class StokPilotApp extends StatelessWidget {
     home: StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting)
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
+        }
         if (!snapshot.hasData) return const AuthPage();
         return WorkspaceInitializer(
           key: ValueKey(snapshot.data!.uid),
