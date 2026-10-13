@@ -28,13 +28,14 @@ class StokPilotApp extends StatelessWidget {
       useMaterial3: true,
       fontFamily: 'Roboto',
       scaffoldBackgroundColor: canvas,
-      splashFactory: InkRipple.splashFactory,
+      splashFactory: InkSparkle.splashFactory,
       colorScheme: ColorScheme.fromSeed(
         seedColor: green,
         primary: green,
         surface: Colors.white,
       ),
       dividerTheme: const DividerThemeData(color: line, thickness: 1),
+      visualDensity: VisualDensity.standard,
       textSelectionTheme: const TextSelectionThemeData(
         cursorColor: green,
         selectionColor: Color(0xFFB5EADB),
@@ -49,9 +50,10 @@ class StokPilotApp extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
       ),
       textTheme: const TextTheme(
-        bodyMedium: TextStyle(color: ink),
-        bodyLarge: TextStyle(color: ink),
-        titleLarge: TextStyle(color: ink, fontWeight: FontWeight.w800),
+        bodyMedium: TextStyle(color: ink, height: 1.4),
+        bodyLarge: TextStyle(color: ink, height: 1.4),
+        titleLarge: TextStyle(color: ink, fontWeight: FontWeight.w800, letterSpacing: -0.4),
+        headlineSmall: TextStyle(color: ink, fontWeight: FontWeight.w900, letterSpacing: -0.8),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.white,
