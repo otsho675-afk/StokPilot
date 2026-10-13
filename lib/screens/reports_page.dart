@@ -90,8 +90,9 @@ class _ReportsPageState extends State<ReportsPage> {
                     final trade = doc.data();
                     if (trade['type'] != 'sale') continue;
                     final date = (trade['createdAt'] as Timestamp?)?.toDate();
-                    if (since != null && (date == null || date.isBefore(since)))
+                    if (since != null && (date == null || date.isBefore(since))) {
                       continue;
+                    }
                     final method = trade['paymentMethod']?.toString() ?? '';
                     final key = totals.containsKey(method) ? method : 'other';
                     totals[key] =
