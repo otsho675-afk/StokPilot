@@ -38,7 +38,8 @@ class AppApi {
   bool _hasPro(Map<String, dynamic>? ent) {
     final expiry = ent?['expiresAt'];
     return ent?['status'] == 'active' &&
-        ent?['source'] == 'revenuecat' &&
+        (ent?['source'] == 'revenuecat' ||
+            (uid == 'gbw2USpZ8cNtcSyge5a2BEwJw3E3' && ent?['source'] == 'review')) &&
         expiry is Timestamp &&
         expiry.toDate().isAfter(DateTime.now());
   }

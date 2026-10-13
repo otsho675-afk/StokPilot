@@ -76,6 +76,36 @@ test('Spark: cannot create two products with a single counter increment', async 
   await assertFails(batch.commit());
 });
 
+test('review Pro grant applies only to the dedicated review account', async () => {
+  const reviewer = 'gbw2USpZ8cNtcSyge5a2BEwJw3E3';
+  const regular = 'regular-review-check';
+  await env.withSecurityRulesDisabled(async context => {
+    const admin = context.firestore();
+    for (const uid of [reviewer, regular]) {
+      await setDoc(doc(admin, `workspaces/${uid}`), {
+        ownerUid: uid, name: 'Test', currency: 'TRY', productCount: 50,
+        createdAt: Timestamp.now(),
+      });
+      await setDoc(doc(admin, `workspaces/${uid}/entitlements/current`), {
+        status: 'active', source: 'review',
+        expiresAt: Timestamp.fromDate(new Date('2027-01-01T00:00:00Z')),
+      });
+    }
+  });
+  const create51st = uid => {
+    const db = env.authenticatedContext(uid).firestore();
+    const ws = doc(db, `workspaces/${uid}`);
+    const item = doc(collection(db, `workspaces/${uid}/products`));
+    return runTransaction(db, async tx => {
+      const current = await tx.get(ws);
+      tx.set(item, newProduct());
+      tx.update(ws, {productCount: current.data().productCount + 1, lastProductId: item.id});
+    });
+  };
+  await assertSucceeds(create51st(reviewer));
+  await assertFails(create51st(regular));
+});
+
 
 test('sale settlement rules distinguish cash, card and veresiye', async () => {
   const db = env.authenticatedContext('payment-test-owner').firestore();
