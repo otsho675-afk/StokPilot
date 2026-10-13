@@ -164,7 +164,7 @@ class _OperationsPageState extends State<OperationsPage> {
                 );
           final total = records.fold<int>(
             0,
-            (sum, doc) => sum + _minor(doc.data()['totalMinor']),
+            (totalAmount, doc) => totalAmount + _minor(doc.data()['totalMinor']),
           );
           final shown = records.take(visible).toList();
           return DataPanel(
@@ -589,8 +589,9 @@ class _TradeDetail extends StatelessWidget {
                                 }),
                               ),
                             );
-                            if (context.mounted)
+                            if (context.mounted) {
                               notify(context, 'Fiş panoya kopyalandı.');
+                            }
                           },
                           icon: const Icon(Icons.copy_all_outlined),
                           label: const Text('Fişi kopyala'),
