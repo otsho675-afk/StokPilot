@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/format.dart';
 import '../core/smart_inventory.dart';
+import '../core/sales_tools.dart';
 import '../services/app_api.dart';
 import '../widgets/ui.dart';
 import 'paywall_page.dart';
@@ -63,6 +64,12 @@ class _ProductsPageState extends State<ProductsPage> {
     }
   }
 
+  double? _markup(Map<String, dynamic> product) {
+    final purchase = (product['purchasePriceMinor'] as num?)?.toInt() ?? 0;
+    final sale = (product['salePriceMinor'] as num?)?.toInt() ?? 0;
+    return profitMarkupPercent(purchase, sale);
+  }
+
   bool _matches(Map<String, dynamic> m) {
     final qty = (m['stockMilli'] as num?)?.toInt() ?? 0;
     final min = (m['minStockMilli'] as num?)?.toInt() ?? 0;
@@ -71,13 +78,19 @@ class _ProductsPageState extends State<ProductsPage> {
       'low' => active && qty <= min,
       'empty' => active && qty <= 0,
       'inactive' => !active,
+      'loss' => active && (_markup(m) ?? 1) <= 0,
       _ => true,
     };
+    final entry = ProductSearchEntry(
+      id: '',
+      name: (m['name'] ?? '').toString(),
+      sku: (m['sku'] ?? '').toString(),
+      barcode: (m['barcode'] ?? '').toString(),
+      stockMilli: qty,
+    );
     return byStock &&
         (categoryFilter.isEmpty || m['categoryId'] == categoryFilter) &&
-        [m['name'], m['sku'], m['barcode']].any(
-          (field) => (field ?? '').toString().toLowerCase().contains(query),
-        );
+        productSearchScore(entry, query) >= 0;
   }
 
   int _compare(
@@ -90,6 +103,9 @@ class _ProductsPageState extends State<ProductsPage> {
         return ((one['stockMilli'] as num?)?.toInt() ?? 0).compareTo(
           (two['stockMilli'] as num?)?.toInt() ?? 0,
         );
+      case 'markup':
+        return (_markup(one) ?? double.infinity)
+            .compareTo(_markup(two) ?? double.infinity);
       case 'price':
         return ((two['salePriceMinor'] as num?)?.toInt() ?? 0).compareTo(
           (one['salePriceMinor'] as num?)?.toInt() ?? 0,
@@ -249,7 +265,7 @@ class _ProductsPageState extends State<ProductsPage> {
                           textInputAction: TextInputAction.search,
                           onChanged:
                               (s) => setState(() {
-                                query = s.trim().toLowerCase();
+                                query = s.trim();
                                 visibleCount = 30;
                               }),
                           decoration: InputDecoration(
@@ -325,6 +341,7 @@ class _ProductsPageState extends State<ProductsPage> {
                       children: [
                         _filter('all', 'Tümü', Icons.apps_rounded),
                         _filter('low', 'Kritik', Icons.warning_amber_rounded),
+                        _filter('loss', 'Zarar riski', Icons.trending_down_rounded),
                         _filter(
                           'empty',
                           'Tükenen',
@@ -360,6 +377,10 @@ class _ProductsPageState extends State<ProductsPage> {
                                 PopupMenuItem(
                                   value: 'new',
                                   child: Text('Yeni eklenen önce'),
+                                ),
+                                PopupMenuItem(
+                                  value: 'markup',
+                                  child: Text('En düşük kâr oranı'),
                                 ),
                               ],
                           child: const Padding(
@@ -588,9 +609,15 @@ class _ProductsPageState extends State<ProductsPage> {
                   color: alert ? amber : green,
                 ),
                 if (disabled) const StatusPill(label: 'Pasif', color: muted),
+                if (_markup(m) != null)
+                  StatusPill(
+                    label: 'Alışa göre %${_markup(m)!.toStringAsFixed(1)}',
+                    color: _markup(m)! <= 0 ? const Color(0xFFC2574B) : green,
+                  ),
                 StatusPill(
                   label:
-                      'KDV %${((m['taxRateBps'] ?? 0) / 100).toStringAsFixed(0)}',
+                      'KDV %${((m['taxRateBps'] ?? 0) / 100).toStringAsFixed(0)}'
+            '${_markup(m) == null ? '' : '   •   Alışa göre %${_markup(m)!.toStringAsFixed(1)}'}',
                   color: ink,
                 ),
               ],
