@@ -76,7 +76,7 @@ class _MainShellState extends State<MainShell> {
         height: compact ? 40 : 44,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF2BC3A6), green],
+            colors: [Color(0xFF3B82F6), Color(0xFF0A3EA8)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -177,7 +177,7 @@ class _MainShellState extends State<MainShell> {
   }
 
   Widget _sidebar({required bool condensed}) => ColoredBox(
-    color: ink,
+    color: const Color(0xFF1047AE),
     child: SafeArea(
       child: Column(
         children: [
@@ -195,7 +195,7 @@ class _MainShellState extends State<MainShell> {
                     child: Text(
                       'ÇALIŞMA ALANI',
                       style: TextStyle(
-                        color: Color(0xFF8CA9AE),
+                        color: Color(0xFFC5D9FF),
                         fontSize: 10,
                         letterSpacing: 1.6,
                         fontWeight: FontWeight.w800,
@@ -213,7 +213,7 @@ class _MainShellState extends State<MainShell> {
                           child: Text(
                             _groups[_groupStarts.indexOf(i)],
                             style: const TextStyle(
-                              color: Color(0xFF9BB2BF),
+                              color: Color(0xFFC5D9FF),
                               fontWeight: FontWeight.w800,
                               fontSize: 10,
                               letterSpacing: 1.3,
@@ -227,7 +227,7 @@ class _MainShellState extends State<MainShell> {
                       child: Material(
                         color:
                             active
-                                ? const Color(0xFFE7F8F0)
+                                ? const Color(0xFFFFFFFF)
                                 : Colors.transparent,
                         borderRadius: BorderRadius.circular(13),
                         child: InkWell(
@@ -248,7 +248,7 @@ class _MainShellState extends State<MainShell> {
                                   icons[i],
                                   size: 21,
                                   color:
-                                      active ? green : const Color(0xFFC0D0D2),
+                                      active ? const Color(0xFF1047AE) : const Color(0xFFDFEAFF),
                                 ),
                                 if (!condensed) ...[
                                   const SizedBox(width: 12),
@@ -262,8 +262,8 @@ class _MainShellState extends State<MainShell> {
                                                 : FontWeight.w500,
                                         color:
                                             active
-                                                ? ink
-                                                : const Color(0xFFCDDADB),
+                                                ? const Color(0xFF1047AE)
+                                                : const Color(0xFFE7EFFF),
                                       ),
                                     ),
                                   ),
@@ -341,7 +341,7 @@ class _MainShellState extends State<MainShell> {
             drawer:
                 mobile
                     ? Drawer(
-                      backgroundColor: ink,
+                      backgroundColor: const Color(0xFF1047AE),
                       child: SafeArea(
                         child: ListView(
                           children: [
@@ -356,7 +356,7 @@ class _MainShellState extends State<MainShell> {
                                   icons[i],
                                   color:
                                       selected == i
-                                          ? const Color(0xFF48D4AE)
+                                          ? const Color(0xFFFFFFFF)
                                           : Colors.white70,
                                 ),
                                 title: Text(
