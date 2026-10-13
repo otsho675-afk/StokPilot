@@ -16,6 +16,74 @@ class OverviewPage extends StatefulWidget {
   State<OverviewPage> createState() => _OverviewPageState();
 }
 
+class _QuickActions extends StatelessWidget {
+  const _QuickActions({required this.onNavigate});
+  final ValueChanged<int> onNavigate;
+
+  @override
+  Widget build(BuildContext context) {
+    const actions = <(String, IconData, int)>[
+      ('Yeni Satış', Icons.receipt_long_outlined, 2),
+      ('Yeni Ürün', Icons.inventory_2_outlined, 1),
+      ('Yeni Cari', Icons.person_add_alt_1_outlined, 4),
+      ('Yeni Alış', Icons.shopping_bag_outlined, 3),
+      ('Tahsilat', Icons.payments_outlined, 6),
+      ('Raporlar', Icons.bar_chart_rounded, 7),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Hızlı işlemler',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: ink)),
+        const SizedBox(height: 5),
+        const Text('En sık kullandığınız işlemlere tek dokunuşla ulaşın.',
+          style: TextStyle(fontSize: 12, color: muted)),
+        const SizedBox(height: 14),
+        LayoutBuilder(builder: (context, constraints) {
+          final columns = constraints.maxWidth < 440 ? 2 : constraints.maxWidth < 850 ? 3 : 6;
+          final spacing = 12.0;
+          final width = (constraints.maxWidth - spacing * (columns - 1)) / columns;
+          return Wrap(
+            spacing: spacing,
+            runSpacing: spacing,
+            children: [
+              for (final action in actions)
+                SizedBox(
+                  width: width,
+                  child: Material(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    child: InkWell(
+                      onTap: () => onNavigate(action.$3),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        constraints: const BoxConstraints(minHeight: 122),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 18),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: line),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(action.$2, size: 29, color: const Color(0xFF1255B7)),
+                            const SizedBox(height: 12),
+                            Text(action.$1, textAlign: TextAlign.center,
+                              style: const TextStyle(fontWeight: FontWeight.w800, color: ink)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        }),
+      ],
+    );
+  }
+}
+
 class _OverviewPageState extends State<OverviewPage> {
   int periodDays = 7;
 
@@ -23,6 +91,8 @@ class _OverviewPageState extends State<OverviewPage> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
+      _QuickActions(onNavigate: widget.onNavigate),
+      const SizedBox(height: 18),
       _Hero(onNavigate: widget.onNavigate),
       const SizedBox(height: 22),
       LayoutBuilder(
