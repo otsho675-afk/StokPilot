@@ -75,3 +75,30 @@ test('Spark: cannot create two products with a single counter increment', async 
   batch.update(ws, { productCount: 1, lastProductId: a.id });
   await assertFails(batch.commit());
 });
+
+
+test('sale settlement rules distinguish cash, card and veresiye', async () => {
+  const db = env.authenticatedContext('payment-test-owner').firestore();
+  await assertSucceeds(setDoc(doc(db, 'workspaces/payment-test-owner'), {
+    ownerUid: 'payment-test-owner', name: 'Shop', currency: 'TRY',
+    productCount: 0, createdAt: serverTimestamp(),
+  }));
+  const base = {
+    type: 'sale', contactId: null, lines: [{productId: 'p', quantityMilli: 1000}],
+    paidMinor: 12000, netMinor: 10000, taxMinor: 2000, totalMinor: 12000,
+    note: '', createdAt: serverTimestamp(),
+  };
+  const ref = () => doc(collection(db, 'workspaces/payment-test-owner/trades'));
+  await assertSucceeds(setDoc(ref(), {...base, paymentMethod: 'cash'}));
+  await assertSucceeds(setDoc(ref(), {...base, paymentMethod: 'card'}));
+  await assertSucceeds(setDoc(ref(), {
+    ...base, paidMinor: 0, contactId: 'customer-1', paymentMethod: 'credit',
+  }));
+  await assertFails(setDoc(ref(), {...base, paidMinor: 0, paymentMethod: 'cash'}));
+  await assertFails(setDoc(ref(), {...base, paidMinor: 0, paymentMethod: 'card'}));
+  await assertFails(setDoc(ref(), {...base, paidMinor: 0, paymentMethod: 'credit'}));
+  await assertFails(setDoc(ref(), {
+    ...base, paidMinor: 12000, contactId: 'customer-1', paymentMethod: 'credit',
+  }));
+  await assertFails(setDoc(ref(), {...base, paymentMethod: 'crypto'}));
+});
