@@ -75,11 +75,11 @@ class _OverviewPageState extends State<OverviewPage> {
           final restocks = suggestRestocks(
             products.map((item) => MapEntry(item.id, item.data())),
           );
-          final stockCost = products.fold<int>(0, (sum, item) {
+          final stockCost = products.fold<int>(0, (totalAmount, item) {
             final product = item.data();
             final stock = (product['stockMilli'] as num?)?.toInt() ?? 0;
             final price = (product['purchasePriceMinor'] as num?)?.toInt() ?? 0;
-            return sum + (stock * price / 1000).round();
+            return totalAmount + (stock * price / 1000).round();
           });
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: AppApi.instance.watch('contacts'),
