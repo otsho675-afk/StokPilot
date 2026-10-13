@@ -12,6 +12,7 @@ import 'reports_page.dart';
 import 'operations_page.dart';
 import 'finance_page.dart';
 import 'settings_page.dart';
+import 'overview_page.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -65,6 +66,35 @@ class _MainShellState extends State<MainShell> {
         ])),
     ],
   ]);
+
+  Widget _desktopHeader() => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+    decoration: const BoxDecoration(
+      color: Colors.white,
+      border: Border(bottom: BorderSide(color: line)),
+    ),
+    child: Row(children: [
+      Expanded(child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(names[selected], style: const TextStyle(
+            color: ink, fontSize: 16, fontWeight: FontWeight.w900)),
+          const Text('StokPilot · İşletme yönetim paneli',
+            style: TextStyle(fontSize: 11, color: muted)),
+        ],
+      )),
+      const SizedBox(width: 12),
+      Tooltip(message: 'Yeni satış', child: FilledButton.icon(
+        onPressed: () => navigate(2),
+        icon: const Icon(Icons.add_rounded, size: 18),
+        label: const Text('Hızlı satış'),
+      )),
+      const SizedBox(width: 6),
+      IconButton(onPressed: () => navigate(9),
+        tooltip: 'Ayarlar',
+        icon: const Icon(Icons.settings_outlined, color: muted)),
+    ]),
+  );
 
   Future<void> _signOut() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -155,6 +185,7 @@ class _MainShellState extends State<MainShell> {
           body: Row(children: [
             if (showSide) SizedBox(width: wide ? 252 : 76, child: _sidebar(condensed: rail)),
             Expanded(child: SafeArea(child: Column(children: [
+              if (!mobile) _desktopHeader(),
               if (mobile) Builder(builder: (inner) => Container(
                 color: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -211,160 +242,5 @@ class _MainShellState extends State<MainShell> {
         );
       });
     },
-  );
-}
-
-class OverviewPage extends StatelessWidget {
-  const OverviewPage({super.key, required this.onNavigate});
-  final ValueChanged<int> onNavigate;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      _WelcomeBanner(onNavigate: onNavigate),
-      const SizedBox(height: 24),
-      const SectionHeading(title: 'İşletmenin nabzı',
-        subtitle: 'Tüm rakamlar güncel stok ve cari kayıtlarından hesaplanır.'),
-      const SizedBox(height: 13),
-      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: AppApi.instance.watch('products'),
-        builder: (context, stock) {
-          if (stock.hasError) return Text('Ürün bilgileri okunamadı: ${stock.error}');
-          if (!stock.hasData) return const LinearProgressIndicator();
-          final products = stock.data!.docs;
-          final low = products.where((p) {
-            final m = p.data();
-            final balance = (m['stockMilli'] as num?)?.toInt() ?? 0;
-            final threshold = (m['minStockMilli'] as num?)?.toInt() ?? 0;
-            return m['isActive'] != false && balance <= threshold;
-          }).toList();
-          final inventoryValue = products.fold<int>(0, (total, item) {
-            final m = item.data();
-            return total + (((m['stockMilli'] as num? ?? 0) *
-              (m['purchasePriceMinor'] as num? ?? 0)) / 1000).round();
-          });
-          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: AppApi.instance.watch('contacts'),
-            builder: (context, contactState) {
-              final contacts = contactState.data?.docs ?? [];
-              final receivable = contacts.fold<int>(0, (total, c) {
-                final v = (c.data()['balanceMinor'] as num?)?.toInt() ?? 0;
-                return total + (v > 0 ? v : 0);
-              });
-              final payable = contacts.fold<int>(0, (total, c) {
-                final v = (c.data()['balanceMinor'] as num?)?.toInt() ?? 0;
-                return total + (v < 0 ? -v : 0);
-              });
-              return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                LayoutBuilder(builder: (context, c) {
-                  final cols = c.maxWidth >= 950 ? 4 : c.maxWidth >= 480 ? 2 : 1;
-                  final width = (c.maxWidth - (cols - 1) * 12) / cols;
-                  return Wrap(spacing: 12, runSpacing: 12, children: [
-                    SizedBox(width: width, child: MetricCard(title: 'Kayıtlı ürün',
-                      value: '${products.length}', icon: Icons.inventory_2_outlined,
-                      subtext: '${low.length} üründe stok uyarısı', onTap: () => onNavigate(1))),
-                    SizedBox(width: width, child: MetricCard(title: 'Stok maliyet değeri',
-                      value: money(inventoryValue), icon: Icons.warehouse_outlined,
-                      subtext: 'Ürünlerin mevcut alış fiyatından')),
-                    SizedBox(width: width, child: MetricCard(title: 'Alacaklar',
-                      value: money(receivable), icon: Icons.trending_up_rounded,
-                      subtext: 'Müşteri cari bakiyeleri', onTap: () => onNavigate(4))),
-                    SizedBox(width: width, child: MetricCard(title: 'Borçlar',
-                      value: money(payable), icon: Icons.trending_down_rounded,
-                      subtext: 'Tedarikçi cari bakiyeleri', onTap: () => onNavigate(5))),
-                  ]);
-                }),
-                const SizedBox(height: 22),
-                DataPanel(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  SectionHeading(title: 'Kritik stoklar',
-                    subtitle: 'Önce ilgilenmen gereken ürünler',
-                    trailing: TextButton(onPressed: () => onNavigate(1),
-                      child: const Text('Ürünlere git'))),
-                  const SizedBox(height: 10),
-                  if (low.isEmpty) const BlankState(
-                    title: 'Stoklar kontrol altında',
-                    message: 'Kritik stok seviyesindeki aktif ürün bulunmuyor.',
-                    icon: Icons.verified_outlined),
-                  ...low.take(6).map((p) {
-                    final m = p.data();
-                    return Padding(padding: const EdgeInsets.symmetric(vertical: 5),
-                      child: Row(children: [
-                        Container(padding: const EdgeInsets.all(9),
-                          decoration: BoxDecoration(color: const Color(0xFFFFF3E5),
-                            borderRadius: BorderRadius.circular(12)),
-                          child: const Icon(Icons.warning_amber_rounded, color: amber)),
-                        const SizedBox(width: 12),
-                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('${m['name'] ?? 'Ürün'}', maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontWeight: FontWeight.w700)),
-                            Text('Eşik: ${quantity((m['minStockMilli'] as num?)?.toInt() ?? 0)}',
-                              style: const TextStyle(fontSize: 12, color: muted)),
-                          ])),
-                        StatusPill(label: 'Stok ${quantity((m['stockMilli'] as num?)?.toInt() ?? 0)}',
-                          color: amber),
-                      ]));
-                  }),
-                  if (low.length > 6) TextButton(onPressed: () => onNavigate(1),
-                    child: Text('Diğer ${low.length - 6} ürünü görüntüle')),
-                ])),
-              ]);
-            },
-          );
-        },
-      ),
-    ],
-  );
-}
-
-class _WelcomeBanner extends StatelessWidget {
-  const _WelcomeBanner({required this.onNavigate});
-  final ValueChanged<int> onNavigate;
-  @override
-  Widget build(BuildContext context) => Container(
-    clipBehavior: Clip.antiAlias,
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(26),
-      gradient: const LinearGradient(
-        colors: [Color(0xFF102E39), Color(0xFF116753)],
-        begin: Alignment.topLeft, end: Alignment.bottomRight),
-    ),
-    padding: const EdgeInsets.all(24),
-    child: LayoutBuilder(builder: (context, c) => Column(
-      crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const StatusPill(label: 'STOKPILOT • İŞLETME PANELİ',
-          color: Color(0xFFDBFFF1), icon: Icons.auto_awesome_rounded),
-        const SizedBox(height: 14),
-        Text('İşlerin kontrol altında.',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900,
-            fontSize: c.maxWidth < 460 ? 24 : 31, letterSpacing: -0.7)),
-        const SizedBox(height: 7),
-        const Text('Stok, satış ve carilerini tek ekranda kolayca yönet.',
-          style: TextStyle(color: Color(0xFFCFEBE5), height: 1.5)),
-        const SizedBox(height: 20),
-        Wrap(spacing: 9, runSpacing: 9, children: [
-          FilledButton.icon(onPressed: () => onNavigate(1),
-            style: FilledButton.styleFrom(backgroundColor: Colors.white,
-              foregroundColor: ink),
-            icon: const Icon(Icons.add_box_outlined), label: const Text('Ürün ekle')),
-          OutlinedButton.icon(onPressed: () => onNavigate(2),
-            style: OutlinedButton.styleFrom(foregroundColor: Colors.white,
-              side: const BorderSide(color: Color(0xFF9ECDC2))),
-            icon: const Icon(Icons.point_of_sale_rounded),
-            label: const Text('Satış yap')),
-          OutlinedButton.icon(onPressed: () => onNavigate(3),
-            style: OutlinedButton.styleFrom(foregroundColor: Colors.white,
-              side: const BorderSide(color: Color(0xFF9ECDC2))),
-            icon: const Icon(Icons.shopping_cart_checkout),
-            label: const Text('Alış kaydet')),
-          OutlinedButton.icon(onPressed: () => onNavigate(4),
-            style: OutlinedButton.styleFrom(foregroundColor: Colors.white,
-              side: const BorderSide(color: Color(0xFF9ECDC2))),
-            icon: const Icon(Icons.person_add_alt_outlined),
-            label: const Text('Cari ekle')),
-        ]),
-      ],
-    )),
   );
 }
