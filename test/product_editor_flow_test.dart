@@ -118,8 +118,9 @@ void main() {
                               (_) => ProductEditorDialog(
                                 loadCatalog: () async {
                                   tries++;
-                                  if (tries == 1)
+                                  if (tries == 1) {
                                     throw StateError('Örnek bağlantı hatası');
+                                  }
                                   return catalog;
                                 },
                                 saveProduct: (_) async {},
