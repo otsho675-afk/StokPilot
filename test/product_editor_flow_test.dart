@@ -9,55 +9,82 @@ void main() {
     taxes: [ProductOption('tax1', '%20 KDV', taxRateBps: 2000)],
   );
 
-  testWidgets('Real product form opens and closes without layout or lifecycle failures',
-      (tester) async {
-    await tester.binding.setSurfaceSize(const Size(320, 640));
-    addTearDown(() async => tester.binding.setSurfaceSize(null));
-    Map<String, dynamic>? saved;
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(
-      builder: (outer) => FilledButton(
-        onPressed: () => Navigator.of(outer).push<void>(MaterialPageRoute(
-          builder: (_) => ProductEditorDialog(
-            loadCatalog: () async => catalog,
-            saveProduct: (data) async { saved = data; },
-          )),
+  testWidgets(
+    'Real product form opens and closes without layout or lifecycle failures',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(320, 640));
+      addTearDown(() async => tester.binding.setSurfaceSize(null));
+      Map<String, dynamic>? saved;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder:
+                  (outer) => FilledButton(
+                    onPressed:
+                        () => Navigator.of(outer).push<void>(
+                          MaterialPageRoute(
+                            builder:
+                                (_) => ProductEditorDialog(
+                                  loadCatalog: () async => catalog,
+                                  saveProduct: (data) async {
+                                    saved = data;
+                                  },
+                                ),
+                          ),
+                        ),
+                    child: const Text('Yeni ürün aç'),
+                  ),
+            ),
+          ),
         ),
-        child: const Text('Yeni ürün aç'),
-      ),
-    ))));
-    await tester.tap(find.text('Yeni ürün aç'));
-    await tester.pumpAndSettle();
-    expect(find.text('Yeni ürün'), findsOneWidget);
-    expect(find.byType(TextField), findsNWidgets(6));
-    expect(tester.takeException(), isNull);
+      );
+      await tester.tap(find.text('Yeni ürün aç'));
+      await tester.pumpAndSettle();
+      expect(find.text('Yeni ürün'), findsOneWidget);
+      expect(find.byType(TextField), findsNWidgets(6));
+      expect(tester.takeException(), isNull);
 
-    await tester.enterText(find.byType(TextField).first, 'Karton Bardak');
-    await tester.ensureVisible(find.text('Kaydet'));
-    await tester.tap(find.text('Kaydet'));
-    await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, 'Karton Bardak');
+      await tester.ensureVisible(find.text('Kaydet'));
+      await tester.tap(find.text('Kaydet'));
+      await tester.pumpAndSettle();
 
-    expect(saved, isNotNull);
-    expect(saved!['name'], 'Karton Bardak');
-    expect(saved!['salePriceMinor'], 0);
-    expect(find.text('Yeni ürün'), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
+      expect(saved, isNotNull);
+      expect(saved!['name'], 'Karton Bardak');
+      expect(saved!['salePriceMinor'], 0);
+      expect(find.text('Yeni ürün'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
-  testWidgets('Real product form handles narrow landscape and validation',
-      (tester) async {
+  testWidgets('Real product form handles narrow landscape and validation', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(440, 320));
     addTearDown(() async => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(
-      builder: (outer) => FilledButton(
-        onPressed: () => Navigator.of(outer).push<void>(MaterialPageRoute(
-          builder: (_) => ProductEditorDialog(
-            loadCatalog: () async => catalog,
-            saveProduct: (_) async {},
-          )),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder:
+                (outer) => FilledButton(
+                  onPressed:
+                      () => Navigator.of(outer).push<void>(
+                        MaterialPageRoute(
+                          builder:
+                              (_) => ProductEditorDialog(
+                                loadCatalog: () async => catalog,
+                                saveProduct: (_) async {},
+                              ),
+                        ),
+                      ),
+                  child: const Text('Formu aç'),
+                ),
+          ),
         ),
-        child: const Text('Formu aç'),
       ),
-    ))));
+    );
     await tester.tap(find.text('Formu aç'));
     await tester.pumpAndSettle();
     expect(find.text('Yeni ürün'), findsOneWidget);
@@ -74,24 +101,37 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Product dialog shows loading and recovers on catalog failure',
-      (tester) async {
+  testWidgets('Product dialog shows loading and recovers on catalog failure', (
+    tester,
+  ) async {
     var tries = 0;
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(
-      builder: (outer) => FilledButton(
-        onPressed: () => Navigator.of(outer).push<void>(MaterialPageRoute(
-          builder: (_) => ProductEditorDialog(
-            loadCatalog: () async {
-              tries++;
-              if (tries == 1) throw StateError('Örnek bağlantı hatası');
-              return catalog;
-            },
-            saveProduct: (_) async {},
-          )),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder:
+                (outer) => FilledButton(
+                  onPressed:
+                      () => Navigator.of(outer).push<void>(
+                        MaterialPageRoute(
+                          builder:
+                              (_) => ProductEditorDialog(
+                                loadCatalog: () async {
+                                  tries++;
+                                  if (tries == 1)
+                                    throw StateError('Örnek bağlantı hatası');
+                                  return catalog;
+                                },
+                                saveProduct: (_) async {},
+                              ),
+                        ),
+                      ),
+                  child: const Text('Formu aç'),
+                ),
+          ),
         ),
-        child: const Text('Formu aç'),
       ),
-    ))));
+    );
     await tester.tap(find.text('Formu aç'));
     await tester.pumpAndSettle();
     expect(find.text('Ürün seçenekleri yüklenemedi'), findsOneWidget);
@@ -100,21 +140,36 @@ void main() {
     expect(find.text('Yeni ürün'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
-  testWidgets('Real stock movement dialog can save and close safely', (tester) async {
+  testWidgets('Real stock movement dialog can save and close safely', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(320, 640));
     addTearDown(() async => tester.binding.setSurfaceSize(null));
     int? recordedDelta;
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: Builder(
-      builder: (outer) => FilledButton(
-        onPressed: () => Navigator.of(outer).push<void>(MaterialPageRoute(
-          builder: (_) => StockAdjustmentDialog(
-            productName: 'Karton Bardak',
-            adjustStock: (delta, note) async { recordedDelta = delta; },
-          )),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder:
+                (outer) => FilledButton(
+                  onPressed:
+                      () => Navigator.of(outer).push<void>(
+                        MaterialPageRoute(
+                          builder:
+                              (_) => StockAdjustmentDialog(
+                                productName: 'Karton Bardak',
+                                adjustStock: (delta, note) async {
+                                  recordedDelta = delta;
+                                },
+                              ),
+                        ),
+                      ),
+                  child: const Text('Stok işlemi aç'),
+                ),
+          ),
         ),
-        child: const Text('Stok işlemi aç'),
       ),
-    ))));
+    );
     await tester.tap(find.text('Stok işlemi aç'));
     await tester.pumpAndSettle();
     expect(find.text('Karton Bardak • Stok işlemi'), findsOneWidget);

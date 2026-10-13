@@ -66,10 +66,11 @@ class _TradesPageState extends State<TradesPage> {
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: AppApi.instance.watch('products'),
         builder: (context, productSnap) {
-          if (productSnap.hasError)
+          if (productSnap.hasError) {
             return DataPanel(
               child: Text('Ürünler okunamadı: ${productSnap.error}'),
             );
+          }
           if (!productSnap.hasData) return const LinearProgressIndicator();
           final products =
               productSnap.data!.docs
@@ -78,10 +79,11 @@ class _TradesPageState extends State<TradesPage> {
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: AppApi.instance.watch('contacts'),
             builder: (context, contactSnap) {
-              if (contactSnap.hasError)
+              if (contactSnap.hasError) {
                 return DataPanel(
                   child: Text('Firmalar okunamadı: ${contactSnap.error}'),
                 );
+              }
               if (!contactSnap.hasData) return const LinearProgressIndicator();
               final contacts =
                   contactSnap.data!.docs
@@ -127,8 +129,10 @@ class _TradesPageState extends State<TradesPage> {
                       onChanged:
                           (s) => setState(() {
                             contactId = s ?? '';
-                            if (contactId.isEmpty && purchaseMethod == 'credit')
+                            if (contactId.isEmpty &&
+                                purchaseMethod == 'credit') {
                               purchaseMethod = 'cash';
+                            }
                           }),
                     ),
                     const SizedBox(height: 14),
@@ -203,8 +207,9 @@ class _TradesPageState extends State<TradesPage> {
                       },
                       onSelected: (p) async {
                         final item = await _addLineDialog(context, p, sale);
-                        if (mounted && item != null)
+                        if (mounted && item != null) {
                           setState(() => lines.add(item));
+                        }
                       },
                       optionsViewBuilder: (context, onSelected, options) {
                         final result = options.toList();
@@ -242,14 +247,7 @@ class _TradesPageState extends State<TradesPage> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       subtitle: Text(
-                                        'Barkod: ' +
-                                            (m['barcode'] ?? '—').toString() +
-                                            ' • Stok: ' +
-                                            quantity(
-                                              (m['stockMilli'] as num?)
-                                                      ?.toInt() ??
-                                                  0,
-                                            ),
+                                        'Barkod: ${m['barcode'] ?? '—'} • Stok: ${quantity((m['stockMilli'] as num?)?.toInt() ?? 0)}',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -288,26 +286,43 @@ class _TradesPageState extends State<TradesPage> {
                           ),
                     ),
                     const SizedBox(height: 14),
-                    if (lines.isNotEmpty) Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(children: [
-                        Expanded(child: Text(
-                          'Sepet · ${lines.length} kalem',
-                          style: const TextStyle(
-                            color: ink, fontWeight: FontWeight.w900, fontSize: 15),
-                        )),
-                        TextButton.icon(
-                          onPressed: busy ? null : () async {
-                            final approved = await confirm(context,
-                              'Sepeti temizle',
-                              'Kaydedilmemiş ${lines.length} kalem silinsin mi?');
-                            if (approved && mounted) setState(() => lines.clear());
-                          },
-                          icon: const Icon(Icons.delete_sweep_outlined, size: 18),
-                          label: const Text('Sepeti temizle'),
+                    if (lines.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Sepet · ${lines.length} kalem',
+                                style: const TextStyle(
+                                  color: ink,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed:
+                                  busy
+                                      ? null
+                                      : () async {
+                                        final approved = await confirm(
+                                          context,
+                                          'Sepeti temizle',
+                                          'Kaydedilmemiş ${lines.length} kalem silinsin mi?',
+                                        );
+                                        if (approved && mounted)
+                                          setState(() => lines.clear());
+                                      },
+                              icon: const Icon(
+                                Icons.delete_sweep_outlined,
+                                size: 18,
+                              ),
+                              label: const Text('Sepeti temizle'),
+                            ),
+                          ],
                         ),
-                      ]),
-                    ),
+                      ),
                     if (lines.isEmpty)
                       const BlankState(
                         title: 'Sepet henüz boş',
@@ -351,35 +366,61 @@ class _TradesPageState extends State<TradesPage> {
                                       ),
                                     ),
                                     const SizedBox(height: 6),
-                                    Row(mainAxisSize: MainAxisSize.min, children: [
-                                      IconButton(
-                                        tooltip: 'Miktarı 1 azalt',
-                                        visualDensity: VisualDensity.compact,
-                                        constraints: const BoxConstraints(
-                                          minWidth: 33, minHeight: 33),
-                                        onPressed: busy || line.qtyMilli <= 1000
-                                          ? null
-                                          : () => setState(() => line.qtyMilli -= 1000),
-                                        icon: const Icon(Icons.remove_circle_outline,
-                                          size: 21, color: green),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                                        child: Text(quantity(line.qtyMilli),
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w800, color: ink)),
-                                      ),
-                                      IconButton(
-                                        tooltip: 'Miktarı 1 artır',
-                                        visualDensity: VisualDensity.compact,
-                                        constraints: const BoxConstraints(
-                                          minWidth: 33, minHeight: 33),
-                                        onPressed: busy ? null
-                                          : () => setState(() => line.qtyMilli += 1000),
-                                        icon: const Icon(Icons.add_circle_outline,
-                                          size: 21, color: green),
-                                      ),
-                                    ]),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          tooltip: 'Miktarı 1 azalt',
+                                          visualDensity: VisualDensity.compact,
+                                          constraints: const BoxConstraints(
+                                            minWidth: 33,
+                                            minHeight: 33,
+                                          ),
+                                          onPressed:
+                                              busy || line.qtyMilli <= 1000
+                                                  ? null
+                                                  : () => setState(
+                                                    () => line.qtyMilli -= 1000,
+                                                  ),
+                                          icon: const Icon(
+                                            Icons.remove_circle_outline,
+                                            size: 21,
+                                            color: green,
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                          ),
+                                          child: Text(
+                                            quantity(line.qtyMilli),
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                              color: ink,
+                                            ),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          tooltip: 'Miktarı 1 artır',
+                                          visualDensity: VisualDensity.compact,
+                                          constraints: const BoxConstraints(
+                                            minWidth: 33,
+                                            minHeight: 33,
+                                          ),
+                                          onPressed:
+                                              busy
+                                                  ? null
+                                                  : () => setState(
+                                                    () => line.qtyMilli += 1000,
+                                                  ),
+                                          icon: const Icon(
+                                            Icons.add_circle_outline,
+                                            size: 21,
+                                            color: green,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                     const SizedBox(height: 3),
                                     Text(
                                       money(line.total),
@@ -459,10 +500,7 @@ class _TradesPageState extends State<TradesPage> {
                               ? (contactId.isEmpty
                                   ? 'Veresiye için önce müşteri/cari seçin.'
                                   : 'Tutar tahsil edilmeden cari hesabın alacağına eklenecek.')
-                              : 'Tahsil edilecek: ' +
-                                  money(total) +
-                                  ' • ' +
-                                  paymentMethodLabel(saleMethod),
+                              : 'Tahsil edilecek: ${money(total)} • ${paymentMethodLabel(saleMethod)}',
                           style: const TextStyle(
                             fontWeight: FontWeight.w700,
                             color: ink,
@@ -554,8 +592,9 @@ class _TradesPageState extends State<TradesPage> {
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: AppApi.instance.watch('trades'),
         builder: (context, snap) {
-          if (snap.hasError)
+          if (snap.hasError) {
             return DataPanel(child: Text('Fişler okunamadı: ${snap.error}'));
+          }
           if (!snap.hasData) return const LinearProgressIndicator();
           final docs =
               snap.data!.docs
@@ -571,13 +610,14 @@ class _TradesPageState extends State<TradesPage> {
                             0,
                       ),
                 );
-          if (docs.isEmpty)
+          if (docs.isEmpty) {
             return const DataPanel(
               child: BlankState(
                 message: 'Henüz işlem yapılmadı.',
                 icon: Icons.receipt_long_outlined,
               ),
             );
+          }
           return DataPanel(
             child: Column(
               children:
@@ -676,14 +716,16 @@ class _TradesPageState extends State<TradesPage> {
                   : (contactId.isEmpty || paid.text.trim().isEmpty
                       ? total
                       : parseMoney(paid.text)));
-      if (payment > total)
+      if (payment > total) {
         throw const FormatException('Tahsilat / ödeme toplamdan fazla olamaz.');
+      }
       if (!await confirm(
         context,
         sale ? 'Satışı onayla' : 'Alışı onayla',
         '${lines.length} kalem • ${money(total)} • ${sale ? paymentMethodLabel(saleMethod) : 'Alış'}. Stok ve cari kayıtlar güncellenecek.',
-      ))
+      )) {
         return;
+      }
       setState(() => busy = true);
       await AppApi.instance.call('commitTrade', {
         'type': widget.type,
@@ -775,12 +817,14 @@ Future<_Line?> _addLineDialog(
               onPressed: () {
                 try {
                   final q = parseQty(qty.text);
-                  if (q <= 0)
+                  if (q <= 0) {
                     throw const FormatException(
                       'Miktar sıfırdan büyük olmalı.',
                     );
-                  if (sale && q > (m['stockMilli'] ?? 0))
+                  }
+                  if (sale && q > (m['stockMilli'] ?? 0)) {
                     throw const FormatException('Yetersiz stok.');
+                  }
                   result = _Line(
                     product.id,
                     m['name'] ?? '',

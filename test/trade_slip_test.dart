@@ -9,11 +9,17 @@ void main() {
       'contactName': 'Deneme Tedarik',
       'externalDocumentNo': 'FT-43',
       'lines': [
-        {'name': 'Vida', 'quantityMilli': 2000,
-          'priceMinor': 1000, 'totalMinor': 2000},
+        {
+          'name': 'Vida',
+          'quantityMilli': 2000,
+          'priceMinor': 1000,
+          'totalMinor': 2000,
+        },
       ],
-      'netMinor': 2000, 'taxMinor': 400,
-      'totalMinor': 2400, 'paidMinor': 1000,
+      'netMinor': 2000,
+      'taxMinor': 400,
+      'totalMinor': 2400,
+      'paidMinor': 1000,
       'paymentMethod': 'card',
     });
     expect(text, contains('ALS-test123'));

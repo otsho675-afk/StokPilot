@@ -9,8 +9,8 @@ void main() {
       expect(code.length, 13);
       expect(code.startsWith('20'), isTrue);
       expect(isValidEan13(code), isTrue);
-      final broken = code.substring(0, 12) +
-        ((int.parse(code[12]) + 1) % 10).toString();
+      final broken =
+          code.substring(0, 12) + ((int.parse(code[12]) + 1) % 10).toString();
       expect(isValidEan13(broken), isFalse);
     }
   });
@@ -26,12 +26,27 @@ void main() {
   });
   test('barcode exact match ranks ahead of name and SKU', () {
     final items = [
-      const ProductSearchEntry(id: 'name', name: '8691234567890 Kağıt',
-          sku: 'KA-1', barcode: '2022222222222', stockMilli: 2000),
-      const ProductSearchEntry(id: 'barcode', name: 'Bardak',
-          sku: 'BAR', barcode: '8691234567890', stockMilli: 3000),
-      const ProductSearchEntry(id: 'sku', name: 'Karton',
-          sku: '8691234567890', barcode: '', stockMilli: 0),
+      const ProductSearchEntry(
+        id: 'name',
+        name: '8691234567890 Kağıt',
+        sku: 'KA-1',
+        barcode: '2022222222222',
+        stockMilli: 2000,
+      ),
+      const ProductSearchEntry(
+        id: 'barcode',
+        name: 'Bardak',
+        sku: 'BAR',
+        barcode: '8691234567890',
+        stockMilli: 3000,
+      ),
+      const ProductSearchEntry(
+        id: 'sku',
+        name: 'Karton',
+        sku: '8691234567890',
+        barcode: '',
+        stockMilli: 0,
+      ),
     ];
     expect(findProducts(items, '8691234567890').first.id, 'barcode');
     expect(findProducts(items, 'KAGIT').map((e) => e.id), ['name']);
@@ -54,9 +69,13 @@ void main() {
     expect(salePaidMinor('cash', 5000, hasContact: false), 5000);
     expect(salePaidMinor('card', 5000, hasContact: false), 5000);
     expect(salePaidMinor('credit', 5000, hasContact: true), 0);
-    expect(() => salePaidMinor('credit', 5000, hasContact: false),
-      throwsFormatException);
-    expect(() => salePaidMinor('invalid', 5000, hasContact: true),
-      throwsFormatException);
+    expect(
+      () => salePaidMinor('credit', 5000, hasContact: false),
+      throwsFormatException,
+    );
+    expect(
+      () => salePaidMinor('invalid', 5000, hasContact: true),
+      throwsFormatException,
+    );
   });
 }

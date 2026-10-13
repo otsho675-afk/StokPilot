@@ -32,7 +32,8 @@ class DashboardInsights {
   final Map<DateTime, int> byDay;
   final List<DashboardActivity> recent;
 
-  int get averageSaleMinor => saleCount == 0 ? 0 : (salesMinor / saleCount).round();
+  int get averageSaleMinor =>
+      saleCount == 0 ? 0 : (salesMinor / saleCount).round();
 
   static int _minor(dynamic value) => value is num ? value.toInt() : 0;
 
@@ -54,8 +55,11 @@ class DashboardInsights {
   }) {
     if (days < 1) throw ArgumentError.value(days, 'days');
     final current = now ?? DateTime.now();
-    final since = DateTime(current.year, current.month, current.day)
-        .subtract(Duration(days: days - 1));
+    final since = DateTime(
+      current.year,
+      current.month,
+      current.day,
+    ).subtract(Duration(days: days - 1));
     var sales = 0, collected = 0, purchases = 0, count = 0;
     var cash = 0, card = 0, credit = 0;
     final daily = <DateTime, int>{};
@@ -66,14 +70,16 @@ class DashboardInsights {
       final type = (trade['type'] ?? '').toString();
       if (type != 'sale' && type != 'purchase') continue;
       final total = _minor(trade['totalMinor']);
-      activity.add(DashboardActivity(
-        type: type,
-        number: (trade['documentNo'] ?? 'İşlem').toString(),
-        contact: (trade['contactName'] ?? 'Peşin işlem').toString(),
-        totalMinor: total,
-        method: (trade['paymentMethod'] ?? '').toString(),
-        date: date,
-      ));
+      activity.add(
+        DashboardActivity(
+          type: type,
+          number: (trade['documentNo'] ?? 'İşlem').toString(),
+          contact: (trade['contactName'] ?? 'Peşin işlem').toString(),
+          totalMinor: total,
+          method: (trade['paymentMethod'] ?? '').toString(),
+          date: date,
+        ),
+      );
       if (date.isBefore(since)) continue;
       if (type == 'purchase') {
         purchases += total;
@@ -136,13 +142,15 @@ List<RestockSuggestion> suggestRestocks(
     final minimum = (data['minStockMilli'] as num?)?.toInt() ?? 0;
     if (stock > minimum) continue;
     final target = minimum > 0 ? minimum * 2 : 1000;
-    result.add(RestockSuggestion(
-      id: entry.key,
-      name: (data['name'] ?? 'Ürün').toString(),
-      stockMilli: stock,
-      minimumMilli: minimum,
-      orderMilli: target > stock ? target - stock : 0,
-    ));
+    result.add(
+      RestockSuggestion(
+        id: entry.key,
+        name: (data['name'] ?? 'Ürün').toString(),
+        stockMilli: stock,
+        minimumMilli: minimum,
+        orderMilli: target > stock ? target - stock : 0,
+      ),
+    );
   }
   result.sort((a, b) {
     final emptyOrder = (b.isEmpty ? 1 : 0).compareTo(a.isEmpty ? 1 : 0);

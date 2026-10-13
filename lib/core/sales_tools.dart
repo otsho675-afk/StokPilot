@@ -22,7 +22,6 @@ int netFromGrossMinor(int gross, int taxRateBps) {
   return candidate;
 }
 
-
 /// Markup: profit / net purchase price (not gross margin).
 double? profitMarkupPercent(int purchaseNetMinor, int saleNetMinor) {
   if (purchaseNetMinor <= 0) return null;
@@ -32,9 +31,8 @@ double? profitMarkupPercent(int purchaseNetMinor, int saleNetMinor) {
 /// Internal EAN-13 with prefix 20; not an externally licensed GS1 product code.
 String generateInternalBarcode({Random? random}) {
   final r = random ?? Random.secure();
-  final body = '20' +
-      r.nextInt(100000).toString().padLeft(5, '0') +
-      r.nextInt(100000).toString().padLeft(5, '0');
+  final body =
+      '20${r.nextInt(100000).toString().padLeft(5, '0')}${r.nextInt(100000).toString().padLeft(5, '0')}';
   return body + ean13CheckDigit(body).toString();
 }
 
@@ -54,15 +52,16 @@ bool isValidEan13(String text) =>
     RegExp(r'^\d{13}$').hasMatch(text) &&
     ean13CheckDigit(text.substring(0, 12)) == int.parse(text[12]);
 
-String normalizeProductSearch(String value) => value
-    .toLowerCase()
-    .replaceAll('ı', 'i')
-    .replaceAll('ğ', 'g')
-    .replaceAll('ü', 'u')
-    .replaceAll('ş', 's')
-    .replaceAll('ö', 'o')
-    .replaceAll('ç', 'c')
-    .trim();
+String normalizeProductSearch(String value) =>
+    value
+        .toLowerCase()
+        .replaceAll('ı', 'i')
+        .replaceAll('ğ', 'g')
+        .replaceAll('ü', 'u')
+        .replaceAll('ş', 's')
+        .replaceAll('ö', 'o')
+        .replaceAll('ç', 'c')
+        .trim();
 
 class ProductSearchEntry {
   const ProductSearchEntry({
@@ -83,8 +82,11 @@ int productSearchScore(ProductSearchEntry entry, String query) {
   final name = normalizeProductSearch(entry.name);
   final sku = normalizeProductSearch(entry.sku);
   final barcode = normalizeProductSearch(entry.barcode);
-  if (!words.every((w) =>
-      name.contains(w) || sku.contains(w) || barcode.contains(w))) return -1;
+  if (!words.every(
+    (w) => name.contains(w) || sku.contains(w) || barcode.contains(w),
+  )) {
+    return -1;
+  }
   if (barcode.isNotEmpty && barcode == term) return 1000;
   if (sku.isNotEmpty && sku == term) return 900;
   if (name == term) return 800;
@@ -96,7 +98,10 @@ int productSearchScore(ProductSearchEntry entry, String query) {
 }
 
 List<ProductSearchEntry> findProducts(
-    Iterable<ProductSearchEntry> entries, String query, {int limit = 15}) {
+  Iterable<ProductSearchEntry> entries,
+  String query, {
+  int limit = 15,
+}) {
   final scored = <(ProductSearchEntry, int)>[];
   for (final entry in entries) {
     final score = productSearchScore(entry, query);

@@ -6,20 +6,22 @@ class LegalPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(privacy ? 'Gizlilik bildirimi' : 'Kullanım koşulları')),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(22),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: SelectableText(
-                privacy ? _privacy : _terms,
-                style: const TextStyle(height: 1.55, fontSize: 15),
-              ),
-            ),
+    appBar: AppBar(
+      title: Text(privacy ? 'Gizlilik bildirimi' : 'Kullanım koşulları'),
+    ),
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(22),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: SelectableText(
+            privacy ? _privacy : _terms,
+            style: const TextStyle(height: 1.55, fontSize: 15),
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 const _privacy = '''STOKPILOT GİZLİLİK BİLDİRİMİ

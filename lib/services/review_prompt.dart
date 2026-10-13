@@ -30,8 +30,9 @@ class ReviewPrompt {
       if (count < 5 ||
           installed == null ||
           now.difference(installed).inDays < 7 ||
-          (last != null && now.difference(last).inDays < 90))
+          (last != null && now.difference(last).inDays < 90)) {
         return;
+      }
       final review = InAppReview.instance;
       if (!await review.isAvailable()) return;
       // Store APIs enforce their own limits. Record the attempt before showing it.

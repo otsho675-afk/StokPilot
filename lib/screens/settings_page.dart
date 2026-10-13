@@ -76,15 +76,17 @@ class SettingsPage extends StatelessWidget {
                     onPressed: () async {
                       try {
                         await AuthActions.google(link: true);
-                        if (context.mounted)
+                        if (context.mounted) {
                           notify(context, 'Google hesabına bağlandı.');
+                        }
                       } catch (e) {
-                        if (context.mounted)
+                        if (context.mounted) {
                           notify(
                             context,
                             AuthActions.errorMessage(e),
                             error: true,
                           );
+                        }
                       }
                     },
                     child: const Text('Google ile bağla'),
@@ -94,15 +96,17 @@ class SettingsPage extends StatelessWidget {
                       onPressed: () async {
                         try {
                           await AuthActions.apple(link: true);
-                          if (context.mounted)
+                          if (context.mounted) {
                             notify(context, 'Apple hesabına bağlandı.');
+                          }
                         } catch (e) {
-                          if (context.mounted)
+                          if (context.mounted) {
                             notify(
                               context,
                               AuthActions.errorMessage(e),
                               error: true,
                             );
+                          }
                         }
                       },
                       child: const Text('Apple ile bağla'),
@@ -176,8 +180,9 @@ class _AlertSettings extends StatelessWidget {
         'lowStockAlerts': lowStock,
       });
     } catch (error) {
-      if (context.mounted)
+      if (context.mounted) {
         notify(context, 'Hatırlatıcı kaydedilemedi: $error', error: true);
+      }
     }
   }
 
@@ -284,11 +289,12 @@ class _MasterData extends StatelessWidget {
           stream: AppApi.instance.watch(collection),
           builder: (context, snap) {
             if (!snap.hasData) return const LinearProgressIndicator();
-            if (snap.data!.docs.isEmpty)
+            if (snap.data!.docs.isEmpty) {
               return const Padding(
                 padding: EdgeInsets.all(10),
                 child: Text('Henüz kayıt yok. + ile ekleyin.'),
               );
+            }
             return Column(
               children:
                   snap.data!.docs
@@ -320,8 +326,9 @@ class _MasterData extends StatelessWidget {
                                       .doc(d.id)
                                       .delete();
                                 } catch (e) {
-                                  if (context.mounted)
+                                  if (context.mounted) {
                                     notify(context, '$e', error: true);
+                                  }
                                 }
                               }
                             },
@@ -419,13 +426,15 @@ Future<void> masterDialog(
                             ? null
                             : () async {
                               try {
-                                if (name.text.trim().isEmpty)
+                                if (name.text.trim().isEmpty) {
                                   throw const FormatException('Ad zorunlu.');
+                                }
                                 final values = <String, dynamic>{
                                   'name': name.text.trim(),
                                 };
-                                if (collection == 'units')
+                                if (collection == 'units') {
                                   values['symbol'] = other.text.trim();
+                                }
                                 if (collection == 'taxRates') {
                                   final rate = double.tryParse(
                                     other.text.replaceAll(',', '.'),
@@ -433,10 +442,11 @@ Future<void> masterDialog(
                                   if (rate == null ||
                                       !rate.isFinite ||
                                       rate < 0 ||
-                                      rate > 100)
+                                      rate > 100) {
                                     throw const FormatException(
                                       'KDV 0 ile 100 arasında olmalı.',
                                     );
+                                  }
                                   values['rateBps'] = (rate * 100).round();
                                 }
                                 update(() => saving = true);
@@ -454,8 +464,9 @@ Future<void> masterDialog(
                                 }
                                 if (dc.mounted) Navigator.pop(dc);
                               } catch (e) {
-                                if (context.mounted)
+                                if (context.mounted) {
                                   notify(context, '$e', error: true);
+                                }
                                 update(() => saving = false);
                               }
                             },

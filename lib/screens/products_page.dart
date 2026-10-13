@@ -57,8 +57,9 @@ class _ProductsPageState extends State<ProductsPage> {
         await productDialog(context);
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         notify(context, 'Ürün limiti kontrol edilemedi: $e', error: true);
+      }
     } finally {
       if (mounted) setState(() => _openingProduct = false);
     }
@@ -104,8 +105,9 @@ class _ProductsPageState extends State<ProductsPage> {
           (two['stockMilli'] as num?)?.toInt() ?? 0,
         );
       case 'markup':
-        return (_markup(one) ?? double.infinity)
-            .compareTo(_markup(two) ?? double.infinity);
+        return (_markup(one) ?? double.infinity).compareTo(
+          _markup(two) ?? double.infinity,
+        );
       case 'price':
         return ((two['salePriceMinor'] as num?)?.toInt() ?? 0).compareTo(
           (one['salePriceMinor'] as num?)?.toInt() ?? 0,
@@ -341,7 +343,11 @@ class _ProductsPageState extends State<ProductsPage> {
                       children: [
                         _filter('all', 'Tümü', Icons.apps_rounded),
                         _filter('low', 'Kritik', Icons.warning_amber_rounded),
-                        _filter('loss', 'Zarar riski', Icons.trending_down_rounded),
+                        _filter(
+                          'loss',
+                          'Zarar riski',
+                          Icons.trending_down_rounded,
+                        ),
                         _filter(
                           'empty',
                           'Tükenen',

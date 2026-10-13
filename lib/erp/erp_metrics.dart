@@ -2,7 +2,11 @@
 /// and all quantities are thousandths of their stored unit.
 /// No client-side computed value is trusted for stock writes or subscriptions.
 class ErpLineRank {
-  const ErpLineRank({required this.name, required this.quantityMilli, required this.netMinor});
+  const ErpLineRank({
+    required this.name,
+    required this.quantityMilli,
+    required this.netMinor,
+  });
   final String name;
   final int quantityMilli;
   final int netMinor;
@@ -40,7 +44,8 @@ class ErpMetrics {
 
   int get outstandingSalesMinor => salesGrossMinor - salesPaidMinor;
   int get unpaidPurchasesMinor => purchasesGrossMinor - purchasesPaidMinor;
-  int get averageSaleMinor => saleCount == 0 ? 0 : (salesGrossMinor / saleCount).round();
+  int get averageSaleMinor =>
+      saleCount == 0 ? 0 : (salesGrossMinor / saleCount).round();
 
   static int _number(dynamic value) => value is num ? value.toInt() : 0;
 
@@ -63,7 +68,8 @@ class ErpMetrics {
     DateTime? now,
   }) {
     final time = now ?? DateTime.now();
-    final cutoff = lastDays == null ? null : time.subtract(Duration(days: lastDays));
+    final cutoff =
+        lastDays == null ? null : time.subtract(Duration(days: lastDays));
     var productCount = 0;
     var low = 0;
     var empty = 0;
@@ -124,9 +130,10 @@ class ErpMetrics {
             if (raw is! Map) continue;
             final item = Map<String, dynamic>.from(raw);
             final name = (item['name'] ?? 'Bilinmeyen ürün').toString();
-            quantityByProduct[name] = (quantityByProduct[name] ?? 0) +
-                _number(item['quantityMilli']);
-            netByProduct[name] = (netByProduct[name] ?? 0) + _number(item['netMinor']);
+            quantityByProduct[name] =
+                (quantityByProduct[name] ?? 0) + _number(item['quantityMilli']);
+            netByProduct[name] =
+                (netByProduct[name] ?? 0) + _number(item['netMinor']);
           }
         }
       } else if (trade['type'] == 'purchase') {
@@ -136,12 +143,17 @@ class ErpMetrics {
         purchasesPaid += paid;
       }
     }
-    final ranking = netByProduct.keys.map((name) => ErpLineRank(
-      name: name,
-      quantityMilli: quantityByProduct[name] ?? 0,
-      netMinor: netByProduct[name] ?? 0,
-    )).toList()
-      ..sort((a, b) => b.netMinor.compareTo(a.netMinor));
+    final ranking =
+        netByProduct.keys
+            .map(
+              (name) => ErpLineRank(
+                name: name,
+                quantityMilli: quantityByProduct[name] ?? 0,
+                netMinor: netByProduct[name] ?? 0,
+              ),
+            )
+            .toList()
+          ..sort((a, b) => b.netMinor.compareTo(a.netMinor));
     return ErpMetrics(
       productCount: productCount,
       lowStockCount: low,
@@ -174,5 +186,6 @@ String erpCsv(Iterable<Iterable<Object?>> rows) {
     }
     return '"${text.replaceAll('"', '""')}"';
   }
+
   return '\uFEFF${rows.map((row) => row.map(cell).join(';')).join('\r\n')}';
 }

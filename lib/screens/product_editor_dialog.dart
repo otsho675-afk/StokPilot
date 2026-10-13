@@ -186,9 +186,7 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
 
   int _enteredNetPrice(String text) {
     final amount = parseMoney(text);
-    return pricesIncludeVat
-        ? netFromGrossMinor(amount, taxRateBps)
-        : amount;
+    return pricesIncludeVat ? netFromGrossMinor(amount, taxRateBps) : amount;
   }
 
   int? _tryPrice(String text) {
@@ -204,11 +202,10 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
     for (final field in [purchase, sale]) {
       final entered = _tryPrice(field.text);
       if (entered == null) continue;
-      final displayAmount = include
-          ? grossMinor(entered, taxRateBps)
-          : entered;
+      final displayAmount = include ? grossMinor(entered, taxRateBps) : entered;
       field.text = (displayAmount / 100)
-          .toStringAsFixed(2).replaceAll('.', ',');
+          .toStringAsFixed(2)
+          .replaceAll('.', ',');
     }
     setState(() => pricesIncludeVat = include);
   }
@@ -442,10 +439,7 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
                           (rate) => DropdownMenuItem(
                             value: rate,
                             child: Text(
-                              '%' +
-                                  (rate / 100).toStringAsFixed(
-                                    rate % 100 == 0 ? 0 : 2,
-                                  ),
+                              '%${(rate / 100).toStringAsFixed(rate % 100 == 0 ? 0 : 2)}',
                             ),
                           ),
                         )
@@ -461,35 +455,47 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
               color: const Color(0xFFF1F8F6),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
-                side: const BorderSide(color: Color(0xFFD6ECE4))),
+                side: const BorderSide(color: Color(0xFFD6ECE4)),
+              ),
               clipBehavior: Clip.antiAlias,
               child: SwitchListTile.adaptive(
                 key: const ValueKey('vat-inclusive-input'),
-                title: const Text('Fiyatları KDV dâhil gir',
-                  style: TextStyle(color: ink, fontWeight: FontWeight.w800)),
-                subtitle: const Text('Değiştirince girilmiş tutarlar dönüştürülür; kayıtlarda net fiyat saklanır.',
-                  style: TextStyle(color: muted, fontSize: 11)),
+                title: const Text(
+                  'Fiyatları KDV dâhil gir',
+                  style: TextStyle(color: ink, fontWeight: FontWeight.w800),
+                ),
+                subtitle: const Text(
+                  'Değiştirince girilmiş tutarlar dönüştürülür; kayıtlarda net fiyat saklanır.',
+                  style: TextStyle(color: muted, fontSize: 11),
+                ),
                 value: pricesIncludeVat,
                 onChanged: saving ? null : _setPriceIncludesVat,
-              )),
+              ),
+            ),
             const SizedBox(height: 12),
             ResponsiveFields(
               first: TextField(
                 controller: purchase,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
-                  labelText: pricesIncludeVat
-                    ? 'KDV dâhil alış (₺)'
-                    : 'KDV hariç alış (₺)',
+                  labelText:
+                      pricesIncludeVat
+                          ? 'KDV dâhil alış (₺)'
+                          : 'KDV hariç alış (₺)',
                 ),
               ),
               second: TextField(
                 controller: sale,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
-                  labelText: pricesIncludeVat
-                    ? 'KDV dâhil satış (₺)'
-                    : 'KDV hariç satış (₺)',
+                  labelText:
+                      pricesIncludeVat
+                          ? 'KDV dâhil satış (₺)'
+                          : 'KDV hariç satış (₺)',
                 ),
               ),
             ),
@@ -552,8 +558,7 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
                               child: Text(
                                 markup == null
                                     ? 'Kâr için alış fiyatı girin'
-                                    : 'Tahmini kâr (maliyet üzerinden): %' +
-                                        value.toStringAsFixed(1),
+                                    : 'Tahmini kâr (maliyet üzerinden): %${value.toStringAsFixed(1)}',
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,

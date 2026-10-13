@@ -63,7 +63,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '289925788761',
     projectId: 'stokpilot-5bd2e',
     storageBucket: 'stokpilot-5bd2e.firebasestorage.app',
-    iosClientId: '289925788761-as2bbg2itfg88unnmdh9sadkbmrhp03n.apps.googleusercontent.com',
+    iosClientId:
+        '289925788761-as2bbg2itfg88unnmdh9sadkbmrhp03n.apps.googleusercontent.com',
     iosBundleId: 'com.yesildas.stokpilot',
   );
 }
