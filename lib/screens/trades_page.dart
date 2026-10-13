@@ -288,6 +288,26 @@ class _TradesPageState extends State<TradesPage> {
                           ),
                     ),
                     const SizedBox(height: 14),
+                    if (lines.isNotEmpty) Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(children: [
+                        Expanded(child: Text(
+                          'Sepet · ${lines.length} kalem',
+                          style: const TextStyle(
+                            color: ink, fontWeight: FontWeight.w900, fontSize: 15),
+                        )),
+                        TextButton.icon(
+                          onPressed: busy ? null : () async {
+                            final approved = await confirm(context,
+                              'Sepeti temizle',
+                              'Kaydedilmemiş ${lines.length} kalem silinsin mi?');
+                            if (approved && mounted) setState(() => lines.clear());
+                          },
+                          icon: const Icon(Icons.delete_sweep_outlined, size: 18),
+                          label: const Text('Sepeti temizle'),
+                        ),
+                      ]),
+                    ),
                     if (lines.isEmpty)
                       const BlankState(
                         title: 'Sepet henüz boş',
@@ -330,6 +350,36 @@ class _TradesPageState extends State<TradesPage> {
                                         fontSize: 12,
                                       ),
                                     ),
+                                    const SizedBox(height: 6),
+                                    Row(mainAxisSize: MainAxisSize.min, children: [
+                                      IconButton(
+                                        tooltip: 'Miktarı 1 azalt',
+                                        visualDensity: VisualDensity.compact,
+                                        constraints: const BoxConstraints(
+                                          minWidth: 33, minHeight: 33),
+                                        onPressed: busy || line.qtyMilli <= 1000
+                                          ? null
+                                          : () => setState(() => line.qtyMilli -= 1000),
+                                        icon: const Icon(Icons.remove_circle_outline,
+                                          size: 21, color: green),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                                        child: Text(quantity(line.qtyMilli),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w800, color: ink)),
+                                      ),
+                                      IconButton(
+                                        tooltip: 'Miktarı 1 artır',
+                                        visualDensity: VisualDensity.compact,
+                                        constraints: const BoxConstraints(
+                                          minWidth: 33, minHeight: 33),
+                                        onPressed: busy ? null
+                                          : () => setState(() => line.qtyMilli += 1000),
+                                        icon: const Icon(Icons.add_circle_outline,
+                                          size: 21, color: green),
+                                      ),
+                                    ]),
                                     const SizedBox(height: 3),
                                     Text(
                                       money(line.total),
