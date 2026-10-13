@@ -24,16 +24,18 @@ int parseMoney(String input) {
       .replaceAll('.', '')
       .replaceAll(',', '.');
   final n = double.tryParse(cleaned);
-  if (n == null || !n.isFinite || n < 0 || n > 1e10)
+  if (n == null || !n.isFinite || n < 0 || n > 1e10) {
     throw const FormatException('Geçerli bir tutar girin.');
+  }
   return (n * 100).round();
 }
 
 int parseQty(String input) {
   final normalized = input.trim().replaceAll(',', '.');
   final n = double.tryParse(normalized);
-  if (n == null || !n.isFinite || n < 0 || n > 1e9)
+  if (n == null || !n.isFinite || n < 0 || n > 1e9) {
     throw const FormatException('Geçerli miktar girin.');
+  }
   return (n * 1000).round();
 }
 
