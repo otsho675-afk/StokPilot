@@ -378,6 +378,14 @@ Future<void> productDialog(BuildContext context, {QueryDocumentSnapshot<Map<Stri
       existing: item?.data(),
       loadCatalog: ProductCatalog.fetch,
       saveProduct: (values) async {
+        final code = (values['barcode'] ?? '').toString().trim();
+        if (code.isNotEmpty) {
+          final matches = await AppApi.instance.collection('products')
+              .where('barcode', isEqualTo: code).limit(2).get();
+          if (matches.docs.any((doc) => doc.id != item?.id)) {
+            throw const FormatException('Bu barkod başka bir üründe kayıtlı.');
+          }
+        }
         if (item == null) {
           await AppApi.instance.create('products', values);
         } else {
