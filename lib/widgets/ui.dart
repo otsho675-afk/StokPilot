@@ -13,43 +13,63 @@ const amber = Color(0xFFBA741A);
 
 class MetricCard extends StatelessWidget {
   const MetricCard({super.key, required this.title, required this.value,
-    required this.icon, this.subtext, this.onTap});
+    required this.icon, this.subtext, this.onTap, this.accent = green});
   final String title, value;
   final IconData icon;
   final String? subtext;
   final VoidCallback? onTap;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) => Material(
     color: Colors.white,
-    borderRadius: BorderRadius.circular(22),
+    borderRadius: BorderRadius.circular(20),
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 150),
-        padding: const EdgeInsets.all(20),
+        constraints: const BoxConstraints(minHeight: 148),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: line),
-          boxShadow: const [BoxShadow(color: Color(0x07152C35), blurRadius: 20, offset: Offset(0, 5))],
+          boxShadow: const [
+            BoxShadow(color: Color(0x0B132F36), blurRadius: 22, offset: Offset(0, 7)),
+          ],
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Expanded(child: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: muted, fontSize: 13, fontWeight: FontWeight.w600))),
-            const SizedBox(width: 8),
-            Container(padding: const EdgeInsets.all(9),
-              decoration: BoxDecoration(color: softGreen, borderRadius: BorderRadius.circular(12)),
-              child: Icon(icon, color: green, size: 20)),
+            Expanded(child: Text(title, maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: muted, fontSize: 12,
+                fontWeight: FontWeight.w700))),
+            const SizedBox(width: 7),
+            Container(width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(13)),
+              child: Icon(icon, color: accent, size: 20)),
           ]),
-          const SizedBox(height: 16),
+          const SizedBox(height: 13),
           FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
-            child: Text(value, style: const TextStyle(fontSize: 27, color: ink, fontWeight: FontWeight.w900))),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: Text(value, key: ValueKey<String>(value),
+                style: const TextStyle(fontSize: 26, color: ink,
+                  fontWeight: FontWeight.w900, letterSpacing: -0.8)))),
           if (subtext != null) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: 5),
             Text(subtext!, maxLines: 2, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, color: muted)),
+              style: const TextStyle(fontSize: 11.5, color: muted, height: 1.3)),
+          ],
+          if (onTap != null) ...[
+            const SizedBox(height: 9),
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              Text('İncele', style: TextStyle(
+                color: accent, fontSize: 11, fontWeight: FontWeight.w800)),
+              const SizedBox(width: 3),
+              Icon(Icons.arrow_forward_rounded, size: 13, color: accent),
+            ]),
           ],
         ]),
       ),
