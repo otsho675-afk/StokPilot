@@ -324,14 +324,14 @@ class _TradesPageState extends State<TradesPage> {
                         key: const ValueKey('pos-cart-summary'),
                         padding: const EdgeInsets.all(15),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF102F39),
+                          color: const Color(0xFF103E91),
                           borderRadius: BorderRadius.circular(18),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text('AKTİF SEPET',
-                              style: TextStyle(color: Color(0xFFC0DED9),
+                              style: TextStyle(color: Color(0xFFD4E4FF),
                                 fontWeight: FontWeight.w800, fontSize: 11,
                                 letterSpacing: 1.2)),
                             const SizedBox(height: 8),
@@ -341,7 +341,7 @@ class _TradesPageState extends State<TradesPage> {
                             const SizedBox(height: 7),
                             Wrap(spacing: 12, runSpacing: 7, children: [
                               Text('${lines.length} ürün kalemi',
-                                style: const TextStyle(color: Color(0xFFDBEEE9))),
+                                style: const TextStyle(color: Color(0xFFE8F1FF))),
                               Text('Miktar: ${quantity(cartUnitMilli)}',
                                 style: const TextStyle(color: Color(0xFFDBEEE9))),
                               Text('KDV: ${money(cartVatMinor)}',
@@ -359,7 +359,7 @@ class _TradesPageState extends State<TradesPage> {
                           children: [
                             Expanded(
                               child: Text(
-                                'Sepet · ${lines.length} kalem',
+                                'Sepet · ${lines.length} ürün',
                                 style: const TextStyle(
                                   color: ink,
                                   fontWeight: FontWeight.w900,
@@ -394,7 +394,7 @@ class _TradesPageState extends State<TradesPage> {
                       const BlankState(
                         title: 'Sepet henüz boş',
                         message:
-                            'Ürün adı veya barkod ile arayıp ilk kalemi ekle.',
+                            'Yukarıdaki arama alanına ürün adı, stok kodu veya barkod girin.',
                         icon: Icons.shopping_basket_outlined,
                       ),
                     ...lines.map(
@@ -408,7 +408,7 @@ class _TradesPageState extends State<TradesPage> {
                           decoration: BoxDecoration(
                             color: canvas,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: const Color(0xFFE5ECEE)),
+                            border: Border.all(color: line),
                           ),
                           child: Row(
                             children: [
@@ -723,7 +723,9 @@ class _TradesPageState extends State<TradesPage> {
           color: saleMethod == value ? green : muted,
         ),
         label: Text(title),
-        onSelected: busy ? null : (_) => setState(() => saleMethod = value),
+        onSelected: busy || (value == 'credit' && contactId.isEmpty)
+            ? null
+            : (_) => setState(() => saleMethod = value),
         selectedColor: softGreen,
       );
 
@@ -736,7 +738,9 @@ class _TradesPageState extends State<TradesPage> {
           color: purchaseMethod == value ? green : muted,
         ),
         label: Text(title),
-        onSelected: busy ? null : (_) => setState(() => purchaseMethod = value),
+        onSelected: busy || (value == 'credit' && contactId.isEmpty)
+            ? null
+            : (_) => setState(() => purchaseMethod = value),
         selectedColor: softGreen,
       );
 
