@@ -5,7 +5,11 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 class BillingService {
   BillingService._();
   static final instance = BillingService._();
-  static const androidKey = String.fromEnvironment('RC_ANDROID_PUBLIC_KEY');
+  // RevenueCat public SDK key is safe to ship in the client. Override per build if needed.
+  static const androidKey = String.fromEnvironment(
+    'RC_ANDROID_PUBLIC_KEY',
+    defaultValue: 'goog_XyItqRIRhvNUQFhGycEFVKcykln',
+  );
   static const iosKey = String.fromEnvironment('RC_IOS_PUBLIC_KEY');
   static const bool verifiedBackendReady = bool.fromEnvironment('RC_VERIFIED_BACKEND_READY', defaultValue: false);
   bool _configured = false;
