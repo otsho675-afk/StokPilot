@@ -1,11 +1,11 @@
-# StokPilot 50 TL/ay - Firebase Spark + RevenueCat + Cloudflare Workers
+# StokPilot Pro aylık abonelik - Firebase Spark + RevenueCat + Cloudflare Workers
 
 **Amaç:** Firebase Blaze kullanmadan, Google Play/App Store abonelik doğrulamasını güvenli bir sunucuda tutmak. Cloudflare Workers'ın ücretsiz kotası başlangıç için yeterli olabilir (talep ve kota değişirse ücret çıkabilir). RevenueCat Pro, aylık takip edilen 2.500 USD gelir eşiğinin altında ücretsizdir; eşik aşılınca ücret uygulanabilir. Apple/Google mağaza ücret ve komisyonları ayrıdır.
 
 ## Abonelik ürünlerini oluştur
 
-- Google Play Console > Subscriptions: ürün `stokpilot_pro_monthly`, base plan `monthly-50`, otomatik yenileme **1 ay**, Türkiye fiyatı **50 TRY**.
-- App Store Connect > Subscriptions: ürün `stokpilot_pro_monthly`, otomatik yenileme **1 ay**; Türkiye fiyatını App Store'un izin verdiği kademeden seç.
+- Google Play Console > Subscriptions: ürün `stokpilot_pro_monthly`, base plan `monthly-50`, otomatik yenileme **1 ay**, Türkiye fiyatı **49,99 TRY**. Plan şu anda taslaktır.
+- App Store Connect > Subscriptions: ürün `stokpilot_pro_monthly`, otomatik yenileme **1 ay**, Türkiye fiyatı **49,99 TRY**. İlk abonelik uygulamanın yeni sürümüyle incelemeye gönderilmelidir.
 - RevenueCat'te Android/iOS uygulamalarını bağla, **`pro`** entitlement oluştur, **`default`** offering içindeki `$rc_monthly`/Monthly paketini ilgili mağaza ürününe bağla.
 - RevenueCat SDK **public** anahtarları Google için `goog_...`, Apple için `appl_...`; bunları Flutter `--dart-define` ile kullan.
 
