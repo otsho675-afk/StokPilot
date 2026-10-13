@@ -17,8 +17,9 @@ class _PaywallPageState extends State<PaywallPage> {
     setState(() => loading = true);
     try {
       await action();
-      if (mounted)
+      if (mounted) {
         notify(context, 'İşlem tamamlandı. Abonelik onayı bekleniyor.');
+      }
     } catch (e) {
       if (mounted) notify(context, '$e', error: true);
     } finally {
@@ -69,17 +70,19 @@ class _PaywallPageState extends State<PaywallPage> {
               FutureBuilder(
                 future: BillingService.instance.packages(),
                 builder: (context, snap) {
-                  if (snap.hasError)
+                  if (snap.hasError) {
                     return Text(
                       'Mağaza ürünleri yüklenemedi: ${snap.error}',
                       textAlign: TextAlign.center,
                     );
+                  }
                   final packages =
                       (snap.data ?? [])
                           .where((p) => p.packageType == PackageType.monthly)
                           .toList();
-                  if (snap.connectionState != ConnectionState.done)
+                  if (snap.connectionState != ConnectionState.done) {
                     return const CircularProgressIndicator();
+                  }
                   return Column(
                     children: [
                       if (packages.isEmpty)
