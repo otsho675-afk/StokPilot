@@ -26,8 +26,21 @@ class StokPilotApp extends StatelessWidget {
       useMaterial3: true,
       fontFamily: 'Roboto',
       scaffoldBackgroundColor: canvas,
+      splashFactory: InkRipple.splashFactory,
       colorScheme: ColorScheme.fromSeed(seedColor: green, primary: green,
         surface: Colors.white),
+      dividerTheme: const DividerThemeData(color: line, thickness: 1),
+      textSelectionTheme: const TextSelectionThemeData(cursorColor: green,
+        selectionColor: Color(0xFFB5EADB)),
+      chipTheme: ChipThemeData(
+        backgroundColor: Colors.white,
+        selectedColor: softGreen,
+        checkmarkColor: green,
+        side: const BorderSide(color: line),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        labelStyle: const TextStyle(color: ink, fontWeight: FontWeight.w700),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
+      ),
       textTheme: const TextTheme(
         bodyMedium: TextStyle(color: ink),
         bodyLarge: TextStyle(color: ink),
@@ -41,7 +54,8 @@ class StokPilotApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: const Color(0xFFFAFCFC),
+        hintStyle: const TextStyle(color: muted),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: line)),
