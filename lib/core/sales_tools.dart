@@ -7,6 +7,22 @@ int vatMinor(int netMinor, int taxRateBps) =>
 int grossMinor(int netMinor, int taxRateBps) =>
     netMinor + vatMinor(netMinor, taxRateBps);
 
+/// Converts a VAT-inclusive unit price into the VAT-exclusive price stored
+/// in Firestore. Searches nearby kuruş values for exact round-trip accuracy.
+int netFromGrossMinor(int gross, int taxRateBps) {
+  if (gross < 0 || taxRateBps < 0) {
+    throw ArgumentError('Fiyat ve KDV negatif olamaz.');
+  }
+  if (taxRateBps == 0) return gross;
+  final candidate = (gross * 10000 / (10000 + taxRateBps)).round();
+  for (var delta = -2; delta <= 2; delta++) {
+    final value = candidate + delta;
+    if (value >= 0 && grossMinor(value, taxRateBps) == gross) return value;
+  }
+  return candidate;
+}
+
+
 /// Markup: profit / net purchase price (not gross margin).
 double? profitMarkupPercent(int purchaseNetMinor, int saleNetMinor) {
   if (purchaseNetMinor <= 0) return null;
