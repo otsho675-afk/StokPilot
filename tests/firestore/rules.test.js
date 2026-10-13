@@ -21,6 +21,7 @@ const newProduct = () => ({
   name: 'Ürün', sku: '', barcode: '', categoryId: '', unitId: '',
   taxRateBps: 2000, purchasePriceMinor: 100, salePriceMinor: 150,
   minStockMilli: 0, stockMilli: 0, isActive: true,
+  priceChangedAt: serverTimestamp(),
   createdAt: serverTimestamp(),
 });
 
