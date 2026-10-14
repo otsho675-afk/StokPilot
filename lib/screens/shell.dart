@@ -21,6 +21,7 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int selected = 0;
+  bool sidebarCollapsed = false;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   static const names = [
     'Genel Bakış',
@@ -182,9 +183,26 @@ class _MainShellState extends State<MainShell> {
       child: Column(
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(condensed ? 16 : 22, 26, 12, 24),
-            child: _brand(compact: condensed),
+            padding: EdgeInsets.fromLTRB(condensed ? 15 : 20, 22, 15, 20),
+            child: Row(
+              mainAxisAlignment: condensed ? MainAxisAlignment.center : MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(child: _brand(compact: condensed)),
+                if (!condensed)
+                  IconButton(
+                    tooltip: 'Menüyü daralt',
+                    onPressed: () => setState(() => sidebarCollapsed = true),
+                    icon: const Icon(Icons.keyboard_double_arrow_left_rounded, color: Color(0xFFB8C9DC)),
+                  ),
+              ],
+            ),
           ),
+          if (condensed && MediaQuery.sizeOf(context).width >= 1110)
+            IconButton(
+              tooltip: 'Menüyü genişlet',
+              onPressed: () => setState(() => sidebarCollapsed = false),
+              icon: const Icon(Icons.keyboard_double_arrow_right_rounded, color: Color(0xFFB8C9DC)),
+            ),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -333,7 +351,7 @@ class _MainShellState extends State<MainShell> {
       return LayoutBuilder(
         builder: (context, c) {
           final wide = c.maxWidth >= 1110;
-          final rail = c.maxWidth >= 760 && !wide;
+          final rail = (c.maxWidth >= 760 && !wide) || (wide && sidebarCollapsed);
           final showSide = wide || rail;
           final mobile = !showSide;
           return Scaffold(
@@ -396,7 +414,7 @@ class _MainShellState extends State<MainShell> {
               children: [
                 if (showSide)
                   SizedBox(
-                    width: wide ? 264 : 76,
+                    width: rail ? 76 : 264,
                     child: _sidebar(condensed: rail),
                   ),
                 Expanded(
@@ -460,7 +478,7 @@ class _MainShellState extends State<MainShell> {
                             keyboardDismissBehavior:
                                 ScrollViewKeyboardDismissBehavior.onDrag,
                             padding: EdgeInsets.fromLTRB(
-                              wide ? 30 : 15,
+                              wide ? 28 : 15,
                               24,
                               wide ? 30 : 15,
                               mobile ? 20 : 30,
