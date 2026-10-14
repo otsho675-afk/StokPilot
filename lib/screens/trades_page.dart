@@ -126,7 +126,7 @@ class _TradesPageState extends State<TradesPage> {
                       builder: (context, viewport) {
                         final desktopPos = viewport.maxWidth >= 880;
                         final basket = Container(
-                          padding: const EdgeInsets.all(21),
+                          padding: EdgeInsets.all(viewport.maxWidth < 520 ? 12 : 21),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             border: Border.all(color: line),
@@ -138,25 +138,35 @@ class _TradesPageState extends State<TradesPage> {
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.all(11),
-                                    decoration: BoxDecoration(color: softGreen, borderRadius: BorderRadius.circular(13)),
-                                    child: const Icon(Icons.qr_code_scanner_rounded, color: green, size: 22),
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: softGreen,
+                                      borderRadius: BorderRadius.circular(11),
+                                    ),
+                                    child: const Icon(Icons.qr_code_scanner_rounded,
+                                      color: green, size: 21),
                                   ),
-                                  const SizedBox(width: 12),
-                                  const Expanded(child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('Ürün seçimi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: ink)),
-                                      Text('Barkod okut veya ürün ismi yaz', style: TextStyle(fontSize: 12, color: muted)),
-                                    ],
-                                  )),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                                    decoration: BoxDecoration(color: canvas, borderRadius: BorderRadius.circular(10)),
-                                    child: Text('${products.length} ürün', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: muted)),
+                                  const SizedBox(width: 11),
+                                  const Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Ürün seçimi', maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(fontSize: 16,
+                                            fontWeight: FontWeight.w900, color: ink)),
+                                        Text('İsim veya barkod ile ara',
+                                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(fontSize: 11, color: muted)),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
+                              const SizedBox(height: 6),
+                              Text('${products.length} aktif ürün',
+                                style: const TextStyle(fontSize: 11, color: muted)),
                               const SizedBox(height: 20),
                     Autocomplete<QueryDocumentSnapshot<Map<String, dynamic>>>(
                       displayStringForOption:
@@ -205,8 +215,9 @@ class _TradesPageState extends State<TradesPage> {
                             clipBehavior: Clip.antiAlias,
                             child: SizedBox(
                               width:
-                                  (MediaQuery.sizeOf(context).width - 32)
-                                      .clamp(220.0, 520.0)
+                                  (MediaQuery.sizeOf(context).width -
+                                          (MediaQuery.sizeOf(context).width < 600 ? 88 : 32))
+                                      .clamp(170.0, 520.0)
                                       .toDouble(),
                               child: ConstrainedBox(
                                 constraints: const BoxConstraints(
@@ -269,7 +280,6 @@ class _TradesPageState extends State<TradesPage> {
                           ),
                     ),
                     const SizedBox(height: 14),
-                    const SizedBox(height: 18),
                     Row(children: [
                       const Icon(Icons.shopping_bag_outlined, size: 20, color: ink),
                       const SizedBox(width: 9),
@@ -279,41 +289,23 @@ class _TradesPageState extends State<TradesPage> {
                     ]),
                     const SizedBox(height: 12),
                     if (lines.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Sepet · ${lines.length} ürün',
-                                style: const TextStyle(
-                                  color: ink,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ),
-                            TextButton.icon(
-                              onPressed:
-                                  busy
-                                      ? null
-                                      : () async {
-                                        final approved = await confirm(
-                                          context,
-                                          'Sepeti temizle',
-                                          'Kaydedilmemiş ${lines.length} kalem silinsin mi?',
-                                        );
-                                        if (approved && mounted) {
-                                          setState(() => lines.clear());
-                                        }
-                                      },
-                              icon: const Icon(
-                                Icons.delete_sweep_outlined,
-                                size: 18,
-                              ),
-                              label: const Text('Sepeti temizle'),
-                            ),
-                          ],
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: busy
+                              ? null
+                              : () async {
+                                  final approved = await confirm(
+                                    context,
+                                    'Sepeti temizle',
+                                    'Kaydedilmemiş ${lines.length} kalem silinsin mi?',
+                                  );
+                                  if (approved && mounted) {
+                                    setState(() => lines.clear());
+                                  }
+                                },
+                          icon: const Icon(Icons.delete_sweep_outlined, size: 17),
+                          label: const Text('Sepeti temizle'),
                         ),
                       ),
                     if (lines.isEmpty)
