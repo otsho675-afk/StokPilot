@@ -183,11 +183,11 @@ class _ContactsPageState extends State<ContactsPage> {
             children: [
               LayoutBuilder(
                 builder: (context, c) {
-                  final cols = c.maxWidth < 540 ? 1 : 3;
-                  final width = (c.maxWidth - (cols - 1) * 12) / cols;
+                  final cols = c.maxWidth < 310 ? 1 : c.maxWidth < 760 ? 2 : 3;
+                  final width = (c.maxWidth - (cols - 1) * 10) / cols;
                   return Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
+                    spacing: 10,
+                    runSpacing: 10,
                     children: [
                       SizedBox(
                         width: width,
