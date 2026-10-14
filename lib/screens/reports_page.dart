@@ -119,9 +119,6 @@ class _ReportsPageState extends State<ReportsPage> {
                                         0,
                                   ),
                         );
-                  final now = DateTime.now();
-                  final since = period == 'all' || period == 'custom'
-                      ? null : now.subtract(Duration(days: int.parse(period)));
                   final totals = <String, int>{
                     'cash': 0,
                     'card': 0,
@@ -131,7 +128,6 @@ class _ReportsPageState extends State<ReportsPage> {
                   for (final doc in trades.data!.docs) {
                     final trade = doc.data();
                     if (trade['type'] != 'sale') continue;
-                    final date = (trade['createdAt'] as Timestamp?)?.toDate();
                     if (!_withinRange(trade)) {
                       continue;
                     }
