@@ -47,7 +47,7 @@ class _MainShellState extends State<MainShell> {
     Icons.tune_rounded,
   ];
   static const mobileTabs = [0, 1, 2, 4];
-  static const _groups = ['YÖNETİM', 'STOK VE SATIŞ', 'İŞ ORTAKLARI', 'ANALİZ VE SİSTEM'];
+  static const _groups = ['GENEL', 'STOK & TİCARET', 'CARİ HESAPLAR', 'YÖNETİM & SİSTEM'];
   static const _groupStarts = [0, 1, 4, 6];
 
 
@@ -76,7 +76,7 @@ class _MainShellState extends State<MainShell> {
         height: compact ? 40 : 44,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF3B82F6), Color(0xFF0A3EA8)],
+            colors: [Color(0xFF1FBE96), Color(0xFF087E78)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -116,7 +116,7 @@ class _MainShellState extends State<MainShell> {
   );
 
   Widget _desktopHeader() => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 17),
     decoration: const BoxDecoration(
       color: Colors.white,
       border: Border(bottom: BorderSide(color: line)),
@@ -131,7 +131,7 @@ class _MainShellState extends State<MainShell> {
                 names[selected],
                 style: const TextStyle(
                   color: ink,
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -177,17 +177,17 @@ class _MainShellState extends State<MainShell> {
   }
 
   Widget _sidebar({required bool condensed}) => ColoredBox(
-    color: const Color(0xFF1047AE),
+    color: const Color(0xFF102338),
     child: SafeArea(
       child: Column(
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(condensed ? 14 : 18, 24, 12, 30),
+            padding: EdgeInsets.fromLTRB(condensed ? 16 : 22, 26, 12, 24),
             child: _brand(compact: condensed),
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               children: [
                 if (!condensed)
                   const Padding(
@@ -195,7 +195,7 @@ class _MainShellState extends State<MainShell> {
                     child: Text(
                       'ÇALIŞMA ALANI',
                       style: TextStyle(
-                        color: Color(0xFFC5D9FF),
+                        color: Color(0xFF8FAAC2),
                         fontSize: 10,
                         letterSpacing: 1.6,
                         fontWeight: FontWeight.w800,
@@ -209,11 +209,11 @@ class _MainShellState extends State<MainShell> {
                     children: [
                       if (!condensed && _groupStarts.contains(i))
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(14, 19, 8, 10),
+                          padding: const EdgeInsets.fromLTRB(12, 22, 8, 10),
                           child: Text(
                             _groups[_groupStarts.indexOf(i)],
                             style: const TextStyle(
-                              color: Color(0xFFC5D9FF),
+                              color: Color(0xFF8FAAC2),
                               fontWeight: FontWeight.w800,
                               fontSize: 10,
                               letterSpacing: 1.3,
@@ -221,22 +221,22 @@ class _MainShellState extends State<MainShell> {
                           ),
                         ),
                       Padding(
-                    padding: const EdgeInsets.only(bottom: 5),
+                    padding: const EdgeInsets.only(bottom: 6),
                     child: Tooltip(
                       message: condensed ? names[i] : '',
                       child: Material(
                         color:
                             active
-                                ? const Color(0xFFFFFFFF)
+                                ? const Color(0xFF21405B)
                                 : Colors.transparent,
-                        borderRadius: BorderRadius.circular(13),
+                        borderRadius: BorderRadius.circular(12),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(13),
                           onTap: () => navigate(i),
                           child: Padding(
                             padding: EdgeInsets.symmetric(
                               horizontal: condensed ? 0 : 14,
-                              vertical: 14,
+                              vertical: 12,
                             ),
                             child: Row(
                               mainAxisAlignment:
@@ -248,7 +248,7 @@ class _MainShellState extends State<MainShell> {
                                   icons[i],
                                   size: 21,
                                   color:
-                                      active ? const Color(0xFF1047AE) : const Color(0xFFDFEAFF),
+                                      active ? const Color(0xFF58E0BD) : const Color(0xFFB8C9DC),
                                 ),
                                 if (!condensed) ...[
                                   const SizedBox(width: 12),
@@ -262,8 +262,8 @@ class _MainShellState extends State<MainShell> {
                                                 : FontWeight.w500,
                                         color:
                                             active
-                                                ? const Color(0xFF1047AE)
-                                                : const Color(0xFFE7EFFF),
+                                                ? Colors.white
+                                                : const Color(0xFFE4ECF6),
                                       ),
                                     ),
                                   ),
@@ -297,7 +297,7 @@ class _MainShellState extends State<MainShell> {
                       onPressed: _signOut,
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
-                        side: const BorderSide(color: Color(0xFF52656A)),
+                        side: const BorderSide(color: Color(0xFF405A72)),
                       ),
                       icon: const Icon(Icons.logout_rounded, size: 18),
                       label: const Text('Güvenli çıkış'),
@@ -341,7 +341,7 @@ class _MainShellState extends State<MainShell> {
             drawer:
                 mobile
                     ? Drawer(
-                      backgroundColor: const Color(0xFF1047AE),
+                      backgroundColor: const Color(0xFF102338),
                       child: SafeArea(
                         child: ListView(
                           children: [
@@ -364,6 +364,8 @@ class _MainShellState extends State<MainShell> {
                                   style: const TextStyle(color: Colors.white),
                                 ),
                                 selected: selected == i,
+                                selectedTileColor: const Color(0xFF21405B),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 onTap: () {
                                   navigate(i);
                                   Navigator.of(context).pop();
@@ -394,7 +396,7 @@ class _MainShellState extends State<MainShell> {
               children: [
                 if (showSide)
                   SizedBox(
-                    width: wide ? 252 : 76,
+                    width: wide ? 264 : 76,
                     child: _sidebar(condensed: rail),
                   ),
                 Expanded(
