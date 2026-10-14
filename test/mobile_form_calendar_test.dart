@@ -4,8 +4,12 @@ import 'package:stokpilot/widgets/ui.dart';
 
 void main() {
   testWidgets('mobile date picker opens bottom calendar and returns quick date', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(390, 780));
-    addTearDown(() async => tester.binding.setSurfaceSize(null));
+    tester.view.physicalSize = const Size(390, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
     final today = DateUtils.dateOnly(DateTime.now());
     DateTime? result;
 
@@ -39,8 +43,12 @@ void main() {
   });
 
   testWidgets('mobile owned form is a bottom sheet and saves with fixed footer', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(320, 640));
-    addTearDown(() async => tester.binding.setSurfaceSize(null));
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
     final controller = TextEditingController();
     var saved = '';
     await tester.pumpWidget(MaterialApp(
@@ -91,8 +99,12 @@ void main() {
   });
 
   testWidgets('desktop owned form remains a dialog', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(1024, 768));
-    addTearDown(() async => tester.binding.setSurfaceSize(null));
+    tester.view.physicalSize = const Size(1024, 768);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
         body: Builder(builder: (outer) => FilledButton(
