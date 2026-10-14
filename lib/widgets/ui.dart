@@ -295,6 +295,7 @@ class StatusPill extends StatelessWidget {
 
 /// A form dialog with finite dimensions, unlike AlertDialog's intrinsic-width
 /// sizing, which can fail when forms contain LayoutBuilder/ResponsiveFields.
+/// Form sheets on phones, restrained dialogs on desktop.
 class ResponsiveFormDialog extends StatelessWidget {
   const ResponsiveFormDialog({
     super.key,
@@ -302,6 +303,7 @@ class ResponsiveFormDialog extends StatelessWidget {
     required this.content,
     this.actions = const <Widget>[],
   });
+
   final Widget title;
   final Widget content;
   final List<Widget> actions;
@@ -310,70 +312,126 @@ class ResponsiveFormDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final dimensions = MediaQuery.sizeOf(context);
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
-    final width = (dimensions.width - 24).clamp(260.0, 540.0).toDouble();
-    final height = (dimensions.height - keyboard - 24).clamp(160.0, 9000.0).toDouble();
+    final mobile = dimensions.width < 600;
+    final maxHeight = (dimensions.height - keyboard - (mobile ? 8 : 24))
+        .clamp(150.0, 9000.0).toDouble();
+
+    final sheet = ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxHeight),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (mobile)
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 10, bottom: 5),
+                width: 42,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCED7DF),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              ),
+            ),
+          Container(
+            padding: EdgeInsets.fromLTRB(mobile ? 17 : 21, 12, 12, 12),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFAFCFD),
+              border: Border(bottom: BorderSide(color: line)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: DefaultTextStyle(
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: ink,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.35,
+                    ),
+                    child: title,
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Kapat',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  icon: const Icon(Icons.close_rounded, color: muted, size: 21),
+                ),
+              ],
+            ),
+          ),
+          Flexible(
+            fit: FlexFit.loose,
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.fromLTRB(mobile ? 17 : 21, 17, 17, 19),
+              child: content,
+            ),
+          ),
+          if (actions.isNotEmpty)
+            Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: line)),
+              ),
+              padding: EdgeInsets.fromLTRB(
+                mobile ? 13 : 18,
+                12,
+                mobile ? 13 : 18,
+                mobile ? 16 : 12,
+              ),
+              child: mobile
+                  ? LayoutBuilder(
+                      builder: (context, constraints) {
+                        final width = (constraints.maxWidth - (actions.length - 1) * 9)
+                            / actions.length;
+                        return Wrap(
+                          spacing: 9,
+                          runSpacing: 9,
+                          children: [
+                            for (final action in actions)
+                              SizedBox(
+                                width: width.clamp(104.0, 9000.0).toDouble(),
+                                child: action,
+                              ),
+                          ],
+                        );
+                      },
+                    )
+                  : Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 10,
+                      runSpacing: 8,
+                      children: actions,
+                    ),
+            ),
+        ],
+      ),
+    );
+
+    if (mobile) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: keyboard),
+        child: Material(
+          color: Colors.white,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: sheet,
+        ),
+      );
+    }
     return Dialog(
       insetPadding: const EdgeInsets.all(12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       clipBehavior: Clip.antiAlias,
       backgroundColor: Colors.white,
       child: SizedBox(
-        width: width,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: height),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: const EdgeInsets.fromLTRB(21, 16, 13, 13),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFAFCFD),
-                  border: Border(bottom: BorderSide(color: line)),
-                ),
-                child: Row(children: [
-                  Expanded(
-                    child: DefaultTextStyle(
-                      style: const TextStyle(
-                        fontSize: 17, color: ink, fontWeight: FontWeight.w900,
-                        letterSpacing: -0.4),
-                      child: title,
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Pencereyi kapat',
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () => Navigator.of(context).maybePop(),
-                    icon: const Icon(Icons.close_rounded, color: muted, size: 20),
-                  ),
-                ]),
-              ),
-              Flexible(
-                fit: FlexFit.loose,
-                child: SingleChildScrollView(
-                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.fromLTRB(21, 17, 21, 18),
-                  child: content,
-                ),
-              ),
-              if (actions.isNotEmpty)
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFAFCFD),
-                    border: Border(top: BorderSide(color: line)),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                  child: Wrap(
-                    alignment: WrapAlignment.end,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: actions,
-                  ),
-                ),
-            ],
-          ),
-        ),
+        width: (dimensions.width - 24).clamp(280.0, 540.0).toDouble(),
+        child: sheet,
       ),
     );
   }
@@ -438,6 +496,145 @@ class CompactDateField extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A calendar bottom sheet on phones; the native date dialog on desktops.
+/// Kept independent from form controllers so closing the calendar never
+/// tears down the owning form or loses partially entered data.
+Future<DateTime?> showPilotDatePicker({
+  required BuildContext context,
+  required DateTime initialDate,
+  required DateTime firstDate,
+  required DateTime lastDate,
+  String title = 'Tarih seç',
+}) async {
+  assert(!lastDate.isBefore(firstDate));
+  final first = DateUtils.dateOnly(firstDate);
+  final last = DateUtils.dateOnly(lastDate);
+  final normalized = DateUtils.dateOnly(initialDate);
+  final initial = normalized.isBefore(first)
+      ? first
+      : normalized.isAfter(last)
+          ? last
+          : normalized;
+
+  if (MediaQuery.sizeOf(context).width >= 600) {
+    return showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: first,
+      lastDate: last,
+      helpText: title,
+      cancelText: 'Vazgeç',
+      confirmText: 'Seç',
+    );
+  }
+
+  var selected = initial;
+  final now = DateUtils.dateOnly(DateTime.now());
+  return showModalBottomSheet<DateTime>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    builder: (sheetContext) => StatefulBuilder(
+      builder: (sheetContext, update) {
+        final screen = MediaQuery.sizeOf(sheetContext);
+        final height = (screen.height * 0.9).clamp(240.0, 610.0).toDouble();
+        final choices = <(String, DateTime)>[
+          ('Bugün', now),
+          ('Dün', now.subtract(const Duration(days: 1))),
+          ('7 gün önce', now.subtract(const Duration(days: 7))),
+        ].where((item) =>
+            !item.$2.isBefore(first) && !item.$2.isAfter(last)).toList();
+
+        return Container(
+          height: height,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(children: [
+            Container(
+              width: 42, height: 4,
+              margin: const EdgeInsets.only(top: 10, bottom: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFCDD7E0),
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(19, 0, 11, 10),
+              child: Row(children: [
+                const Icon(Icons.calendar_month_rounded, color: green, size: 23),
+                const SizedBox(width: 11),
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w900, color: ink)),
+                    Text(
+                      '${selected.day.toString().padLeft(2, '0')}.${selected.month.toString().padLeft(2, '0')}.${selected.year}',
+                      style: const TextStyle(fontSize: 12, color: muted)),
+                  ],
+                )),
+                IconButton(
+                  tooltip: 'Kapat',
+                  onPressed: () => Navigator.of(sheetContext).pop(),
+                  icon: const Icon(Icons.close_rounded, color: muted),
+                ),
+              ]),
+            ),
+            if (choices.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(15, 0, 15, 7),
+                child: Wrap(spacing: 7, runSpacing: 6, children: [
+                  for (final choice in choices)
+                    ChoiceChip(
+                      label: Text(choice.$1),
+                      showCheckmark: false,
+                      selected: DateUtils.isSameDay(selected, choice.$2),
+                      onSelected: (_) => update(() => selected = choice.$2),
+                    ),
+                ]),
+              ),
+            const Divider(height: 1, color: line),
+            Expanded(
+              child: SingleChildScrollView(
+                child: CalendarDatePicker(
+                  key: ValueKey<DateTime>(selected),
+                  initialDate: selected,
+                  firstDate: first,
+                  lastDate: last,
+                  onDateChanged: (date) => update(() => selected = date),
+                ),
+              ),
+            ),
+            Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFFFAFCFD),
+                border: Border(top: BorderSide(color: line)),
+              ),
+              padding: const EdgeInsets.fromLTRB(16, 11, 16, 16),
+              child: Row(children: [
+                Expanded(child: OutlinedButton(
+                  onPressed: () => Navigator.of(sheetContext).pop(),
+                  child: const Text('Vazgeç'),
+                )),
+                const SizedBox(width: 10),
+                Expanded(child: FilledButton.icon(
+                  onPressed: () => Navigator.of(sheetContext).pop(selected),
+                  icon: const Icon(Icons.check_rounded, size: 18),
+                  label: const Text('Tarihi seç'),
+                )),
+              ]),
+            ),
+          ]),
+        );
+      },
+    ),
+  );
 }
 
 /// Shared client-side paging for compact inventory, contacts and ledger views.
