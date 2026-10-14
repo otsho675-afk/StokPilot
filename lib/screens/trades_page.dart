@@ -230,11 +230,17 @@ class _TradesPageState extends State<TradesPage> {
                                   itemBuilder: (context, index) {
                                     final product = result[index];
                                     final m = product.data();
+                                    final smallScreen = MediaQuery.sizeOf(context).width < 600;
+                                    final unitPrice = money(
+                                      (m[sale ? 'salePriceMinor' : 'purchasePriceMinor'] as num?)?.toInt() ?? 0,
+                                    );
                                     return ListTile(
                                       dense: true,
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                                       leading: const Icon(
                                         Icons.inventory_2_outlined,
                                         color: green,
+                                        size: 19,
                                       ),
                                       title: Text(
                                         (m['name'] ?? '').toString(),
@@ -242,20 +248,15 @@ class _TradesPageState extends State<TradesPage> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       subtitle: Text(
-                                        'Barkod: ${m['barcode'] ?? '—'} • Stok: ${quantity((m['stockMilli'] as num?)?.toInt() ?? 0)}',
+                                        smallScreen
+                                            ? 'Stok: ${quantity((m['stockMilli'] as num?)?.toInt() ?? 0)} · $unitPrice'
+                                            : 'Barkod: ${m['barcode'] ?? '—'} · Stok: ${quantity((m['stockMilli'] as num?)?.toInt() ?? 0)}',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      trailing: Text(
-                                        money(
-                                          (m[sale
-                                                          ? 'salePriceMinor'
-                                                          : 'purchasePriceMinor']
-                                                      as num?)
-                                                  ?.toInt() ??
-                                              0,
-                                        ),
-                                      ),
+                                      trailing: smallScreen
+                                          ? null
+                                          : Text(unitPrice, style: const TextStyle(fontWeight: FontWeight.w800)),
                                       onTap: () => onSelected(product),
                                     );
                                   },
