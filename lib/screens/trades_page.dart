@@ -114,13 +114,30 @@ class _TradesPageState extends State<TradesPage> {
                   children: [
                     SectionHeading(
                       title:
-                          sale ? 'Yeni satış oluştur' : 'Yeni alış oluştur',
+                          sale ? 'Akıllı kasa' : 'Yeni alış oluştur',
                       subtitle:
                           sale
-                              ? 'Önce ürünü ekle, ardından müşteri ve ödeme bilgilerini tamamla.'
+                              ? 'Ürünleri soldan seç, sağdan ödemeyi tamamla. Hızlı, temiz, tek ekran.'
                               : 'Ürünleri ekle, tedarikçiyi seç ve stok girişini kaydet.',
                     ),
                     const SizedBox(height: 14),
+                    LayoutBuilder(
+                      builder: (context, viewport) {
+                        final desktopPos = viewport.maxWidth >= 900;
+                        final basket = Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFD),
+                            border: Border.all(color: line),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Text('KASA · ÜRÜNLER', style: TextStyle(
+                                color: muted, fontSize: 11, letterSpacing: 1.2,
+                                fontWeight: FontWeight.w900)),
+                              const SizedBox(height: 14),
                     _posStep(1, 'Ürün seçimi', 'Barkod, stok kodu veya ürün adıyla hızlıca bul.', Icons.search_rounded),
                     const SizedBox(height: 14),
                     Autocomplete<QueryDocumentSnapshot<Map<String, dynamic>>>(
@@ -298,7 +315,7 @@ class _TradesPageState extends State<TradesPage> {
                       ),
                     if (lines.isEmpty)
                       const BlankState(
-                        title: 'Sepet henüz boş',
+                        title: 'Sepet boş, satışa hazır',
                         message:
                             'Yukarıdaki arama alanına ürün adı, stok kodu veya barkod girin.',
                         icon: Icons.shopping_basket_outlined,
@@ -416,6 +433,27 @@ class _TradesPageState extends State<TradesPage> {
                         ),
                       ),
                     ),
+
+                            ],
+                          ),
+                        );
+                        final checkout = Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: line),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: const [BoxShadow(
+                              color: Color(0x080F2742), blurRadius: 24,
+                              offset: Offset(0, 8))],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Text('ÖDEME PANELİ', style: TextStyle(
+                                color: muted, fontSize: 11, letterSpacing: 1.2,
+                                fontWeight: FontWeight.w900)),
+                              const SizedBox(height: 12),
                     const Divider(),
                     _totalRow(
                       'Matrah',
@@ -651,6 +689,26 @@ class _TradesPageState extends State<TradesPage> {
                         ),
                         onPressed: busy || lines.isEmpty ? null : save,
                       ),
+                    ),
+
+                            ],
+                          ),
+                        );
+                        if (!desktopPos) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [basket, const SizedBox(height: 16), checkout],
+                          );
+                        }
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(flex: 6, child: basket),
+                            const SizedBox(width: 18),
+                            Expanded(flex: 4, child: checkout),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
