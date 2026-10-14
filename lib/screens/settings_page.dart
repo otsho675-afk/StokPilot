@@ -18,30 +18,9 @@ class SettingsPage extends StatelessWidget {
       const PageTitle(
         title: 'İşletme ayarları',
         subtitle:
-            'Kategoriler, birimler ve KDV oranlarını işletmenize göre tanımlayın.',
+            'Hesap, abonelik ve işletme tercihlerini yönetin.',
       ),
       const _AlertSettings(),
-      const SizedBox(height: 18),
-      _MasterData(
-        title: 'Kategoriler',
-        collection: 'categories',
-        subtitle: 'Ürünlerinizi gruplandırın.',
-        icon: Icons.category_outlined,
-      ),
-      const SizedBox(height: 18),
-      _MasterData(
-        title: 'Birimler',
-        collection: 'units',
-        subtitle: 'Adet, koli, paket, kilogram, litre...',
-        icon: Icons.straighten_outlined,
-      ),
-      const SizedBox(height: 18),
-      _MasterData(
-        title: 'KDV oranları',
-        collection: 'taxRates',
-        subtitle: 'KDV oranları ürünlere tek tek atanabilir.',
-        icon: Icons.percent_outlined,
-      ),
       const SizedBox(height: 18),
       DataPanel(
         child: Column(
@@ -238,8 +217,8 @@ class _AlertSettings extends StatelessWidget {
   );
 }
 
-class _MasterData extends StatelessWidget {
-  const _MasterData({
+class MasterData extends StatelessWidget {
+  const MasterData({
     required this.title,
     required this.collection,
     required this.subtitle,
