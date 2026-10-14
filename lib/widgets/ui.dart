@@ -785,14 +785,21 @@ Future<T?> showOwnedDialog<T>({
   required List<TextEditingController> controllers,
   required WidgetBuilder builder,
 }) {
-  return showDialog<T>(
-    context: context,
-    builder:
-        (routeContext) => _RouteControllerOwner(
-          controllers: controllers,
-          child: Builder(builder: builder),
-        ),
+  Widget owner(BuildContext routeContext) => _RouteControllerOwner(
+    controllers: controllers,
+    child: Builder(builder: builder),
   );
+  if (MediaQuery.sizeOf(context).width < 600) {
+    return showModalBottomSheet<T>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black45,
+      builder: owner,
+    );
+  }
+  return showDialog<T>(context: context, builder: owner);
 }
 
 void notify(BuildContext context, String message, {bool error = false}) {
