@@ -13,7 +13,8 @@ class ContactsPage extends StatefulWidget {
 
 class _ContactsPageState extends State<ContactsPage> {
   String search = '';
-  int visibleCount = 30;
+  int currentPage = 0;
+  static const int pageSize = 20;
   final searchController = TextEditingController();
   @override
   void dispose() {
@@ -47,7 +48,7 @@ class _ContactsPageState extends State<ContactsPage> {
               onChanged:
                   (s) => setState(() {
                     search = s.trim().toLowerCase();
-                    visibleCount = 30;
+                    currentPage = 0;
                   }),
               decoration: InputDecoration(
                 hintText: 'Ad, telefon veya vergi numarası ara',
@@ -62,7 +63,7 @@ class _ContactsPageState extends State<ContactsPage> {
                               () => setState(() {
                                 searchController.clear();
                                 search = '';
-                                visibleCount = 30;
+                                currentPage = 0;
                               }),
                         ),
               ),
@@ -104,6 +105,8 @@ class _ContactsPageState extends State<ContactsPage> {
             if (v > 0) receivable += v;
             if (v < 0) payable -= v;
           }
+          final pages = (entries.length + pageSize - 1) ~/ pageSize;
+          final page = currentPage.clamp(0, pages == 0 ? 0 : pages - 1);
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -192,7 +195,8 @@ class _ContactsPageState extends State<ContactsPage> {
                           (context, c) => Column(
                             children: [
                               ...entries
-                                  .take(visibleCount)
+                                  .skip(page * pageSize)
+                                  .take(pageSize)
                                   .map(
                                     (d) => _contactEntry(
                                       context,
@@ -203,16 +207,32 @@ class _ContactsPageState extends State<ContactsPage> {
                             ],
                           ),
                     ),
-                    if (entries.length > visibleCount) ...[
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: () => setState(() => visibleCount += 30),
-                        icon: const Icon(Icons.expand_more),
-                        label: Text(
-                          'Daha fazla göster (${entries.length - visibleCount} kaldı)',
-                        ),
+                    if (pages > 1)
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 7,
+                        children: [
+                          IconButton(
+                            onPressed: page == 0 ? null : () => setState(() => currentPage = page - 1),
+                            icon: const Icon(Icons.chevron_left_rounded),
+                          ),
+                          ...List.generate(pages, (i) => i)
+                            .where((i) => pages <= 7 || i == 0 || i == pages - 1 || (i - page).abs() <= 2)
+                            .map((i) => OutlinedButton(
+                              onPressed: () => setState(() => currentPage = i),
+                              style: OutlinedButton.styleFrom(
+                                backgroundColor: i == page ? softGreen : Colors.white,
+                                minimumSize: const Size(42, 42),
+                              ),
+                              child: Text('${i + 1}'),
+                            )),
+                          IconButton(
+                            onPressed: page >= pages - 1 ? null : () => setState(() => currentPage = page + 1),
+                            icon: const Icon(Icons.chevron_right_rounded),
+                          ),
+                        ],
                       ),
-                    ],
+
                   ],
                 ),
               ),
@@ -239,7 +259,7 @@ class _ContactsPageState extends State<ContactsPage> {
           PopupMenuItem(value: 'payment', child: Text('Tahsilat / ödeme')),
           PopupMenuItem(
             value: 'debt',
-            child: Text('Geçmiş borç / alacak ekle'),
+            child: Text('Tarihli manuel borç / alacak gir'),
           ),
           PopupMenuItem(
             value: 'history',
