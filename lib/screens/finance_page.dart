@@ -37,11 +37,17 @@ class _FinancePageState extends State<FinancePage> {
     final picked = await showDatePicker(context: context,
       initialDate: (start ? startDate : endDate) ?? now,
       firstDate: DateTime(2000), lastDate: DateTime(now.year + 1));
-    if (picked != null && mounted) setState(() {
-      period = 'custom';
-      if (start) { startDate = picked; } else { endDate = picked; }
-      currentPage = 0;
-    });
+    if (picked != null && mounted) {
+      setState(() {
+        period = 'custom';
+        if (start) {
+          startDate = picked;
+        } else {
+          endDate = picked;
+        }
+        currentPage = 0;
+      });
+    }
   }
 
 
