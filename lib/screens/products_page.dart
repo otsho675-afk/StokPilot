@@ -23,12 +23,19 @@ class _ProductsPageState extends State<ProductsPage> {
   int currentPage = 0;
   static const int pageSize = 20;
   bool showPurchasePrice = false;
+  bool advancedFilters = false;
+  double? minimumPrice;
+  double? maximumPrice;
+  final minPriceInput = TextEditingController();
+  final maxPriceInput = TextEditingController();
   final search = TextEditingController();
   bool _openingProduct = false;
 
   @override
   void dispose() {
     search.dispose();
+    minPriceInput.dispose();
+    maxPriceInput.dispose();
     super.dispose();
   }
 
@@ -91,7 +98,10 @@ class _ProductsPageState extends State<ProductsPage> {
       barcode: (m['barcode'] ?? '').toString(),
       stockMilli: qty,
     );
+    final price = ((m['salePriceMinor'] as num?)?.toInt() ?? 0) / 100;
     return byStock &&
+        (minimumPrice == null || price >= minimumPrice!) &&
+        (maximumPrice == null || price <= maximumPrice!) &&
         (categoryFilter.isEmpty || m['categoryId'] == categoryFilter) &&
         productSearchScore(entry, query) >= 0;
   }
@@ -337,6 +347,55 @@ class _ProductsPageState extends State<ProductsPage> {
                         );
                       },
                     ),
+                    OutlinedButton.icon(
+                      onPressed: () => setState(() => advancedFilters = !advancedFilters),
+                      icon: Icon(advancedFilters ? Icons.tune_rounded : Icons.filter_alt_outlined),
+                      label: Text(advancedFilters ? 'Gelişmiş filtreleri kapat' : 'Gelişmiş filtreler · fiyat aralığı'),
+                    ),
+                    if (advancedFilters) ...[
+                      const SizedBox(height: 12),
+                      ResponsiveFields(
+                        first: TextField(
+                          controller: minPriceInput,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: const InputDecoration(
+                            labelText: 'En düşük satış fiyatı (₺)',
+                            prefixIcon: Icon(Icons.arrow_downward_rounded),
+                          ),
+                          onChanged: (value) => setState(() {
+                            minimumPrice = double.tryParse(value.replaceAll(',', '.'));
+                            currentPage = 0;
+                          }),
+                        ),
+                        second: TextField(
+                          controller: maxPriceInput,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: const InputDecoration(
+                            labelText: 'En yüksek satış fiyatı (₺)',
+                            prefixIcon: Icon(Icons.arrow_upward_rounded),
+                          ),
+                          onChanged: (value) => setState(() {
+                            maximumPrice = double.tryParse(value.replaceAll(',', '.'));
+                            currentPage = 0;
+                          }),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () => setState(() {
+                            minPriceInput.clear();
+                            maxPriceInput.clear();
+                            minimumPrice = null;
+                            maximumPrice = null;
+                            currentPage = 0;
+                          }),
+                          icon: const Icon(Icons.restart_alt_rounded),
+                          label: const Text('Fiyat filtresini sıfırla'),
+                        ),
+                      ),
+                    ],
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Alış fiyatı ve kâr oranını göster'),
@@ -592,8 +651,8 @@ class _ProductsPageState extends State<ProductsPage> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: canvas,
-          borderRadius: BorderRadius.circular(16),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(color: line),
         ),
         child: Column(
