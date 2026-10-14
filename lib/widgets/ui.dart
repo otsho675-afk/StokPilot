@@ -450,68 +450,113 @@ class ListPager extends StatelessWidget {
     required this.onPageChanged,
     required this.onPageSizeChanged,
   });
+
   final int total, page, pageSize;
   final ValueChanged<int> onPageChanged;
   final ValueChanged<int> onPageSizeChanged;
 
   @override
-  Widget build(BuildContext context) {
-    final pages = ((total + pageSize - 1) ~/ pageSize).clamp(1, 999999);
-    final current = page.clamp(0, pages - 1);
-    return Padding(
-      padding: const EdgeInsets.only(top: 14),
-      child: Wrap(
-        alignment: WrapAlignment.spaceBetween,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: 10, runSpacing: 9,
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final pages = ((total + pageSize - 1) ~/ pageSize).clamp(1, 999999);
+      final current = page.clamp(0, pages - 1);
+      final narrow = constraints.maxWidth < 500;
+      final shown = <int>{
+        0,
+        if (pages > 1) pages - 1,
+        for (var i = current - (narrow ? 0 : 1);
+            i <= current + (narrow ? 0 : 1); i++)
+          if (i >= 0 && i < pages) i,
+      }.toList()..sort();
+
+      final count = Text(
+        total == 0
+            ? '0 kayıt'
+            : '${current * pageSize + 1}–${(current * pageSize + pageSize).clamp(0, total)} / $total kayıt',
+        style: const TextStyle(color: muted, fontSize: 12),
+      );
+      final sizePicker = DropdownButton<int>(
+        key: const ValueKey('pager-page-size'),
+        value: pageSize,
+        isDense: true,
+        underline: const SizedBox.shrink(),
+        items: const [5, 10, 20, 50]
+            .map((n) => DropdownMenuItem(
+                  value: n,
+                  child: Text('$n kayıt', style: TextStyle(fontSize: 12)),
+                ))
+            .toList(),
+        onChanged: (n) {
+          if (n != null) onPageSizeChanged(n);
+        },
+      );
+      final buttons = Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(total == 0 ? '0 kayıt' : '${current * pageSize + 1}–${(current * pageSize + pageSize).clamp(0, total)} / $total kayıt',
-              style: const TextStyle(color: muted, fontSize: 12)),
-          DropdownButton<int>(
-            value: pageSize,
-            isDense: true,
-            underline: const SizedBox.shrink(),
-            items: const [5, 10, 20, 50].map((n) => DropdownMenuItem(
-              value: n, child: Text('$n kayıt', style: TextStyle(fontSize: 12)))).toList(),
-            onChanged: (n) { if (n != null) onPageSizeChanged(n); },
+          IconButton(
+            tooltip: 'Önceki sayfa',
+            visualDensity: VisualDensity.compact,
+            onPressed: current == 0 ? null : () => onPageChanged(current - 1),
+            icon: const Icon(Icons.chevron_left_rounded, size: 19),
           ),
-          Row(mainAxisSize: MainAxisSize.min, children: [
-            IconButton(
-              icon: const Icon(Icons.chevron_left_rounded, size: 19),
-              tooltip: 'Önceki sayfa',
-              onPressed: current == 0 ? null : () => onPageChanged(current - 1),
-              visualDensity: VisualDensity.compact,
-            ),
-            ...List.generate(pages, (i) => i)
-              .where((i) => i == 0 || i == pages - 1 || (i - current).abs() <= 1)
-              .take(5)
-              .map((i) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                child: SizedBox(
-                  width: 32, height: 32,
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: const Size(32, 32),
-                      backgroundColor: current == i ? softGreen : Colors.white,
-                      side: BorderSide(color: current == i ? green : line),
-                    ),
-                    onPressed: () => onPageChanged(i),
-                    child: Text('${i + 1}', style: const TextStyle(fontSize: 12)),
+          for (final index in shown)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: SizedBox(
+                width: 32,
+                height: 32,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(32, 32),
+                    backgroundColor: current == index ? softGreen : Colors.white,
+                    side: BorderSide(color: current == index ? green : line),
                   ),
+                  onPressed: () => onPageChanged(index),
+                  child: Text('${index + 1}', style: const TextStyle(fontSize: 12)),
                 ),
-              )),
-            IconButton(
-              icon: const Icon(Icons.chevron_right_rounded, size: 19),
-              tooltip: 'Sonraki sayfa',
-              visualDensity: VisualDensity.compact,
-              onPressed: current >= pages - 1 ? null : () => onPageChanged(current + 1),
+              ),
             ),
-          ]),
+          IconButton(
+            tooltip: 'Sonraki sayfa',
+            visualDensity: VisualDensity.compact,
+            onPressed: current >= pages - 1 ? null : () => onPageChanged(current + 1),
+            icon: const Icon(Icons.chevron_right_rounded, size: 19),
+          ),
         ],
-      ),
-    );
-  }
+      );
+
+      return Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: narrow
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: count),
+                      sizePicker,
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SingleChildScrollView(
+                    key: const ValueKey('pager-mobile-scroll'),
+                    scrollDirection: Axis.horizontal,
+                    child: buttons,
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  Expanded(child: count),
+                  sizePicker,
+                  const SizedBox(width: 10),
+                  buttons,
+                ],
+              ),
+      );
+    },
+  );
 }
 
 /// The route, not its awaiting caller, owns text controllers until unmount.
