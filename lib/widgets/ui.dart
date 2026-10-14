@@ -144,7 +144,7 @@ class PageTitle extends StatelessWidget {
   final Widget? action;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 24),
+    padding: const EdgeInsets.only(bottom: 20),
     child: LayoutBuilder(
       builder: (context, constraints) {
         final narrow = constraints.maxWidth < 480;
@@ -309,7 +309,7 @@ class ResponsiveFields extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, size) {
-      if (size.maxWidth < 520) {
+      if (size.maxWidth < 540) {
         return Column(children: [first, const SizedBox(height: 10), second]);
       }
       return Row(
@@ -380,7 +380,7 @@ class ResponsiveFormDialog extends StatelessWidget {
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     final width = (size.width - 32).clamp(200.0, 640.0).toDouble();
     final maxHeight =
-        (size.height - keyboard - 48).clamp(160.0, 9000.0).toDouble();
+        (size.height - keyboard - 32).clamp(160.0, 9000.0).toDouble();
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -424,8 +424,8 @@ class ResponsiveFormDialog extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
                   child: Wrap(
                     alignment: WrapAlignment.end,
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: 10,
+                    runSpacing: 10,
                     children: actions,
                   ),
                 ),
