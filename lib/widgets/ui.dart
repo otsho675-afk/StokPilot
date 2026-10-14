@@ -3,13 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/app_api.dart';
 
 // StokPilot design system: consistent contrast and mobile-safe components.
-const ink = Color(0xFF182B46);
-const green = Color(0xFF1357C5);
-const canvas = Color(0xFFF4F7FC);
-const muted = Color(0xFF64748B);
-const line = Color(0xFFE1E8F2);
-const softGreen = Color(0xFFE8F0FF);
-const amber = Color(0xFFBA741A);
+const ink = Color(0xFF172B43);
+const green = Color(0xFF087F79);
+const canvas = Color(0xFFF6F8FB);
+const muted = Color(0xFF758397);
+const line = Color(0xFFE6ECF1);
+const softGreen = Color(0xFFE4F3F0);
+const amber = Color(0xFFB87929);
 
 class MetricCard extends StatelessWidget {
   const MetricCard({
@@ -30,101 +30,54 @@ class MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: Colors.white,
-    borderRadius: BorderRadius.circular(14),
+    borderRadius: BorderRadius.circular(16),
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 106),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+        constraints: const BoxConstraints(minHeight: 112),
+        padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 15),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
+          color: Colors.white,
           border: Border.all(color: line),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: const [
-            BoxShadow(
-              color: Color(0x0A132F36),
-              blurRadius: 12,
-              offset: Offset(0, 3),
-            ),
+            BoxShadow(color: Color(0x07152842), blurRadius: 18, offset: Offset(0, 4)),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: muted,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+            Row(children: [
+              Container(
+                width: 32, height: 32,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: .10),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                const SizedBox(width: 7),
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, color: accent, size: 17),
-                ),
-              ],
-            ),
-            const SizedBox(height: 7),
+                child: Icon(icon, size: 17, color: accent),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12, color: muted, fontWeight: FontWeight.w700)),
+              ),
+              if (onTap != null) const Icon(Icons.arrow_outward_rounded, size: 16, color: muted),
+            ]),
+            const SizedBox(height: 10),
             FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
+              fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: Text(
-                  value,
-                  key: ValueKey<String>(value),
-                  style: const TextStyle(
-                    fontSize: 22,
-                    color: ink,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.8,
-                  ),
-                ),
+                duration: const Duration(milliseconds: 180),
+                child: Text(value, key: ValueKey<String>(value),
+                  style: const TextStyle(color: ink, fontSize: 24,
+                    fontWeight: FontWeight.w900, letterSpacing: -0.65)),
               ),
             ),
             if (subtext != null) ...[
-              const SizedBox(height: 5),
-              Text(
-                subtext!,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: muted,
-                  height: 1.3,
-                ),
-              ),
-            ],
-            if (onTap != null) ...[
-              const SizedBox(height: 9),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'İncele',
-                    style: TextStyle(
-                      color: accent,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(width: 3),
-                  Icon(Icons.arrow_forward_rounded, size: 13, color: accent),
-                ],
-              ),
+              const SizedBox(height: 4),
+              Text(subtext!, maxLines: 2, overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: muted, fontSize: 11)),
             ],
           ],
         ),
@@ -142,48 +95,37 @@ class PageTitle extends StatelessWidget {
   });
   final String title, subtitle;
   final Widget? action;
+
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 20),
-    child: LayoutBuilder(
-      builder: (context, constraints) {
-        final narrow = constraints.maxWidth < 480;
-        final heading = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    child: LayoutBuilder(builder: (context, constraints) {
+      final heading = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 26,
+            fontWeight: FontWeight.w900, color: ink, letterSpacing: -1)),
+          const SizedBox(height: 4),
+          Text(subtitle, style: const TextStyle(
+            color: muted, fontSize: 12.5, height: 1.45)),
+        ],
+      );
+      if (constraints.maxWidth < 530) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: ink,
-                letterSpacing: -0.7,
-              ),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              subtitle,
-              style: const TextStyle(color: muted, fontSize: 13, height: 1.4),
-            ),
+            heading,
+            if (action != null) ...[const SizedBox(height: 12), action!],
           ],
         );
-        if (narrow) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              heading,
-              if (action != null) ...[const SizedBox(height: 14), action!],
-            ],
-          );
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(child: heading),
-            if (action != null) ...[const SizedBox(width: 14), action!],
-          ],
-        );
-      },
-    ),
+      }
+      return Row(
+        children: [
+          Expanded(child: heading),
+          if (action != null) ...[const SizedBox(width: 16), action!],
+        ],
+      );
+    }),
   );
 }
 
@@ -198,36 +140,37 @@ class BlankState extends StatelessWidget {
   final String message, title;
   final IconData icon;
   final Widget? action;
+
   @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
-              color: softGreen,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 34, color: green),
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+    decoration: BoxDecoration(
+      color: const Color(0xFFFAFCFD),
+      borderRadius: BorderRadius.circular(15),
+      border: Border.all(color: line),
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 46, height: 46,
+          decoration: BoxDecoration(
+            color: softGreen,
+            borderRadius: BorderRadius.circular(14),
           ),
-          const SizedBox(height: 13),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontWeight: FontWeight.w800, color: ink),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: muted, height: 1.4),
-          ),
-          if (action != null) ...[const SizedBox(height: 16), action!],
+          child: Icon(icon, size: 22, color: green),
+        ),
+        const SizedBox(height: 10),
+        Text(title, textAlign: TextAlign.center,
+          style: const TextStyle(color: ink, fontWeight: FontWeight.w800, fontSize: 14)),
+        const SizedBox(height: 4),
+        Text(message, textAlign: TextAlign.center,
+          style: const TextStyle(color: muted, fontSize: 12, height: 1.4)),
+        if (action != null) ...[
+          const SizedBox(height: 12), action!,
         ],
-      ),
+      ],
     ),
   );
 }
@@ -236,26 +179,23 @@ class DataPanel extends StatelessWidget {
   const DataPanel({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(14),
+    this.padding = const EdgeInsets.all(18),
   });
   final Widget child;
   final EdgeInsetsGeometry padding;
+
   @override
   Widget build(BuildContext context) => Container(
     width: double.infinity,
+    padding: padding,
     decoration: BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
       border: Border.all(color: line),
+      borderRadius: BorderRadius.circular(17),
       boxShadow: const [
-        BoxShadow(
-          color: Color(0x06152C35),
-          blurRadius: 10,
-          offset: Offset(0, 3),
-        ),
+        BoxShadow(color: Color(0x05152842), blurRadius: 20, offset: Offset(0, 5)),
       ],
     ),
-    padding: padding,
     child: child,
   );
 }
@@ -270,29 +210,22 @@ class SectionHeading extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? trailing;
+
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: ink,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            if (subtitle != null)
-              Text(
-                subtitle!,
-                style: const TextStyle(color: muted, fontSize: 12),
-              ),
+      Expanded(child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(
+            color: ink, fontSize: 16, fontWeight: FontWeight.w900,
+            letterSpacing: -0.25)),
+          if (subtitle != null) ...[
+            const SizedBox(height: 3),
+            Text(subtitle!, style: const TextStyle(color: muted, fontSize: 11.5)),
           ],
-        ),
-      ),
+        ],
+      )),
       if (trailing != null) trailing!,
     ],
   );
@@ -369,67 +302,75 @@ class ResponsiveFormDialog extends StatelessWidget {
     required this.content,
     this.actions = const <Widget>[],
   });
-
   final Widget title;
   final Widget content;
   final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
+    final dimensions = MediaQuery.sizeOf(context);
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
-    final width = (size.width - 24).clamp(260.0, 520.0).toDouble();
-    final maxHeight =
-        (size.height - keyboard - 32).clamp(160.0, 9000.0).toDouble();
-
+    final width = (dimensions.width - 24).clamp(260.0, 540.0).toDouble();
+    final height = (dimensions.height - keyboard - 24).clamp(160.0, 9000.0).toDouble();
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      insetPadding: const EdgeInsets.all(12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       clipBehavior: Clip.antiAlias,
       backgroundColor: Colors.white,
       child: SizedBox(
         width: width,
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: maxHeight),
+          constraints: BoxConstraints(maxHeight: height),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
-                child: DefaultTextStyle(
-                  style: const TextStyle(
-                    fontSize: 18,
-                    color: ink,
-                    fontWeight: FontWeight.w800,
-                  ),
-                  child: title,
+              Container(
+                padding: const EdgeInsets.fromLTRB(21, 16, 13, 13),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFAFCFD),
+                  border: Border(bottom: BorderSide(color: line)),
                 ),
+                child: Row(children: [
+                  Expanded(
+                    child: DefaultTextStyle(
+                      style: const TextStyle(
+                        fontSize: 17, color: ink, fontWeight: FontWeight.w900,
+                        letterSpacing: -0.4),
+                      child: title,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Pencereyi kapat',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    icon: const Icon(Icons.close_rounded, color: muted, size: 20),
+                  ),
+                ]),
               ),
               Flexible(
                 fit: FlexFit.loose,
                 child: SingleChildScrollView(
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(21, 17, 21, 18),
                   child: content,
                 ),
               ),
-              if (actions.isNotEmpty) ...[
-                const Divider(height: 1, color: line),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+              if (actions.isNotEmpty)
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFAFCFD),
+                    border: Border(top: BorderSide(color: line)),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                   child: Wrap(
                     alignment: WrapAlignment.end,
-                    spacing: 10,
-                    runSpacing: 10,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: actions,
                   ),
                 ),
-              ],
             ],
           ),
         ),
@@ -437,7 +378,6 @@ class ResponsiveFormDialog extends StatelessWidget {
     );
   }
 }
-
 
 class CompactDateField extends StatelessWidget {
   const CompactDateField({
@@ -454,46 +394,48 @@ class CompactDateField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = date == null
-        ? 'Tarih seç'
+    final display = date == null ? 'Tarih seç'
         : '${date!.day.toString().padLeft(2, '0')}.${date!.month.toString().padLeft(2, '0')}.${date!.year}';
-    return Container(
-      constraints: const BoxConstraints(minHeight: 54),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F9FC),
-        borderRadius: BorderRadius.circular(11),
-        border: Border.all(color: line),
-      ),
-      child: Row(children: [
-        Expanded(
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(11),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
-              child: Row(children: [
-                const Icon(Icons.event_outlined, color: green, size: 19),
-                const SizedBox(width: 10),
-                Expanded(child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(label, style: const TextStyle(fontSize: 11, color: muted)),
-                    const SizedBox(height: 2),
-                    Text(text, style: const TextStyle(fontSize: 13, color: ink, fontWeight: FontWeight.w700)),
-                  ],
-                )),
-                const Icon(Icons.keyboard_arrow_down_rounded, size: 19, color: muted),
-              ]),
+    return Material(
+      color: const Color(0xFFFBFCFE),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 57),
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(color: line),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(children: [
+            Container(
+              width: 30, height: 30,
+              decoration: BoxDecoration(color: softGreen, borderRadius: BorderRadius.circular(9)),
+              child: const Icon(Icons.calendar_month_outlined, color: green, size: 16),
             ),
-          ),
+            const SizedBox(width: 10),
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(color: muted, fontSize: 10)),
+                const SizedBox(height: 3),
+                Text(display, style: const TextStyle(
+                  color: ink, fontSize: 13, fontWeight: FontWeight.w700)),
+              ],
+            )),
+            if (date != null && onClear != null)
+              IconButton(
+                tooltip: '$label temizle',
+                icon: const Icon(Icons.close_rounded, color: muted, size: 18),
+                onPressed: onClear,
+              )
+            else
+              const Icon(Icons.expand_more_rounded, color: muted, size: 19),
+          ]),
         ),
-        if (date != null && onClear != null)
-          IconButton(
-            onPressed: onClear,
-            icon: const Icon(Icons.close_rounded, size: 17),
-            tooltip: '$label temizle',
-          ),
-      ]),
+      ),
     );
   }
 }

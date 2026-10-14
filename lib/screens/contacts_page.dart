@@ -343,10 +343,10 @@ class _ContactsPageState extends State<ContactsPage> {
       return Padding(
         padding: const EdgeInsets.only(bottom: 7),
         child: Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(color: line),
           ),
           child: Column(
@@ -355,6 +355,7 @@ class _ContactsPageState extends State<ContactsPage> {
               Row(
                 children: [
                   CircleAvatar(
+                    radius: 17,
                     backgroundColor: softGreen,
                     child: Icon(
                       m['type'] == 'supplier'
@@ -402,7 +403,7 @@ class _ContactsPageState extends State<ContactsPage> {
                   TextButton.icon(
                     onPressed: () => contactHistory(context, item),
                     icon: const Icon(Icons.badge_outlined, size: 17),
-                    label: const Text('Firma kartı'),
+                    label: const Text('Detay'),
                   ),
                 ],
               ),
@@ -411,12 +412,19 @@ class _ContactsPageState extends State<ContactsPage> {
         ),
       );
     }
-    return Column(
-      children: [
-        ListTile(
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: line),
+      ),
+      child: ListTile(
           contentPadding: const EdgeInsets.symmetric(vertical: 1),
           onTap: () => contactHistory(context, item),
           leading: CircleAvatar(
+            radius: 17,
             backgroundColor: softGreen,
             child: Icon(
               m['type'] == 'supplier'
@@ -451,8 +459,6 @@ class _ContactsPageState extends State<ContactsPage> {
             ],
           ),
         ),
-        const Divider(height: 1, color: line),
-      ],
     );
   }
 }

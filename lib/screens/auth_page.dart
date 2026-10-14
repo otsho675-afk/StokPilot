@@ -141,6 +141,7 @@ class _AuthPageState extends State<AuthPage> {
   });
   @override
   Widget build(BuildContext context) => Scaffold(
+    backgroundColor: canvas,
     body: Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -150,17 +151,17 @@ class _AuthPageState extends State<AuthPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                width: 72,
-                height: 72,
+                width: 58,
+                height: 58,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: ink,
-                  borderRadius: BorderRadius.circular(20),
+                  color: green,
+                  borderRadius: BorderRadius.circular(17),
                 ),
                 child: const Icon(
-                  Icons.inventory_2_rounded,
+                  Icons.layers_rounded,
                   color: Colors.white,
-                  size: 36,
+                  size: 28,
                 ),
               ),
               const SizedBox(height: 16),
@@ -182,7 +183,7 @@ class _AuthPageState extends State<AuthPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      register ? 'Hesap oluştur' : 'Giriş yap',
+                      register ? 'Hesap oluştur' : 'Tekrar hoş geldin',
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,

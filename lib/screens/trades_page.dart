@@ -115,22 +115,22 @@ class _TradesPageState extends State<TradesPage> {
                   children: [
                     SectionHeading(
                       title:
-                          sale ? 'Akıllı kasa' : 'Yeni alış oluştur',
+                          sale ? 'Yeni satış' : 'Yeni alış',
                       subtitle:
                           sale
-                              ? 'Ürünleri soldan seç, sağdan ödemeyi tamamla. Hızlı, temiz, tek ekran.'
+                              ? 'Ürünleri sepete ekleyin, ödeme şeklini seçin ve işlemi tamamlayın.'
                               : 'Ürünleri ekle, tedarikçiyi seç ve stok girişini kaydet.',
                     ),
                     const SizedBox(height: 14),
                     LayoutBuilder(
                       builder: (context, viewport) {
-                        final desktopPos = viewport.maxWidth >= 860;
+                        final desktopPos = viewport.maxWidth >= 880;
                         final basket = Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(21),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             border: Border.all(color: line),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(17),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -146,7 +146,7 @@ class _TradesPageState extends State<TradesPage> {
                                   const Expanded(child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('Ürün bul ve ekle', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: ink)),
+                                      Text('Ürün seçimi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: ink)),
                                       Text('Barkod okut veya ürün ismi yaz', style: TextStyle(fontSize: 12, color: muted)),
                                     ],
                                   )),
@@ -459,44 +459,42 @@ class _TradesPageState extends State<TradesPage> {
                           ),
                         );
                         final checkout = Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(21),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             border: Border.all(color: line),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: const [BoxShadow(
-                              color: Color(0x080F2742), blurRadius: 24,
-                              offset: Offset(0, 8))],
+                            borderRadius: BorderRadius.circular(17),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Row(children: [
-                                const Expanded(child: Text('Kasa özeti', style: TextStyle(
-                                  color: ink, fontSize: 19, fontWeight: FontWeight.w900))),
+                                const Expanded(child: Text('Ödeme özeti', style: TextStyle(
+                                  color: ink, fontSize: 18, fontWeight: FontWeight.w900))),
                                 const Icon(Icons.receipt_long_outlined, color: muted),
                               ]),
                               const SizedBox(height: 14),
                               Container(
                                 padding: const EdgeInsets.all(18),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF102338),
-                                  borderRadius: BorderRadius.circular(16),
+                                  color: const Color(0xFFEAF5F2),
+                                  border: Border.all(color: const Color(0xFFCAE6DF)),
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                   const Text('ÖDENECEK TOPLAM', style: TextStyle(
-                                    color: Color(0xFFAFC7DC), fontSize: 11,
+                                    color: Color(0xFF4F807A), fontSize: 11,
                                     fontWeight: FontWeight.w800, letterSpacing: 1.1)),
                                   const SizedBox(height: 8),
                                   FittedBox(
                                     fit: BoxFit.scaleDown,
                                     alignment: Alignment.centerLeft,
                                     child: Text(money(total), style: const TextStyle(
-                                      color: Colors.white, fontSize: 34, fontWeight: FontWeight.w900)),
+                                      color: ink, fontSize: 32, fontWeight: FontWeight.w900)),
                                   ),
                                   const SizedBox(height: 10),
                                   Text('${lines.length} ürün kalemi · ${quantity(cartUnitMilli)} miktar',
-                                    style: const TextStyle(color: Color(0xFFD1E2F2), fontSize: 12)),
+                                    style: const TextStyle(color: Color(0xFF52756F), fontSize: 12)),
                                 ]),
                               ),
                               const SizedBox(height: 12),
@@ -510,7 +508,7 @@ class _TradesPageState extends State<TradesPage> {
                     const SizedBox(height: 8),
                     _totalRow('Genel toplam', money(total), highlight: true),
                     const SizedBox(height: 16),
-                    _posStep(2, 'Müşteri ve belge', 'İsteğe bağlı bilgiler', Icons.person_outline_rounded),
+                    _posSection('Müşteri ve belge', Icons.person_outline_rounded),
                     const SizedBox(height: 14),
                     DropdownButtonFormField<String>(
                       key: ValueKey('${widget.type}-$contactId'),
@@ -611,7 +609,7 @@ class _TradesPageState extends State<TradesPage> {
                         ),
                       ),
                     const SizedBox(height: 14),
-                    _posStep(3, 'Tahsilat', 'Nakit, kart veya veresiye', Icons.payments_outlined),
+                    _posSection('Ödeme yöntemi', Icons.payments_outlined),
                     const SizedBox(height: 14),
                     if (sale) ...[
                       const Text(
@@ -749,9 +747,9 @@ class _TradesPageState extends State<TradesPage> {
                         return Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(flex: 12, child: basket),
-                            const SizedBox(width: 14),
-                            Expanded(flex: 8, child: checkout),
+                            Expanded(flex: 11, child: basket),
+                            const SizedBox(width: 16),
+                            Expanded(flex: 9, child: checkout),
                           ],
                         );
                       },
@@ -834,35 +832,21 @@ class _TradesPageState extends State<TradesPage> {
       ),
     ],
   );
-  Widget _posStep(int number, String title, String subtitle, IconData icon) =>
-      Padding(
-        padding: const EdgeInsets.only(top: 10, bottom: 2),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: softGreen,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(child: Icon(icon, color: green, size: 20)),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('$number. $title',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: ink)),
-                  Text(subtitle, style: const TextStyle(fontSize: 12, color: muted)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
+  Widget _posSection(String title, IconData icon) => Padding(
+    padding: const EdgeInsets.only(top: 8, bottom: 8),
+    child: Row(children: [
+      Container(
+        width: 30, height: 30,
+        decoration: BoxDecoration(
+          color: softGreen,
+          borderRadius: BorderRadius.circular(9)),
+        child: Icon(icon, size: 16, color: green),
+      ),
+      const SizedBox(width: 9),
+      Text(title, style: const TextStyle(
+        color: ink, fontSize: 14, fontWeight: FontWeight.w900)),
+    ]),
+  );
 
   Widget _methodChoice(String value, String title, IconData symbol) =>
       ChoiceChip(

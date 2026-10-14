@@ -21,37 +21,60 @@ class ProductFormScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: title),
+    backgroundColor: canvas,
+    appBar: AppBar(
+      toolbarHeight: 65,
+      backgroundColor: Colors.white,
+      title: DefaultTextStyle(
+        style: const TextStyle(fontSize: 17, color: ink,
+          fontWeight: FontWeight.w900),
+        child: title,
+      ),
+      bottom: const PreferredSize(
+        preferredSize: Size.fromHeight(1),
+        child: Divider(height: 1, color: line),
+      ),
+    ),
     body: SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    child: content,
-                  ),
-                ),
-                if (actions.isNotEmpty) ...[
-                  const Divider(height: 1),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Wrap(
-                      alignment: WrapAlignment.end,
-                      spacing: 10,
-                      runSpacing: 8,
-                      children: actions,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 760),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(17),
+                border: Border.all(color: line),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: const EdgeInsets.all(22),
+                      child: Material(color: Colors.white, child: content),
                     ),
                   ),
+                  if (actions.isNotEmpty)
+                    Container(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFAFCFD),
+                        border: Border(top: BorderSide(color: line)),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18, vertical: 12),
+                      child: Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: 9,
+                        runSpacing: 8,
+                        children: actions,
+                      ),
+                    ),
                 ],
-              ],
+              ),
             ),
           ),
         ),

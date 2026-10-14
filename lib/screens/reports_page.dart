@@ -56,7 +56,7 @@ class _ReportsPageState extends State<ReportsPage> {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       const PageTitle(
-        title: 'Yönetim raporları',
+        title: 'Analiz ve raporlar',
         subtitle: 'Satış, alış, nakit tahsilatı, stok ve cari görünürlüğü.',
       ),
       Wrap(
@@ -221,21 +221,27 @@ class _ReportsPageState extends State<ReportsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DataPanel(
+        Container(
+          padding: const EdgeInsets.all(19),
+          decoration: BoxDecoration(
+            color: const Color(0xFFEAF5F2),
+            border: Border.all(color: const Color(0xFFCEE7E0)),
+            borderRadius: BorderRadius.circular(15),
+          ),
           child: LayoutBuilder(
             builder: (context, size) {
               final title = Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Finansal kontrol paneli',
+                    'Finansal genel görünüm',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    '$periodName • Veriler Firestore kayıtlarından hesaplanır',
+                    '$periodName • İşletme kayıtlarından hesaplanır',
                     style: const TextStyle(color: muted, fontSize: 12),
                   ),
                 ],
@@ -255,7 +261,7 @@ class _ReportsPageState extends State<ReportsPage> {
             },
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 18),
         _metricGrid([
           MetricCard(
             title: 'Satış cirosu (KDV dahil)',

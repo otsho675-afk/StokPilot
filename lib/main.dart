@@ -82,9 +82,9 @@ class StokPilotApp extends StatelessWidget {
         selectedColor: softGreen,
         checkmarkColor: green,
         side: const BorderSide(color: line),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         labelStyle: const TextStyle(color: ink, fontWeight: FontWeight.w700),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       ),
       textTheme: const TextTheme(
         bodyMedium: TextStyle(color: ink, height: 1.4),
@@ -100,10 +100,10 @@ class StokPilotApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFFFAFBFD),
+        fillColor: const Color(0xFFFBFCFE),
         hintStyle: const TextStyle(color: muted),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(11),
           borderSide: const BorderSide(color: line),
         ),
         enabledBorder: OutlineInputBorder(
@@ -111,8 +111,8 @@ class StokPilotApp extends StatelessWidget {
           borderSide: const BorderSide(color: line),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: green, width: 1.5),
+          borderRadius: BorderRadius.circular(11),
+          borderSide: const BorderSide(color: green, width: 1.6),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 13,
@@ -125,10 +125,10 @@ class StokPilotApp extends StatelessWidget {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size(96, 40),
-          padding: const EdgeInsets.symmetric(horizontal: 19, vertical: 14),
+          minimumSize: const Size(110, 43),
+          padding: const EdgeInsets.symmetric(horizontal: 19, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(13),
+            borderRadius: BorderRadius.circular(11),
           ),
         ),
       ),
@@ -137,8 +137,8 @@ class StokPilotApp extends StatelessWidget {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size(94, 40),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          minimumSize: const Size(105, 43),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(13),
           ),
@@ -147,7 +147,7 @@ class StokPilotApp extends StatelessWidget {
       cardTheme: CardThemeData(
         color: Colors.white,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: Colors.white,
@@ -162,7 +162,7 @@ class StokPilotApp extends StatelessWidget {
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
     ),
     home: StreamBuilder<User?>(

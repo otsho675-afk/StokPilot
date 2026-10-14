@@ -347,6 +347,7 @@ class _ProductsPageState extends State<ProductsPage> {
                         );
                       },
                     ),
+                    const SizedBox(height: 12),
                     OutlinedButton.icon(
                       onPressed: () => setState(() => advancedFilters = !advancedFilters),
                       icon: Icon(advancedFilters ? Icons.tune_rounded : Icons.filter_alt_outlined),
@@ -396,6 +397,7 @@ class _ProductsPageState extends State<ProductsPage> {
                         ),
                       ),
                     ],
+                    const Divider(height: 18),
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Alış fiyatı ve kâr oranını göster'),
@@ -548,6 +550,26 @@ class _ProductsPageState extends State<ProductsPage> {
                           builder:
                               (context, c) => Column(
                                 children: [
+                                  if (c.maxWidth >= 650)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 10),
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      decoration: BoxDecoration(
+                                        color: canvas,
+                                        borderRadius: BorderRadius.circular(10)),
+                                      child: const Row(children: [
+                                        Expanded(flex: 5, child: Text('ÜRÜN BİLGİSİ',
+                                          style: TextStyle(color: muted, fontWeight: FontWeight.w800, fontSize: 10))),
+                                        Expanded(flex: 2, child: Text('SATIŞ FİYATI',
+                                          textAlign: TextAlign.end,
+                                          style: TextStyle(color: muted, fontWeight: FontWeight.w800, fontSize: 10))),
+                                        SizedBox(width: 117, child: Text('STOK',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(color: muted, fontWeight: FontWeight.w800, fontSize: 10))),
+                                        SizedBox(width: 82),
+                                      ]),
+                                    ),
                                   ...visible.map(
                                     (item) =>
                                         c.maxWidth < 650
@@ -628,7 +650,7 @@ class _ProductsPageState extends State<ProductsPage> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(13),
           border: Border.all(color: line),
         ),
         child: Column(
@@ -735,29 +757,29 @@ class _ProductsPageState extends State<ProductsPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: alert ? const Color(0xFFF0D8B0) : line),
         ),
         child: Row(
           children: [
             Container(
-              width: 46, height: 46,
+              width: 36, height: 36,
               decoration: BoxDecoration(
                 color: alert ? const Color(0xFFFFF0DD) : softGreen,
                 borderRadius: BorderRadius.circular(13),
               ),
               child: Icon(Icons.inventory_2_outlined, color: alert ? amber : green),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 10),
             Expanded(
               flex: 5,
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('${m['name'] ?? 'Ürün'}',
                   maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: ink, fontSize: 15, fontWeight: FontWeight.w800)),
+                  style: const TextStyle(color: ink, fontSize: 13, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 5),
                 Text('Kod: ${m['sku'] ?? '—'}  ·  Barkod: ${m['barcode'] ?? '—'}',
                   maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -776,16 +798,16 @@ class _ProductsPageState extends State<ProductsPage> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Text(money((m['salePriceMinor'] as num?)?.toInt() ?? 0),
                   maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: green, fontWeight: FontWeight.w900, fontSize: 17)),
+                  style: const TextStyle(color: green, fontWeight: FontWeight.w900, fontSize: 14)),
                 const Text('Satış fiyatı', style: TextStyle(color: muted, fontSize: 11)),
               ]),
             ),
-            const SizedBox(width: 12),
-            StatusPill(label: 'Stok ${quantity(qty)}', color: alert ? amber : green),
+            const SizedBox(width: 9),
+            StatusPill(label: quantity(qty), color: alert ? amber : green),
             IconButton(
               tooltip: 'Stok işlemi',
               onPressed: () => stockDialog(context, p),
-              icon: const Icon(Icons.tune_rounded, color: green),
+              icon: const Icon(Icons.tune_rounded, color: green, size: 18),
             ),
             _productActions(context, p),
           ],
