@@ -25,10 +25,16 @@ class _ContactsPageState extends State<ContactsPage> {
       firstDate: DateTime(2000),
       lastDate: DateTime(today.year + 1),
     );
-    if (picked != null && mounted) setState(() {
-      if (start) { dateFrom = picked; } else { dateTo = picked; }
-      currentPage = 0;
-    });
+    if (picked != null && mounted) {
+      setState(() {
+        if (start) {
+          dateFrom = picked;
+        } else {
+          dateTo = picked;
+        }
+        currentPage = 0;
+      });
+    }
   }
   final searchController = TextEditingController();
   @override
@@ -899,10 +905,14 @@ Future<void> accountEntryDialog(
                           context: context, initialDate: date,
                           firstDate: DateTime(2000), lastDate: DateTime.now(),
                         );
-                        if (picked != null) update(() {
-                          date = picked;
-                          if (dueDate != null && dueDate!.isBefore(date)) dueDate = null;
-                        });
+                        if (picked != null) {
+                          update(() {
+                            date = picked;
+                            if (dueDate != null && dueDate!.isBefore(date)) {
+                              dueDate = null;
+                            }
+                          });
+                        }
                       },
                     ),
                     const SizedBox(height: 10),
@@ -1007,10 +1017,16 @@ class _PartnerCardPageState extends State<PartnerCardPage> {
       context: context, initialDate: (beginning ? from : to) ?? now,
       firstDate: DateTime(2000), lastDate: DateTime(now.year + 1),
     );
-    if (picked != null && mounted) setState(() {
-      if (beginning) { from = picked; } else { to = picked; }
-      page = 0;
-    });
+    if (picked != null && mounted) {
+      setState(() {
+        if (beginning) {
+          from = picked;
+        } else {
+          to = picked;
+        }
+        page = 0;
+      });
+    }
   }
   @override
   Widget build(BuildContext context) => Scaffold(
