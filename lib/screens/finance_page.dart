@@ -30,7 +30,7 @@ class FinancePage extends StatefulWidget {
 
 class _FinancePageState extends State<FinancePage> {
   String period = '30', filter = 'all';
-  int visible = 40;
+  int currentPage = 0, pageSize = 10;
 
   DateTime? get since =>
       period == 'all'
@@ -67,7 +67,7 @@ class _FinancePageState extends State<FinancePage> {
               onSelected:
                   (_) => setState(() {
                     period = item.key;
-                    visible = 40;
+                    currentPage = 0;
                   }),
             ),
         ],
@@ -290,7 +290,7 @@ class _FinancePageState extends State<FinancePage> {
                       onSelected:
                           (_) => setState(() {
                             filter = item.key;
-                            visible = 40;
+                            currentPage = 0;
                           }),
                     ),
                 ],
@@ -302,7 +302,7 @@ class _FinancePageState extends State<FinancePage> {
                   title: 'Hareket bulunamadı',
                   message: 'Dönemi değiştir veya yeni bir gider kaydet.',
                 ),
-              for (final row in rows.take(visible)) ...[
+              for (final row in rows.skip(currentPage.clamp(0, ((rows.length + pageSize - 1) ~/ pageSize).clamp(1, 999999) - 1) * pageSize).take(pageSize)) ...[
                 LayoutBuilder(
                   builder: (context, box) {
                     final amount =
@@ -385,13 +385,13 @@ class _FinancePageState extends State<FinancePage> {
                 ),
                 const Divider(height: 1),
               ],
-              if (rows.length > visible)
-                TextButton(
-                  onPressed: () => setState(() => visible += 40),
-                  child: Text(
-                    'Daha fazla göster (${rows.length - visible} kaldı)',
-                  ),
-                ),
+              ListPager(
+                total: rows.length,
+                page: currentPage,
+                pageSize: pageSize,
+                onPageChanged: (n) => setState(() => currentPage = n),
+                onPageSizeChanged: (n) => setState(() { pageSize = n; currentPage = 0; }),
+              ),
             ],
           ),
         ),
