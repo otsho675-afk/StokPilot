@@ -548,12 +548,36 @@ class _ReportsPageState extends State<ReportsPage> {
             expenses: selectedExpenses,
             since: since,
           );
-          return DataPanel(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SectionHeading(
-                  title: 'Para hareketi özeti',
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _metricGrid([
+                MetricCard(
+                  title: 'Müşteri tahsilatları',
+                  value: money(totals.collectionsMinor),
+                  icon: Icons.call_received_rounded,
+                  accent: const Color(0xFF0D9874),
+                ),
+                MetricCard(
+                  title: 'Firma / tedarikçi ödemeleri',
+                  value: money(totals.payoutsMinor),
+                  icon: Icons.local_shipping_outlined,
+                  accent: const Color(0xFF2563EB),
+                ),
+                MetricCard(
+                  title: 'İşletme giderleri',
+                  value: money(totals.expensesMinor),
+                  icon: Icons.receipt_long_outlined,
+                  accent: const Color(0xFFC17C27),
+                ),
+              ]),
+              const SizedBox(height: 14),
+              DataPanel(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SectionHeading(
+                      title: 'Para hareketi özeti',
                   subtitle:
                       'Seçilen dönemde kaydedilen tahsilat, ödeme ve giderler',
                 ),
@@ -572,8 +596,10 @@ class _ReportsPageState extends State<ReportsPage> {
                   'Bu tutar kayıtlı para hareketlerinin farkıdır; kâr veya banka bakiyesi değildir.',
                   style: TextStyle(color: muted, fontSize: 11),
                 ),
-              ],
-            ),
+                  ],
+                ),
+              ),
+            ],
           );
         },
       );
