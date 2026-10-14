@@ -17,6 +17,40 @@ class ReportsPage extends StatefulWidget {
 
 class _ReportsPageState extends State<ReportsPage> {
   String period = '30';
+  DateTime? startDate;
+  DateTime? endDate;
+
+  Future<void> _chooseDate(bool start) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: (start ? startDate : endDate) ?? now,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(now.year + 1),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      period = 'custom';
+      if (start) { startDate = picked; } else { endDate = picked; }
+    });
+  }
+
+  String _dateLabel(DateTime? date, String fallback) => date == null
+      ? fallback : '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
+
+  bool _withinRange(Map<String, dynamic> data) {
+    final value = data['createdAt'];
+    final date = value is Timestamp ? value.toDate() : null;
+    if (date == null) return period == 'all';
+    if (period == 'all') return true;
+    if (period == 'custom') {
+      if (startDate != null && date.isBefore(DateTime(startDate!.year, startDate!.month, startDate!.day))) return false;
+      if (endDate != null && !date.isBefore(DateTime(endDate!.year, endDate!.month, endDate!.day + 1))) return false;
+      return true;
+    }
+    return !date.isBefore(DateTime.now().subtract(Duration(days: int.parse(period))));
+  }
+
 
   @override
   Widget build(BuildContext context) => Column(
@@ -36,6 +70,16 @@ class _ReportsPageState extends State<ReportsPage> {
           _period('all', 'Tüm zamanlar'),
         ],
       ),
+      const SizedBox(height: 12),
+      Wrap(spacing: 10, runSpacing: 8, children: [
+        OutlinedButton.icon(onPressed: () => _chooseDate(true),
+          icon: const Icon(Icons.event_outlined), label: Text('Başlangıç: ${_dateLabel(startDate, 'Seç')}')),
+        OutlinedButton.icon(onPressed: () => _chooseDate(false),
+          icon: const Icon(Icons.event_outlined), label: Text('Bitiş: ${_dateLabel(endDate, 'Seç')}')),
+        if (period == 'custom') TextButton(onPressed: () => setState(() {
+          period = '30'; startDate = null; endDate = null;
+        }), child: const Text('Tarihi sıfırla')),
+      ]),
       const SizedBox(height: 16),
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: AppApi.instance.watch('trades'),
@@ -54,9 +98,9 @@ class _ReportsPageState extends State<ReportsPage> {
                   if (!contacts.hasData) return const LinearProgressIndicator();
                   final metrics = ErpMetrics.compute(
                     products: products.data!.docs.map((d) => d.data()),
-                    trades: trades.data!.docs.map((d) => d.data()),
+                    trades: trades.data!.docs.map((d) => d.data()).where(_withinRange),
                     contacts: contacts.data!.docs.map((d) => d.data()),
-                    lastDays: period == 'all' ? null : int.parse(period),
+                    lastDays: period == 'all' || period == 'custom' ? null : int.parse(period),
                   );
                   final warningProducts =
                       products.data!.docs.where((doc) {
@@ -76,10 +120,8 @@ class _ReportsPageState extends State<ReportsPage> {
                                   ),
                         );
                   final now = DateTime.now();
-                  final since =
-                      period == 'all'
-                          ? null
-                          : now.subtract(Duration(days: int.parse(period)));
+                  final since = period == 'all' || period == 'custom'
+                      ? null : now.subtract(Duration(days: int.parse(period)));
                   final totals = <String, int>{
                     'cash': 0,
                     'card': 0,
@@ -90,7 +132,7 @@ class _ReportsPageState extends State<ReportsPage> {
                     final trade = doc.data();
                     if (trade['type'] != 'sale') continue;
                     final date = (trade['createdAt'] as Timestamp?)?.toDate();
-                    if (since != null && (date == null || date.isBefore(since))) {
+                    if (!_withinRange(trade)) {
                       continue;
                     }
                     final method = trade['paymentMethod']?.toString() ?? '';
@@ -121,7 +163,7 @@ class _ReportsPageState extends State<ReportsPage> {
   Widget _period(String code, String text) => ChoiceChip(
     label: Text(text),
     selected: period == code,
-    onSelected: (_) => setState(() => period = code),
+    onSelected: (_) => setState(() { period = code; startDate = null; endDate = null; }),
   );
 
   Future<void> _copyReport(BuildContext context, ErpMetrics metrics) async {
@@ -129,7 +171,7 @@ class _ReportsPageState extends State<ReportsPage> {
     final csv = erpCsv([
       [
         'StokPilot Yönetim Raporu',
-        period == 'all' ? 'Tüm zamanlar' : 'Son $period gün',
+        period == 'all' ? 'Tüm zamanlar' : period == 'custom' ? 'Özel tarih aralığı' : 'Son $period gün',
       ],
       ['Gösterge', 'Değer (kuruş veya adet)'],
       ['Satış işlemi', metrics.saleCount],
@@ -166,7 +208,7 @@ class _ReportsPageState extends State<ReportsPage> {
     List<QueryDocumentSnapshot<Map<String, dynamic>>> warnings,
     Map<String, int> paymentTotals,
   ) {
-    final periodName = period == 'all' ? 'Tüm dönem' : 'Son $period gün';
+    final periodName = period == 'all' ? 'Tüm dönem' : period == 'custom' ? 'Seçilen tarih aralığı' : 'Son $period gün';
     final sortedDates = m.byDay.keys.toList()..sort();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -246,6 +288,12 @@ class _ReportsPageState extends State<ReportsPage> {
         ]),
         const SizedBox(height: 14),
         _financeSummary(),
+        const SizedBox(height: 14),
+        _metricGrid([
+          MetricCard(title: 'Nakit satışlar', value: money(paymentTotals['cash'] ?? 0), icon: Icons.payments_rounded, accent: const Color(0xFF0C9672)),
+          MetricCard(title: 'POS / Kart satışları', value: money(paymentTotals['card'] ?? 0), icon: Icons.credit_card_rounded, accent: const Color(0xFF2563EB)),
+          MetricCard(title: 'Veresiye satışlar', value: money(paymentTotals['credit'] ?? 0), icon: Icons.receipt_long_rounded, accent: const Color(0xFFB7791F)),
+        ]),
         const SizedBox(height: 14),
         DataPanel(
           child: Column(
