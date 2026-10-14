@@ -480,7 +480,7 @@ Future<void> contactDialog(
         (dc) => StatefulBuilder(
           builder:
               (context, update) => ResponsiveFormDialog(
-                title: Text(item == null ? 'Cari ekle' : 'Cari düzenle'),
+                title: Text(item == null ? (type == 'supplier' ? 'Yeni tedarikçi' : 'Yeni müşteri') : (type == 'supplier' ? 'Tedarikçi düzenle' : 'Müşteri düzenle')),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -661,7 +661,7 @@ Future<void> paymentDialog(
               (context, update) => ResponsiveFormDialog(
                 title: Text(
                   accountEntryId == null
-                      ? '${contact.data()!['name']} • Cari hareket'
+                      ? '${contactType == 'supplier' ? 'Tedarikçi ödemesi' : 'Müşteri tahsilatı'} • ${contact.data()!['name']}'
                       : '${contact.data()!['name']} • Belge ödemesi',
                 ),
                 content: Column(
@@ -1060,7 +1060,7 @@ class _PartnerCardPageState extends State<PartnerCardPage> {
                             money(balance.abs()),
                             style: const TextStyle(
                               color: ink,
-                              fontSize: 28,
+                              fontSize: 24,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
