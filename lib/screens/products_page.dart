@@ -21,7 +21,7 @@ class _ProductsPageState extends State<ProductsPage> {
   String stockFilter = 'all';
   String sortBy = 'name';
   int currentPage = 0;
-  static const int pageSize = 20;
+  int pageSize = 20;
   bool showPurchasePrice = false;
   bool advancedFilters = false;
   double? minimumPrice;
@@ -557,38 +557,14 @@ class _ProductsPageState extends State<ProductsPage> {
                                 ],
                               ),
                         ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          alignment: WrapAlignment.center,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            IconButton(
-                              tooltip: 'Önceki sayfa',
-                              onPressed: page == 0 ? null : () => setState(() => currentPage = page - 1),
-                              icon: const Icon(Icons.chevron_left_rounded),
-                            ),
-                            ...List.generate(totalPages, (i) => i)
-                              .where((i) => totalPages <= 7 || (i - page).abs() <= 2 || i == 0 || i == totalPages - 1)
-                              .map((i) => OutlinedButton(
-                                onPressed: () => setState(() => currentPage = i),
-                                style: OutlinedButton.styleFrom(
-                                  backgroundColor: page == i ? softGreen : Colors.white,
-                                  minimumSize: const Size(42, 42),
-                                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                                ),
-                                child: Text('${i + 1}'),
-                              )),
-                            IconButton(
-                              tooltip: 'Sonraki sayfa',
-                              onPressed: page >= totalPages - 1 ? null : () => setState(() => currentPage = page + 1),
-                              icon: const Icon(Icons.chevron_right_rounded),
-                            ),
-                          ],
+                        ListPager(
+                          total: filtered.length,
+                          page: page,
+                          pageSize: pageSize,
+                          onPageChanged: (n) => setState(() => currentPage = n),
+                          onPageSizeChanged: (n) => setState(() { pageSize = n; currentPage = 0; }),
                         ),
-                        Text('${page * pageSize + 1}–${page * pageSize + visible.length} / ${filtered.length} ürün',
-                          textAlign: TextAlign.center, style: const TextStyle(color: muted, fontSize: 12)),
+
                       ],
                     ),
                   );

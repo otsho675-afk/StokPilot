@@ -44,6 +44,7 @@ class _TradesPageState extends State<TradesPage> {
   String purchaseMethod = 'cash', documentKind = 'receipt';
   bool addVatToSale = false;
   bool busy = false;
+  int historyPage = 0, historyPageSize = 10;
   bool get sale => widget.type == 'sale';
   int get total => lines.fold(0, (s, line) => s + line.total);
   void _setSaleVat(bool enabled) {
@@ -799,8 +800,9 @@ class _TradesPageState extends State<TradesPage> {
           }
           return DataPanel(
             child: Column(
-              children:
-                  docs.take(30).map((d) {
+              children: [
+                  ...docs.skip(historyPage.clamp(0, ((docs.length + historyPageSize - 1) ~/ historyPageSize) - 1) * historyPageSize)
+                    .take(historyPageSize).map((d) {
                     final m = d.data();
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -819,7 +821,13 @@ class _TradesPageState extends State<TradesPage> {
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => showTradeDetails(context, m),
                     );
-                  }).toList(),
+                  }),
+                  ListPager(
+                    total: docs.length, page: historyPage, pageSize: historyPageSize,
+                    onPageChanged: (n) => setState(() => historyPage = n),
+                    onPageSizeChanged: (n) => setState(() { historyPageSize = n; historyPage = 0; }),
+                  ),
+                ],
             ),
           );
         },
@@ -971,96 +979,6 @@ class _TradesPageState extends State<TradesPage> {
       if (mounted) setState(() => busy = false);
     }
   }
-}
-
-Future<_Line?> _addLineDialog(
-  BuildContext context,
-  QueryDocumentSnapshot<Map<String, dynamic>> product,
-  bool sale,
-  bool addVat,
-) async {
-  final m = product.data();
-  final qty = TextEditingController(text: '1');
-  final price = TextEditingController(
-    text: (((sale ? m['salePriceMinor'] : m['purchasePriceMinor']) ?? 0) / 100)
-        .toStringAsFixed(2)
-        .replaceAll('.', ','),
-  );
-  _Line? result;
-  await showOwnedDialog<void>(
-    context: context,
-    controllers: [qty, price],
-    builder:
-        (dialogContext) => ResponsiveFormDialog(
-          title: Text(m['name'] ?? 'Ürün'),
-          content: SizedBox(
-            width: 380,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Mevcut stok: ${quantity(m['stockMilli'] ?? 0)}',
-                  style: const TextStyle(color: Colors.blueGrey),
-                ),
-                const SizedBox(height: 14),
-                TextField(
-                  controller: qty,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Miktar'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: price,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Birim satış/alış fiyatı (₺)',
-                    helperText: 'Ürüne girilen fiyat aynen kullanılır.',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(sale
-                    ? (addVat ? 'KDV ayrıca eklenecek: %${(m['taxRateBps'] ?? 0) / 100}' : 'KDV eklenmeyecek · fiyat değişmez')
-                    : 'Alış KDV: %${(m['taxRateBps'] ?? 0) / 100}'),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('İptal'),
-            ),
-            FilledButton(
-              onPressed: () {
-                try {
-                  final q = parseQty(qty.text);
-                  if (q <= 0) {
-                    throw const FormatException(
-                      'Miktar sıfırdan büyük olmalı.',
-                    );
-                  }
-                  if (sale && q > (m['stockMilli'] ?? 0)) {
-                    throw const FormatException('Yetersiz stok.');
-                  }
-                  result = _Line(
-                    product.id,
-                    m['name'] ?? '',
-                    q,
-                    parseMoney(price.text),
-                    sale && !addVat ? 0 : (m['taxRateBps'] as num?)?.toInt() ?? 0,
-                    (m['taxRateBps'] as num?)?.toInt() ?? 0,
-                  );
-                  Navigator.pop(dialogContext);
-                } catch (e) {
-                  notify(context, '$e', error: true);
-                }
-              },
-              child: const Text('Ekle'),
-            ),
-          ],
-        ),
-  );
-  return result;
 }
 
 String tradeSlipText(Map<String, dynamic> trade) {

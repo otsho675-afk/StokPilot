@@ -21,13 +21,13 @@ class _OperationsPageState extends State<OperationsPage> {
   int tab = 0;
   String filter = 'all';
   String search = '';
-  int visible = 60;
+  int currentPage = 0, pageSize = 10;
 
   void setTab(int value) => setState(() {
     tab = value;
     filter = 'all';
     search = '';
-    visible = 60;
+    currentPage = 0;
   });
 
   @override
@@ -67,7 +67,7 @@ class _OperationsPageState extends State<OperationsPage> {
               onChanged:
                   (value) => setState(() {
                     search = value.toLowerCase().trim();
-                    visible = 60;
+                    currentPage = 0;
                   }),
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search_rounded),
@@ -106,7 +106,7 @@ class _OperationsPageState extends State<OperationsPage> {
     onSelected:
         (_) => setState(() {
           filter = value;
-          visible = 60;
+          currentPage = 0;
         }),
     label: Text(text),
   );
@@ -166,7 +166,7 @@ class _OperationsPageState extends State<OperationsPage> {
             0,
             (totalAmount, doc) => totalAmount + _minor(doc.data()['totalMinor']),
           );
-          final shown = records.take(visible).toList();
+          final shown = records.skip(currentPage.clamp(0, ((records.length + pageSize - 1) ~/ pageSize).clamp(1, 999999) - 1) * pageSize).take(pageSize).toList();
           return DataPanel(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -296,7 +296,9 @@ class _OperationsPageState extends State<OperationsPage> {
                     ),
                   );
                 }),
-                if (records.length > visible) _more(records.length),
+                ListPager(total: records.length, page: currentPage, pageSize: pageSize,
+                  onPageChanged: (n) => setState(() => currentPage = n),
+                  onPageSizeChanged: (n) => setState(() { pageSize = n; currentPage = 0; }),),
               ],
             ),
           );
@@ -340,7 +342,7 @@ class _OperationsPageState extends State<OperationsPage> {
                     b.data()['createdAt'],
                   ).compareTo(_order(a.data()['createdAt'])),
                 );
-          final shown = records.take(visible).toList();
+          final shown = records.skip(currentPage.clamp(0, ((records.length + pageSize - 1) ~/ pageSize).clamp(1, 999999) - 1) * pageSize).take(pageSize).toList();
           return DataPanel(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -454,21 +456,15 @@ class _OperationsPageState extends State<OperationsPage> {
                     ),
                   );
                 }),
-                if (records.length > visible) _more(records.length),
+                ListPager(total: records.length, page: currentPage, pageSize: pageSize,
+                  onPageChanged: (n) => setState(() => currentPage = n),
+                  onPageSizeChanged: (n) => setState(() { pageSize = n; currentPage = 0; }),),
               ],
             ),
           );
         },
       );
     },
-  );
-
-  Widget _more(int count) => Padding(
-    padding: const EdgeInsets.only(top: 10),
-    child: TextButton(
-      onPressed: () => setState(() => visible += 60),
-      child: Text('Daha fazla göster (${count - visible} kaldı)'),
-    ),
   );
 
   Widget _journalHeading(

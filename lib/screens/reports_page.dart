@@ -17,6 +17,7 @@ class ReportsPage extends StatefulWidget {
 
 class _ReportsPageState extends State<ReportsPage> {
   String period = '30';
+  int topPage = 0, topSize = 5, warningPage = 0, warningSize = 5;
   DateTime? startDate;
   DateTime? endDate;
 
@@ -35,8 +36,6 @@ class _ReportsPageState extends State<ReportsPage> {
     });
   }
 
-  String _dateLabel(DateTime? date, String fallback) => date == null
-      ? fallback : '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
 
   bool _withinRange(Map<String, dynamic> data) {
     final value = data['createdAt'];
@@ -44,8 +43,8 @@ class _ReportsPageState extends State<ReportsPage> {
     if (date == null) return period == 'all';
     if (period == 'all') return true;
     if (period == 'custom') {
-      if (startDate != null && date.isBefore(DateTime(startDate!.year, startDate!.month, startDate!.day))) return false;
-      if (endDate != null && !date.isBefore(DateTime(endDate!.year, endDate!.month, endDate!.day + 1))) return false;
+      if (startDate != null && date.isBefore(DateTime(startDate!.year, startDate!.month, startDate!.day))) { return false; }
+      if (endDate != null && !date.isBefore(DateTime(endDate!.year, endDate!.month, endDate!.day + 1))) { return false; }
       return true;
     }
     return !date.isBefore(DateTime.now().subtract(Duration(days: int.parse(period))));
@@ -71,15 +70,28 @@ class _ReportsPageState extends State<ReportsPage> {
         ],
       ),
       const SizedBox(height: 12),
-      Wrap(spacing: 10, runSpacing: 8, children: [
-        OutlinedButton.icon(onPressed: () => _chooseDate(true),
-          icon: const Icon(Icons.event_outlined), label: Text('Başlangıç: ${_dateLabel(startDate, 'Seç')}')),
-        OutlinedButton.icon(onPressed: () => _chooseDate(false),
-          icon: const Icon(Icons.event_outlined), label: Text('Bitiş: ${_dateLabel(endDate, 'Seç')}')),
-        if (period == 'custom') TextButton(onPressed: () => setState(() {
-          period = '30'; startDate = null; endDate = null;
-        }), child: const Text('Tarihi sıfırla')),
-      ]),
+      ResponsiveFields(
+        first: CompactDateField(
+          label: 'Başlangıç tarihi',
+          date: startDate,
+          onTap: () => _chooseDate(true),
+          onClear: () => setState(() { startDate = null; period = 'custom'; }),
+        ),
+        second: CompactDateField(
+          label: 'Bitiş tarihi',
+          date: endDate,
+          onTap: () => _chooseDate(false),
+          onClear: () => setState(() { endDate = null; period = 'custom'; }),
+        ),
+      ),
+      if (period == 'custom') Align(
+        alignment: Alignment.centerRight,
+        child: TextButton.icon(
+          onPressed: () => setState(() { period = '30'; startDate = null; endDate = null; }),
+          icon: const Icon(Icons.restart_alt_rounded, size: 16),
+          label: const Text('Tarihleri sıfırla'),
+        ),
+      ),
       const SizedBox(height: 16),
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: AppApi.instance.watch('trades'),
@@ -440,7 +452,7 @@ class _ReportsPageState extends State<ReportsPage> {
                       'Aktif ürünlerin stok seviyeleri tanımlı eşiklerin üzerinde.',
                   icon: Icons.task_alt_rounded,
                 ),
-              ...warnings.take(10).map((doc) {
+              ...warnings.skip(warningPage.clamp(0, ((warnings.length + warningSize - 1) ~/ warningSize).clamp(1, 999999) - 1) * warningSize).take(warningSize).map((doc) {
                 final product = doc.data();
                 final name = (product['name'] ?? 'Ürün').toString();
                 final stock = (product['stockMilli'] as num?)?.toInt() ?? 0;
@@ -463,11 +475,13 @@ class _ReportsPageState extends State<ReportsPage> {
                   ),
                 );
               }),
-              if (warnings.length > 10)
-                Text(
-                  'Diğer ${warnings.length - 10} kritik ürün stok listesindedir.',
-                  style: const TextStyle(color: muted),
-                ),
+              ListPager(
+                total: warnings.length,
+                page: warningPage,
+                pageSize: warningSize,
+                onPageChanged: (n) => setState(() => warningPage = n),
+                onPageSizeChanged: (n) => setState(() { warningSize = n; warningPage = 0; }),
+              ),
             ],
           ),
         ),
@@ -663,7 +677,9 @@ class _ReportsPageState extends State<ReportsPage> {
             message: 'Satış yaptıkça ürün sıralaması burada görünür.',
             icon: Icons.bar_chart_rounded,
           ),
-        ...metrics.topProducts.take(6).toList().asMap().entries.map((entry) {
+        ...metrics.topProducts.asMap().entries
+          .skip(topPage.clamp(0, ((metrics.topProducts.length + topSize - 1) ~/ topSize).clamp(1, 999999) - 1) * topSize)
+          .take(topSize).map((entry) {
           final item = entry.value;
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 7),
@@ -705,13 +721,20 @@ class _ReportsPageState extends State<ReportsPage> {
             ),
           );
         }),
+        ListPager(
+          total: metrics.topProducts.length,
+          page: topPage,
+          pageSize: topSize,
+          onPageChanged: (n) => setState(() => topPage = n),
+          onPageSizeChanged: (n) => setState(() { topSize = n; topPage = 0; }),
+        ),
       ],
     ),
   );
 
   Widget _summaryRow(String title, String value, {bool highlighted = false}) =>
       Padding(
-        padding: const EdgeInsets.symmetric(vertical: 7),
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
             Expanded(child: Text(title, style: const TextStyle(color: muted))),
