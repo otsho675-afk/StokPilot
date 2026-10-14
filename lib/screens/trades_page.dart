@@ -163,7 +163,6 @@ class _TradesPageState extends State<TradesPage> {
                               (product.data()['name'] ?? '').toString(),
                       optionsBuilder: (value) {
                         final entries = products
-                            .where((p) => !lines.any((line) => line.id == p.id))
                             .map((p) {
                               final m = p.data();
                               return ProductSearchEntry(
@@ -179,11 +178,21 @@ class _TradesPageState extends State<TradesPage> {
                         final byId = {for (final p in products) p.id: p};
                         return ranked.map((entry) => byId[entry.id]!).toList();
                       },
-                      onSelected: (p) async {
-                        final item = await _addLineDialog(context, p, sale, addVatToSale);
-                        if (mounted && item != null) {
-                          setState(() => lines.add(item));
-                        }
+                      onSelected: (p) {
+                        final m = p.data();
+                        final tax = (m['taxRateBps'] as num?)?.toInt() ?? 0;
+                        final price = (m[sale ? 'salePriceMinor' : 'purchasePriceMinor'] as num?)?.toInt() ?? 0;
+                        setState(() {
+                          final existing = lines.where((line) => line.id == p.id).toList();
+                          if (existing.isNotEmpty) {
+                            existing.first.qtyMilli += 1000;
+                          } else {
+                            lines.add(_Line(
+                              p.id, (m['name'] ?? 'Ürün').toString(), 1000,
+                              price, sale && !addVatToSale ? 0 : tax, tax,
+                            ));
+                          }
+                        });
                       },
                       optionsViewBuilder: (context, onSelected, options) {
                         final result = options.toList();
