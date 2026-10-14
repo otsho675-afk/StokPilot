@@ -545,6 +545,8 @@ Future<DateTime?> showPilotDatePicker({
           ('Bugün', now),
           ('Dün', now.subtract(const Duration(days: 1))),
           ('7 gün önce', now.subtract(const Duration(days: 7))),
+          ('7 gün sonra', now.add(const Duration(days: 7))),
+          ('30 gün sonra', now.add(const Duration(days: 30))),
         ].where((item) =>
             !item.$2.isBefore(first) && !item.$2.isAfter(last)).toList();
 
