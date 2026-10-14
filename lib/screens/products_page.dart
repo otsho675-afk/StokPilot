@@ -721,24 +721,41 @@ class _ProductsPageState extends State<ProductsPage> {
               const SizedBox(height: 8),
               Text('Alış: ${money((m['purchasePriceMinor'] as num?)?.toInt() ?? 0)}', style: const TextStyle(color: muted)),
             ],
-            const SizedBox(height: 11),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Satış ${money((m['salePriceMinor'] as num?)?.toInt() ?? 0)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: ink,
-                    ),
+            const SizedBox(height: 10),
+            LayoutBuilder(
+              builder: (context, bounds) {
+                final price = Text(
+                  'Satış ${money((m['salePriceMinor'] as num?)?.toInt() ?? 0)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: ink,
+                    fontSize: 14,
                   ),
-                ),
-                TextButton.icon(
+                );
+                final action = TextButton.icon(
                   onPressed: () => stockDialog(context, p),
                   icon: const Icon(Icons.tune_rounded, size: 17),
                   label: const Text('Stok işlemi'),
-                ),
-              ],
+                );
+                if (bounds.maxWidth < 345) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      price,
+                      Align(alignment: Alignment.centerRight, child: action),
+                    ],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: price),
+                    const SizedBox(width: 6),
+                    action,
+                  ],
+                );
+              },
             ),
           ],
         ),
