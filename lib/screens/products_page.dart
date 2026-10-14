@@ -347,6 +347,7 @@ class _ProductsPageState extends State<ProductsPage> {
                         );
                       },
                     ),
+                    const SizedBox(height: 12),
                     OutlinedButton.icon(
                       onPressed: () => setState(() => advancedFilters = !advancedFilters),
                       icon: Icon(advancedFilters ? Icons.tune_rounded : Icons.filter_alt_outlined),
@@ -396,6 +397,7 @@ class _ProductsPageState extends State<ProductsPage> {
                         ),
                       ),
                     ],
+                    const Divider(height: 18),
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Alış fiyatı ve kâr oranını göster'),
@@ -628,7 +630,7 @@ class _ProductsPageState extends State<ProductsPage> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(13),
           border: Border.all(color: line),
         ),
         child: Column(
