@@ -71,7 +71,7 @@ class _TradesPageState extends State<TradesPage> {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       PageTitle(
-        title: sale ? 'Hızlı satış' : 'Tedarikçi alışı',
+        title: sale ? 'Satış ekranı' : 'Tedarikçi alışı',
         subtitle:
             sale
                 ? 'Ürün seç, miktarı belirle ve stoğu otomatik güncelle.'
@@ -114,111 +114,14 @@ class _TradesPageState extends State<TradesPage> {
                   children: [
                     SectionHeading(
                       title:
-                          sale ? 'Hızlı satış • yeni fiş' : 'Tedarikçi alışı',
+                          sale ? 'Yeni satış oluştur' : 'Yeni alış oluştur',
                       subtitle:
                           sale
-                              ? 'Barkodla ürün bul, sepet oluştur ve ödeme türünü seç.'
+                              ? 'Önce ürünü ekle, ardından müşteri ve ödeme bilgilerini tamamla.'
                               : 'Ürünleri ekle, tedarikçiyi seç ve stok girişini kaydet.',
                     ),
                     const SizedBox(height: 14),
-                    DropdownButtonFormField<String>(
-                      key: ValueKey('${widget.type}-$contactId'),
-                      initialValue: contactId,
-                      isExpanded: true,
-                      decoration: InputDecoration(
-                        labelText: sale ? 'Müşteri / Cari' : 'Tedarikçi / Cari',
-                      ),
-                      items: [
-                        const DropdownMenuItem(
-                          value: '',
-                          child: Text('Cari olmadan (peşin)'),
-                        ),
-                        ...contacts.map(
-                          (d) => DropdownMenuItem(
-                            value: d.id,
-                            child: Text(d.data()['name'] ?? ''),
-                          ),
-                        ),
-                      ],
-                      onChanged:
-                          (s) => setState(() {
-                            contactId = s ?? '';
-                            if (contactId.isEmpty) {
-                              if (purchaseMethod == 'credit') {
-                                purchaseMethod = 'cash';
-                              }
-                              if (saleMethod == 'credit') {
-                                saleMethod = 'cash';
-                              }
-                            }
-                          }),
-                    ),
-                    const SizedBox(height: 14),
-                    DropdownButtonFormField<String>(
-                      initialValue: documentKind,
-                      decoration: const InputDecoration(
-                        labelText: 'Belge türü',
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'receipt',
-                          child: Text('Satış / alış fişi'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'invoice',
-                          child: Text('Fatura kaydı'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'project',
-                          child: Text('Proje işlemi'),
-                        ),
-                      ],
-                      onChanged:
-                          (value) => setState(
-                            () => documentKind = value ?? documentKind,
-                          ),
-                    ),
-                    if (documentKind == 'invoice') ...[
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: externalNo,
-                        maxLength: 100,
-                        decoration: const InputDecoration(
-                          labelText: 'Mevcut fatura numarası *',
-                          helperText:
-                              'Resmî fatura oluşturmaz; fatura bilgisini kaydeder.',
-                        ),
-                      ),
-                    ],
-                    if (documentKind == 'project') ...[
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: projectName,
-                        maxLength: 150,
-                        decoration: const InputDecoration(
-                          labelText: 'Proje adı *',
-                        ),
-                      ),
-                    ],
-                    if (sale)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: line),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: SwitchListTile.adaptive(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Satışa KDV ekle',
-                            style: TextStyle(fontWeight: FontWeight.w800)),
-                          subtitle: Text(addVatToSale
-                            ? 'Üründeki KDV oranı satış tutarına ayrıca eklenir.'
-                            : 'Kapalı: Ürüne yazdığın satış fiyatı aynen alınır.'),
-                          value: addVatToSale,
-                          onChanged: busy ? null : _setSaleVat,
-                        ),
-                      ),
+                    _posStep(1, 'Ürün seçimi', 'Barkod, stok kodu veya ürün adıyla hızlıca bul.', Icons.search_rounded),
                     const SizedBox(height: 14),
                     Autocomplete<QueryDocumentSnapshot<Map<String, dynamic>>>(
                       displayStringForOption:
@@ -313,12 +216,11 @@ class _TradesPageState extends State<TradesPage> {
                             focusNode: focus,
                             textInputAction: TextInputAction.search,
                             decoration: const InputDecoration(
-                              labelText:
-                                  'Ürün ara • barkod / stok kodu / ürün adı',
+                              hintText: 'Ürün adı, barkod veya stok kodu yazın',
+                              labelText: 'Ürün ara',
                               prefixIcon: Icon(Icons.qr_code_scanner_outlined),
                               suffixIcon: Icon(Icons.search),
-                              helperText:
-                                  'Tam barkod ve stok kodu eşleşmeleri önce gösterilir.',
+                              helperText: 'Sonuçtan bir ürüne dokunarak sepete ekleyin.',
                             ),
                           ),
                     ),
@@ -328,7 +230,7 @@ class _TradesPageState extends State<TradesPage> {
                         key: const ValueKey('pos-cart-summary'),
                         padding: const EdgeInsets.all(15),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF103E91),
+                          color: const Color(0xFF102338),
                           borderRadius: BorderRadius.circular(18),
                         ),
                         child: Column(
@@ -524,6 +426,109 @@ class _TradesPageState extends State<TradesPage> {
                     const SizedBox(height: 8),
                     _totalRow('Genel toplam', money(total), highlight: true),
                     const SizedBox(height: 16),
+                    _posStep(2, 'Müşteri ve belge', 'Cari hesabı, belge türünü ve vergi tercihini belirle.', Icons.person_outline_rounded),
+                    const SizedBox(height: 14),
+                    DropdownButtonFormField<String>(
+                      key: ValueKey('${widget.type}-$contactId'),
+                      initialValue: contactId,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        labelText: sale ? 'Müşteri / Cari' : 'Tedarikçi / Cari',
+                      ),
+                      items: [
+                        const DropdownMenuItem(
+                          value: '',
+                          child: Text('Cari olmadan (peşin)'),
+                        ),
+                        ...contacts.map(
+                          (d) => DropdownMenuItem(
+                            value: d.id,
+                            child: Text(d.data()['name'] ?? ''),
+                          ),
+                        ),
+                      ],
+                      onChanged:
+                          (s) => setState(() {
+                            contactId = s ?? '';
+                            if (contactId.isEmpty) {
+                              if (purchaseMethod == 'credit') {
+                                purchaseMethod = 'cash';
+                              }
+                              if (saleMethod == 'credit') {
+                                saleMethod = 'cash';
+                              }
+                            }
+                          }),
+                    ),
+                    const SizedBox(height: 14),
+                    DropdownButtonFormField<String>(
+                      initialValue: documentKind,
+                      decoration: const InputDecoration(
+                        labelText: 'Belge türü',
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'receipt',
+                          child: Text('Satış / alış fişi'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'invoice',
+                          child: Text('Fatura kaydı'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'project',
+                          child: Text('Proje işlemi'),
+                        ),
+                      ],
+                      onChanged:
+                          (value) => setState(
+                            () => documentKind = value ?? documentKind,
+                          ),
+                    ),
+                    if (documentKind == 'invoice') ...[
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: externalNo,
+                        maxLength: 100,
+                        decoration: const InputDecoration(
+                          labelText: 'Mevcut fatura numarası *',
+                          helperText:
+                              'Resmî fatura oluşturmaz; fatura bilgisini kaydeder.',
+                        ),
+                      ),
+                    ],
+                    if (documentKind == 'project') ...[
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: projectName,
+                        maxLength: 150,
+                        decoration: const InputDecoration(
+                          labelText: 'Proje adı *',
+                        ),
+                      ),
+                    ],
+                    if (sale)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: line),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: SwitchListTile.adaptive(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Satışa KDV ekle',
+                            style: TextStyle(fontWeight: FontWeight.w800)),
+                          subtitle: Text(addVatToSale
+                            ? 'Üründeki KDV oranı satış tutarına ayrıca eklenir.'
+                            : 'Kapalı: Ürüne yazdığın satış fiyatı aynen alınır.'),
+                          value: addVatToSale,
+                          onChanged: busy ? null : _setSaleVat,
+                        ),
+                      ),
+                    const SizedBox(height: 14),
+                    _posStep(3, 'Ödeme ve tamamlama', 'Ödeme yöntemini seçip fişi kaydet.', Icons.payments_outlined),
+                    const SizedBox(height: 14),
                     if (sale) ...[
                       const Text(
                         'ÖDEME YÖNTEMİ',
@@ -718,6 +723,36 @@ class _TradesPageState extends State<TradesPage> {
       ),
     ],
   );
+  Widget _posStep(int number, String title, String subtitle, IconData icon) =>
+      Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 2),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: softGreen,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(child: Icon(icon, color: green, size: 20)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('$number. $title',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: ink)),
+                  Text(subtitle, style: const TextStyle(fontSize: 12, color: muted)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+
   Widget _methodChoice(String value, String title, IconData symbol) =>
       ChoiceChip(
         selected: saleMethod == value,
