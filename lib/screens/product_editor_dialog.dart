@@ -55,7 +55,7 @@ class ProductFormScaffold extends StatelessWidget {
                     child: SingleChildScrollView(
                       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: const EdgeInsets.all(22),
-                      child: content,
+                      child: Material(color: Colors.white, child: content),
                     ),
                   ),
                   if (actions.isNotEmpty)
