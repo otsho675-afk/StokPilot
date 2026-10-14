@@ -123,22 +123,22 @@ class _TradesPageState extends State<TradesPage> {
                     const SizedBox(height: 14),
                     LayoutBuilder(
                       builder: (context, viewport) {
-                        final desktopPos = viewport.maxWidth >= 900;
+                        final desktopPos = viewport.maxWidth >= 820;
                         final basket = Container(
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFD),
+                            color: Colors.white,
                             border: Border.all(color: line),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const Text('KASA · ÜRÜNLER', style: TextStyle(
+                              const Text('ÜRÜN VE SEPET', style: TextStyle(
                                 color: muted, fontSize: 11, letterSpacing: 1.2,
                                 fontWeight: FontWeight.w900)),
                               const SizedBox(height: 14),
-                    _posStep(1, 'Ürün seçimi', 'Barkod, stok kodu veya ürün adıyla hızlıca bul.', Icons.search_rounded),
+                    _posStep(1, 'Ürün ekle', 'Arama sonucu seçildiğinde sepete eklenir.', Icons.search_rounded),
                     const SizedBox(height: 14),
                     Autocomplete<QueryDocumentSnapshot<Map<String, dynamic>>>(
                       displayStringForOption:
@@ -314,11 +314,29 @@ class _TradesPageState extends State<TradesPage> {
                         ),
                       ),
                     if (lines.isEmpty)
-                      const BlankState(
-                        title: 'Sepet boş, satışa hazır',
-                        message:
-                            'Yukarıdaki arama alanına ürün adı, stok kodu veya barkod girin.',
-                        icon: Icons.shopping_basket_outlined,
+                      Container(
+                        key: const ValueKey('pos-empty-cart'),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF7F9FC),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: line),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.shopping_cart_outlined, color: muted, size: 26),
+                            SizedBox(width: 12),
+                            Expanded(child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Sepet boş', style: TextStyle(color: ink, fontWeight: FontWeight.w800)),
+                                SizedBox(height: 3),
+                                Text('Yukarıdan ürün arayarak satışa başla.',
+                                  style: TextStyle(color: muted, fontSize: 12)),
+                              ],
+                            )),
+                          ],
+                        ),
                       ),
                     ...lines.map(
                       (line) => Padding(
@@ -438,7 +456,7 @@ class _TradesPageState extends State<TradesPage> {
                           ),
                         );
                         final checkout = Container(
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             border: Border.all(color: line),
@@ -450,11 +468,11 @@ class _TradesPageState extends State<TradesPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const Text('ÖDEME PANELİ', style: TextStyle(
+                              const Text('SATIŞ BİLGİLERİ', style: TextStyle(
                                 color: muted, fontSize: 11, letterSpacing: 1.2,
                                 fontWeight: FontWeight.w900)),
                               const SizedBox(height: 12),
-                    const Divider(),
+                    const Divider(height: 24),
                     _totalRow(
                       'Matrah',
                       money(lines.fold(0, (s, l) => s + l.net)),
@@ -464,7 +482,7 @@ class _TradesPageState extends State<TradesPage> {
                     const SizedBox(height: 8),
                     _totalRow('Genel toplam', money(total), highlight: true),
                     const SizedBox(height: 16),
-                    _posStep(2, 'Müşteri ve belge', 'Cari hesabı, belge türünü ve vergi tercihini belirle.', Icons.person_outline_rounded),
+                    _posStep(2, 'Müşteri ve belge', 'İsteğe bağlı cari ve fiş bilgileri.', Icons.person_outline_rounded),
                     const SizedBox(height: 14),
                     DropdownButtonFormField<String>(
                       key: ValueKey('${widget.type}-$contactId'),
@@ -565,7 +583,7 @@ class _TradesPageState extends State<TradesPage> {
                         ),
                       ),
                     const SizedBox(height: 14),
-                    _posStep(3, 'Ödeme ve tamamlama', 'Ödeme yöntemini seçip fişi kaydet.', Icons.payments_outlined),
+                    _posStep(3, 'Ödeme', 'Yöntemi seç ve işlemi tamamla.', Icons.payments_outlined),
                     const SizedBox(height: 14),
                     if (sale) ...[
                       const Text(
@@ -703,9 +721,9 @@ class _TradesPageState extends State<TradesPage> {
                         return Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(flex: 6, child: basket),
-                            const SizedBox(width: 18),
-                            Expanded(flex: 4, child: checkout),
+                            Expanded(flex: 11, child: basket),
+                            const SizedBox(width: 14),
+                            Expanded(flex: 9, child: checkout),
                           ],
                         );
                       },
