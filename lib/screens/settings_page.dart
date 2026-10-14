@@ -219,6 +219,7 @@ class _AlertSettings extends StatelessWidget {
 
 class MasterData extends StatelessWidget {
   const MasterData({
+    super.key,
     required this.title,
     required this.collection,
     required this.subtitle,
