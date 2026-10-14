@@ -23,7 +23,7 @@ class _ReportsPageState extends State<ReportsPage> {
 
   Future<void> _chooseDate(bool start) async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
+    final picked = await showPilotDatePicker(
       context: context,
       initialDate: (start ? startDate : endDate) ?? now,
       firstDate: DateTime(2000),

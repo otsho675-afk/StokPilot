@@ -34,7 +34,7 @@ class _FinancePageState extends State<FinancePage> {
   DateTime? startDate, endDate;
   Future<void> chooseDate(bool start) async {
     final now = DateTime.now();
-    final picked = await showDatePicker(context: context,
+    final picked = await showPilotDatePicker(context: context,
       initialDate: (start ? startDate : endDate) ?? now,
       firstDate: DateTime(2000), lastDate: DateTime(now.year + 1));
     if (picked != null && mounted) {
