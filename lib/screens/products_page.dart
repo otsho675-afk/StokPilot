@@ -20,7 +20,9 @@ class _ProductsPageState extends State<ProductsPage> {
   String categoryFilter = '';
   String stockFilter = 'all';
   String sortBy = 'name';
-  int visibleCount = 30;
+  int currentPage = 0;
+  static const int pageSize = 20;
+  bool showPurchasePrice = false;
   final search = TextEditingController();
   bool _openingProduct = false;
 
@@ -268,7 +270,7 @@ class _ProductsPageState extends State<ProductsPage> {
                           onChanged:
                               (s) => setState(() {
                                 query = s.trim();
-                                visibleCount = 30;
+                                currentPage = 0;
                               }),
                           decoration: InputDecoration(
                             hintText: 'Ürün adı, barkod veya stok kodu',
@@ -283,7 +285,7 @@ class _ProductsPageState extends State<ProductsPage> {
                                           () => setState(() {
                                             search.clear();
                                             query = '';
-                                            visibleCount = 30;
+                                            currentPage = 0;
                                           }),
                                     ),
                           ),
@@ -314,7 +316,7 @@ class _ProductsPageState extends State<ProductsPage> {
                           onChanged:
                               (s) => setState(() {
                                 categoryFilter = s ?? '';
-                                visibleCount = 30;
+                                currentPage = 0;
                               }),
                         );
                         if (c.maxWidth < 560) {
@@ -334,6 +336,13 @@ class _ProductsPageState extends State<ProductsPage> {
                           ],
                         );
                       },
+                    ),
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Alış fiyatı ve kâr oranını göster'),
+                      subtitle: const Text('Kapalıyken maliyet bilgileri ürün kartlarında gizlenir.'),
+                      value: showPurchasePrice,
+                      onChanged: (v) => setState(() => showPurchasePrice = v),
                     ),
                     const SizedBox(height: 14),
                     Wrap(
@@ -364,7 +373,7 @@ class _ProductsPageState extends State<ProductsPage> {
                           onSelected:
                               (s) => setState(() {
                                 sortBy = s;
-                                visibleCount = 30;
+                                currentPage = 0;
                               }),
                           itemBuilder:
                               (_) => const [
@@ -457,14 +466,16 @@ class _ProductsPageState extends State<ProductsPage> {
                                         search.clear();
                                         categoryFilter = '';
                                         stockFilter = 'all';
-                                        visibleCount = 30;
+                                        currentPage = 0;
                                       }),
                                   child: const Text('Filtreleri temizle'),
                                 ),
                       ),
                     );
                   }
-                  final visible = filtered.take(visibleCount).toList();
+                  final totalPages = (filtered.length + pageSize - 1) ~/ pageSize;
+                  final page = currentPage.clamp(0, totalPages - 1);
+                  final visible = filtered.skip(page * pageSize).take(pageSize).toList();
                   return DataPanel(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -487,16 +498,38 @@ class _ProductsPageState extends State<ProductsPage> {
                                 ],
                               ),
                         ),
-                        if (filtered.length > visible.length) ...[
-                          const SizedBox(height: 12),
-                          OutlinedButton.icon(
-                            onPressed: () => setState(() => visibleCount += 30),
-                            icon: const Icon(Icons.expand_more_rounded),
-                            label: Text(
-                              'Daha fazla göster (${filtered.length - visible.length} kaldı)',
+                        const SizedBox(height: 12),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            IconButton(
+                              tooltip: 'Önceki sayfa',
+                              onPressed: page == 0 ? null : () => setState(() => currentPage = page - 1),
+                              icon: const Icon(Icons.chevron_left_rounded),
                             ),
-                          ),
-                        ],
+                            ...List.generate(totalPages, (i) => i)
+                              .where((i) => totalPages <= 7 || (i - page).abs() <= 2 || i == 0 || i == totalPages - 1)
+                              .map((i) => OutlinedButton(
+                                onPressed: () => setState(() => currentPage = i),
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: page == i ? softGreen : Colors.white,
+                                  minimumSize: const Size(42, 42),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                                ),
+                                child: Text('${i + 1}'),
+                              )),
+                            IconButton(
+                              tooltip: 'Sonraki sayfa',
+                              onPressed: page >= totalPages - 1 ? null : () => setState(() => currentPage = page + 1),
+                              icon: const Icon(Icons.chevron_right_rounded),
+                            ),
+                          ],
+                        ),
+                        Text('${page * pageSize + 1}–${page * pageSize + visible.length} / ${filtered.length} ürün',
+                          textAlign: TextAlign.center, style: const TextStyle(color: muted, fontSize: 12)),
                       ],
                     ),
                   );
@@ -516,7 +549,7 @@ class _ProductsPageState extends State<ProductsPage> {
     onSelected:
         (_) => setState(() {
           stockFilter = id;
-          visibleCount = 30;
+          currentPage = 0;
         }),
   );
 
@@ -615,7 +648,7 @@ class _ProductsPageState extends State<ProductsPage> {
                   color: alert ? amber : green,
                 ),
                 if (disabled) const StatusPill(label: 'Pasif', color: muted),
-                if (_markup(m) != null)
+                if (showPurchasePrice && _markup(m) != null)
                   StatusPill(
                     label: 'Alışa göre %${_markup(m)!.toStringAsFixed(1)}',
                     color: _markup(m)! <= 0 ? const Color(0xFFC2574B) : green,
@@ -627,6 +660,10 @@ class _ProductsPageState extends State<ProductsPage> {
                 ),
               ],
             ),
+            if (showPurchasePrice) ...[
+              const SizedBox(height: 8),
+              Text('Alış: ${money((m['purchasePriceMinor'] as num?)?.toInt() ?? 0)}', style: const TextStyle(color: muted)),
+            ],
             const SizedBox(height: 11),
             Row(
               children: [
@@ -682,7 +719,8 @@ class _ProductsPageState extends State<ProductsPage> {
             'SKU: ${m['sku'] ?? '—'}   •   ${m['barcode'] ?? ''}\n'
             'Satış ${money((m['salePriceMinor'] as num?)?.toInt() ?? 0)}   •   '
             'KDV %${((m['taxRateBps'] ?? 0) / 100).toStringAsFixed(0)}'
-            '${_markup(m) == null ? '' : '   •   Alışa göre %${_markup(m)!.toStringAsFixed(1)}'}',
+            '${showPurchasePrice ? '   •   Alış ${money((m['purchasePriceMinor'] as num?)?.toInt() ?? 0)}' : ''}'
+            '${!showPurchasePrice || _markup(m) == null ? '' : '   •   Alışa göre %${_markup(m)!.toStringAsFixed(1)}'}',
           ),
           isThreeLine: true,
           trailing: Row(
