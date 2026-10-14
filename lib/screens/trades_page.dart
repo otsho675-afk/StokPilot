@@ -44,6 +44,7 @@ class _TradesPageState extends State<TradesPage> {
   String purchaseMethod = 'cash', documentKind = 'receipt';
   bool addVatToSale = false;
   bool busy = false;
+  int historyPage = 0, historyPageSize = 10;
   bool get sale => widget.type == 'sale';
   int get total => lines.fold(0, (s, line) => s + line.total);
   void _setSaleVat(bool enabled) {
@@ -799,8 +800,9 @@ class _TradesPageState extends State<TradesPage> {
           }
           return DataPanel(
             child: Column(
-              children:
-                  docs.take(30).map((d) {
+              children: [
+                  ...docs.skip(historyPage.clamp(0, ((docs.length + historyPageSize - 1) ~/ historyPageSize) - 1) * historyPageSize)
+                    .take(historyPageSize).map((d) {
                     final m = d.data();
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -819,7 +821,13 @@ class _TradesPageState extends State<TradesPage> {
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => showTradeDetails(context, m),
                     );
-                  }).toList(),
+                  }),
+                  ListPager(
+                    total: docs.length, page: historyPage, pageSize: historyPageSize,
+                    onPageChanged: (n) => setState(() => historyPage = n),
+                    onPageSizeChanged: (n) => setState(() { historyPageSize = n; historyPage = 0; }),
+                  ),
+                ],
             ),
           );
         },
