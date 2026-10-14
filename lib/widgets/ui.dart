@@ -30,21 +30,21 @@ class MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: Colors.white,
-    borderRadius: BorderRadius.circular(20),
+    borderRadius: BorderRadius.circular(14),
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 156),
-        padding: const EdgeInsets.all(20),
+        constraints: const BoxConstraints(minHeight: 106),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: line),
           boxShadow: const [
             BoxShadow(
               color: Color(0x0A132F36),
-              blurRadius: 28,
-              offset: Offset(0, 9),
+              blurRadius: 12,
+              offset: Offset(0, 3),
             ),
           ],
         ),
@@ -67,17 +67,17 @@ class MetricCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 7),
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     color: accent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(13),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, color: accent, size: 20),
+                  child: Icon(icon, color: accent, size: 17),
                 ),
               ],
             ),
-            const SizedBox(height: 13),
+            const SizedBox(height: 7),
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
@@ -87,7 +87,7 @@ class MetricCard extends StatelessWidget {
                   value,
                   key: ValueKey<String>(value),
                   style: const TextStyle(
-                    fontSize: 28,
+                    fontSize: 22,
                     color: ink,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.8,
@@ -102,7 +102,7 @@ class MetricCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 11.5,
+                  fontSize: 11,
                   color: muted,
                   height: 1.3,
                 ),
@@ -236,7 +236,7 @@ class DataPanel extends StatelessWidget {
   const DataPanel({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(18),
+    this.padding = const EdgeInsets.all(14),
   });
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -245,13 +245,13 @@ class DataPanel extends StatelessWidget {
     width: double.infinity,
     decoration: BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(14),
       border: Border.all(color: line),
       boxShadow: const [
         BoxShadow(
           color: Color(0x06152C35),
-          blurRadius: 24,
-          offset: Offset(0, 6),
+          blurRadius: 10,
+          offset: Offset(0, 3),
         ),
       ],
     ),
@@ -281,7 +281,7 @@ class SectionHeading extends StatelessWidget {
               title,
               style: const TextStyle(
                 color: ink,
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -378,13 +378,13 @@ class ResponsiveFormDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
-    final width = (size.width - 32).clamp(200.0, 640.0).toDouble();
+    final width = (size.width - 24).clamp(260.0, 520.0).toDouble();
     final maxHeight =
         (size.height - keyboard - 32).clamp(160.0, 9000.0).toDouble();
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       clipBehavior: Clip.antiAlias,
       backgroundColor: Colors.white,
       child: SizedBox(
@@ -396,10 +396,10 @@ class ResponsiveFormDialog extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 22, 24, 16),
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
                 child: DefaultTextStyle(
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     color: ink,
                     fontWeight: FontWeight.w800,
                   ),
@@ -412,8 +412,8 @@ class ResponsiveFormDialog extends StatelessWidget {
                   keyboardDismissBehavior:
                       ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
+                    horizontal: 20,
+                    vertical: 8,
                   ),
                   child: content,
                 ),
@@ -421,7 +421,7 @@ class ResponsiveFormDialog extends StatelessWidget {
               if (actions.isNotEmpty) ...[
                 const Divider(height: 1, color: line),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
                   child: Wrap(
                     alignment: WrapAlignment.end,
                     spacing: 10,
@@ -433,6 +433,140 @@ class ResponsiveFormDialog extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+
+class CompactDateField extends StatelessWidget {
+  const CompactDateField({
+    super.key,
+    required this.label,
+    required this.date,
+    required this.onTap,
+    this.onClear,
+  });
+  final String label;
+  final DateTime? date;
+  final VoidCallback onTap;
+  final VoidCallback? onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = date == null
+        ? 'Tarih seç'
+        : '${date!.day.toString().padLeft(2, '0')}.${date!.month.toString().padLeft(2, '0')}.${date!.year}';
+    return Container(
+      constraints: const BoxConstraints(minHeight: 54),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F9FC),
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: line),
+      ),
+      child: Row(children: [
+        Expanded(
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(11),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+              child: Row(children: [
+                const Icon(Icons.event_outlined, color: green, size: 19),
+                const SizedBox(width: 10),
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: const TextStyle(fontSize: 11, color: muted)),
+                    const SizedBox(height: 2),
+                    Text(text, style: const TextStyle(fontSize: 13, color: ink, fontWeight: FontWeight.w700)),
+                  ],
+                )),
+                const Icon(Icons.keyboard_arrow_down_rounded, size: 19, color: muted),
+              ]),
+            ),
+          ),
+        ),
+        if (date != null && onClear != null)
+          IconButton(
+            onPressed: onClear,
+            icon: const Icon(Icons.close_rounded, size: 17),
+            tooltip: '$label temizle',
+          ),
+      ]),
+    );
+  }
+}
+
+/// Shared client-side paging for compact inventory, contacts and ledger views.
+class ListPager extends StatelessWidget {
+  const ListPager({
+    super.key,
+    required this.total,
+    required this.page,
+    required this.pageSize,
+    required this.onPageChanged,
+    required this.onPageSizeChanged,
+  });
+  final int total, page, pageSize;
+  final ValueChanged<int> onPageChanged;
+  final ValueChanged<int> onPageSizeChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final pages = ((total + pageSize - 1) ~/ pageSize).clamp(1, 999999);
+    final current = page.clamp(0, pages - 1);
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 10, runSpacing: 9,
+        children: [
+          Text(total == 0 ? '0 kayıt' : '${current * pageSize + 1}–${(current * pageSize + pageSize).clamp(0, total)} / $total kayıt',
+              style: const TextStyle(color: muted, fontSize: 12)),
+          DropdownButton<int>(
+            value: pageSize,
+            isDense: true,
+            underline: const SizedBox.shrink(),
+            items: const [5, 10, 20, 50].map((n) => DropdownMenuItem(
+              value: n, child: Text('$n kayıt', style: TextStyle(fontSize: 12)))).toList(),
+            onChanged: (n) { if (n != null) onPageSizeChanged(n); },
+          ),
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left_rounded, size: 19),
+              tooltip: 'Önceki sayfa',
+              onPressed: current == 0 ? null : () => onPageChanged(current - 1),
+              visualDensity: VisualDensity.compact,
+            ),
+            ...List.generate(pages, (i) => i)
+              .where((i) => i == 0 || i == pages - 1 || (i - current).abs() <= 1)
+              .take(5)
+              .map((i) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: SizedBox(
+                  width: 32, height: 32,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(32, 32),
+                      backgroundColor: current == i ? softGreen : Colors.white,
+                      side: BorderSide(color: current == i ? green : line),
+                    ),
+                    onPressed: () => onPageChanged(i),
+                    child: Text('${i + 1}', style: const TextStyle(fontSize: 12)),
+                  ),
+                ),
+              )),
+            IconButton(
+              icon: const Icon(Icons.chevron_right_rounded, size: 19),
+              tooltip: 'Sonraki sayfa',
+              visualDensity: VisualDensity.compact,
+              onPressed: current >= pages - 1 ? null : () => onPageChanged(current + 1),
+            ),
+          ]),
+        ],
       ),
     );
   }
