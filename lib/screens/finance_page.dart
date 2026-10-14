@@ -31,9 +31,22 @@ class FinancePage extends StatefulWidget {
 class _FinancePageState extends State<FinancePage> {
   String period = '30', filter = 'all';
   int currentPage = 0, pageSize = 10;
+  DateTime? startDate, endDate;
+  Future<void> chooseDate(bool start) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(context: context,
+      initialDate: (start ? startDate : endDate) ?? now,
+      firstDate: DateTime(2000), lastDate: DateTime(now.year + 1));
+    if (picked != null && mounted) setState(() {
+      period = 'custom';
+      if (start) { startDate = picked; } else { endDate = picked; }
+      currentPage = 0;
+    });
+  }
+
 
   DateTime? get since =>
-      period == 'all'
+      period == 'all' || period == 'custom'
           ? null
           : DateTime.now().subtract(Duration(days: int.parse(period)));
 
@@ -67,10 +80,24 @@ class _FinancePageState extends State<FinancePage> {
               onSelected:
                   (_) => setState(() {
                     period = item.key;
+                    startDate = null; endDate = null;
                     currentPage = 0;
                   }),
             ),
         ],
+      ),
+      const SizedBox(height: 10),
+      ResponsiveFields(
+        first: CompactDateField(
+          label: 'Başlangıç tarihi', date: startDate,
+          onTap: () => chooseDate(true),
+          onClear: () => setState(() { startDate = null; period = 'custom'; currentPage = 0; }),
+        ),
+        second: CompactDateField(
+          label: 'Bitiş tarihi', date: endDate,
+          onTap: () => chooseDate(false),
+          onClear: () => setState(() { endDate = null; period = 'custom'; currentPage = 0; }),
+        ),
       ),
       const SizedBox(height: 14),
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -125,12 +152,22 @@ class _FinancePageState extends State<FinancePage> {
     Map<String, String> contacts,
   ) {
     final start = since;
+    bool withinRange(Map<String, dynamic> data) {
+      if (period != 'custom') return true;
+      final value = data['createdAt'];
+      final date = value is Timestamp ? value.toDate() : null;
+      if (date == null) return false;
+      if (startDate != null && date.isBefore(DateTime(startDate!.year, startDate!.month, startDate!.day))) return false;
+      if (endDate != null && !date.isBefore(DateTime(endDate!.year, endDate!.month, endDate!.day + 1))) return false;
+      return true;
+    }
     final totals = FinanceTotals.compute(
-      payments: payments.map((d) => d.data()),
-      expenses: expenses.map((d) => d.data()),
+      payments: payments.map((d) => d.data()).where(withinRange),
+      expenses: expenses.map((d) => d.data()).where(withinRange),
       since: start,
     );
     bool included(Map<String, dynamic> row) {
+      if (!withinRange(row)) return false;
       if (start == null) return true;
       final at = row['createdAt'];
       return at is Timestamp && !at.toDate().isBefore(start);
