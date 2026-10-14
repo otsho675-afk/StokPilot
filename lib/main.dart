@@ -63,10 +63,10 @@ class StokPilotApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFFFAFCFC),
+        fillColor: const Color(0xFFF7F9FC),
         hintStyle: const TextStyle(color: muted),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: line),
         ),
         enabledBorder: OutlineInputBorder(
@@ -84,7 +84,8 @@ class StokPilotApp extends StatelessWidget {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 19, vertical: 15),
+          minimumSize: const Size(110, 46),
+          padding: const EdgeInsets.symmetric(horizontal: 19, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(13),
           ),
@@ -92,7 +93,8 @@ class StokPilotApp extends StatelessWidget {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+          minimumSize: const Size(104, 46),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(13),
           ),
