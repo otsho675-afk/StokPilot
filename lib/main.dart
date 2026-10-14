@@ -72,7 +72,7 @@ class StokPilotApp extends StatelessWidget {
         surface: Colors.white,
       ),
       dividerTheme: const DividerThemeData(color: line, thickness: 1),
-      visualDensity: VisualDensity.standard,
+      visualDensity: VisualDensity.compact,
       textSelectionTheme: const TextSelectionThemeData(
         cursorColor: green,
         selectionColor: Color(0xFFB5EADB),
@@ -100,14 +100,14 @@ class StokPilotApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFFF7F9FC),
+        fillColor: const Color(0xFFFAFBFD),
         hintStyle: const TextStyle(color: muted),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: line),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(11),
           borderSide: const BorderSide(color: line),
         ),
         focusedBorder: OutlineInputBorder(
@@ -115,8 +115,8 @@ class StokPilotApp extends StatelessWidget {
           borderSide: const BorderSide(color: green, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 15,
-          vertical: 15,
+          horizontal: 13,
+          vertical: 11,
         ),
       ),
       tooltipTheme: TooltipThemeData(
@@ -125,7 +125,7 @@ class StokPilotApp extends StatelessWidget {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size(110, 46),
+          minimumSize: const Size(96, 40),
           padding: const EdgeInsets.symmetric(horizontal: 19, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(13),
@@ -137,7 +137,7 @@ class StokPilotApp extends StatelessWidget {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size(104, 46),
+          minimumSize: const Size(94, 40),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(13),
