@@ -756,51 +756,65 @@ class _ProductsPageState extends State<ProductsPage> {
     final qty = (m['stockMilli'] as num?)?.toInt() ?? 0;
     final threshold = (m['minStockMilli'] as num?)?.toInt() ?? 0;
     final alert = qty <= threshold;
-    return Column(
-      children: [
-        ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 2,
-            vertical: 4,
-          ),
-          leading: CircleAvatar(
-            backgroundColor: alert ? const Color(0xFFFFF0DD) : softGreen,
-            child: Icon(
-              Icons.inventory_2_outlined,
-              color: alert ? amber : green,
-            ),
-          ),
-          title: Text(
-            '${m['name'] ?? 'Ürün'}',
-            style: const TextStyle(fontWeight: FontWeight.w800, color: ink),
-          ),
-          subtitle: Text(
-            'SKU: ${m['sku'] ?? '—'}   •   ${m['barcode'] ?? ''}\n'
-            'Satış ${money((m['salePriceMinor'] as num?)?.toInt() ?? 0)}   •   '
-            'KDV %${((m['taxRateBps'] ?? 0) / 100).toStringAsFixed(0)}'
-            '${showPurchasePrice ? '   •   Alış ${money((m['purchasePriceMinor'] as num?)?.toInt() ?? 0)}' : ''}'
-            '${!showPurchasePrice || _markup(m) == null ? '' : '   •   Alışa göre %${_markup(m)!.toStringAsFixed(1)}'}',
-          ),
-          isThreeLine: true,
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              StatusPill(
-                label: 'Stok ${quantity(qty)}',
-                color: alert ? amber : green,
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                tooltip: 'Stok giriş / çıkış',
-                onPressed: () => stockDialog(context, p),
-                icon: const Icon(Icons.tune_rounded, color: green),
-              ),
-              _productActions(context, p),
-            ],
-          ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: alert ? const Color(0xFFF0D8B0) : line),
         ),
-        const Divider(height: 1, color: line),
-      ],
+        child: Row(
+          children: [
+            Container(
+              width: 46, height: 46,
+              decoration: BoxDecoration(
+                color: alert ? const Color(0xFFFFF0DD) : softGreen,
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: Icon(Icons.inventory_2_outlined, color: alert ? amber : green),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              flex: 5,
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('${m['name'] ?? 'Ürün'}',
+                  maxLines: 2, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: ink, fontSize: 15, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 5),
+                Text('Kod: ${m['sku'] ?? '—'}  ·  Barkod: ${m['barcode'] ?? '—'}',
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: muted, fontSize: 11)),
+                if (showPurchasePrice) ...[
+                  const SizedBox(height: 5),
+                  Text('Alış: ${money((m['purchasePriceMinor'] as num?)?.toInt() ?? 0)}'
+                    '${_markup(m) == null ? '' : '  ·  Kâr %${_markup(m)!.toStringAsFixed(1)}'}',
+                    style: const TextStyle(color: muted, fontSize: 12)),
+                ],
+              ]),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              flex: 2,
+              child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                Text(money((m['salePriceMinor'] as num?)?.toInt() ?? 0),
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: green, fontWeight: FontWeight.w900, fontSize: 17)),
+                const Text('Satış fiyatı', style: TextStyle(color: muted, fontSize: 11)),
+              ]),
+            ),
+            const SizedBox(width: 12),
+            StatusPill(label: 'Stok ${quantity(qty)}', color: alert ? amber : green),
+            IconButton(
+              tooltip: 'Stok işlemi',
+              onPressed: () => stockDialog(context, p),
+              icon: const Icon(Icons.tune_rounded, color: green),
+            ),
+            _productActions(context, p),
+          ],
+        ),
+      ),
     );
   }
 }
