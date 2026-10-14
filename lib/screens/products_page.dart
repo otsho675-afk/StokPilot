@@ -550,6 +550,26 @@ class _ProductsPageState extends State<ProductsPage> {
                           builder:
                               (context, c) => Column(
                                 children: [
+                                  if (c.maxWidth >= 650)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 10),
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      decoration: BoxDecoration(
+                                        color: canvas,
+                                        borderRadius: BorderRadius.circular(10)),
+                                      child: const Row(children: [
+                                        Expanded(flex: 5, child: Text('ÜRÜN BİLGİSİ',
+                                          style: TextStyle(color: muted, fontWeight: FontWeight.w800, fontSize: 10))),
+                                        Expanded(flex: 2, child: Text('SATIŞ FİYATI',
+                                          textAlign: TextAlign.end,
+                                          style: TextStyle(color: muted, fontWeight: FontWeight.w800, fontSize: 10))),
+                                        SizedBox(width: 117, child: Text('STOK',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(color: muted, fontWeight: FontWeight.w800, fontSize: 10))),
+                                        SizedBox(width: 82),
+                                      ]),
+                                    ),
                                   ...visible.map(
                                     (item) =>
                                         c.maxWidth < 650
