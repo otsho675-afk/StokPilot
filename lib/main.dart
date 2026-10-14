@@ -119,6 +119,10 @@ class StokPilotApp extends StatelessWidget {
           vertical: 15,
         ),
       ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(color: ink, borderRadius: BorderRadius.circular(8)),
+        textStyle: const TextStyle(color: Colors.white, fontSize: 12),
+      ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size(110, 46),
@@ -127,6 +131,9 @@ class StokPilotApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(13),
           ),
         ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(minimumSize: const Size(90, 44)),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
