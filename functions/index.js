@@ -109,8 +109,8 @@ exports.commitTrade = onCall({ region }, async req => {
       const taxBps = int(product.data().taxRateBps, 0, 10000);
       const { net, tax, gross } = lineAmount(quantityMilli, priceMinor, taxBps);
       if (!Number.isSafeInteger(gross) || gross > 1e12) deny('invalid-argument', 'Tutar limiti asildi.');
-      const stock = int(product.data().stockMilli, 0);
-      if (type === 'sale' && stock < quantityMilli) deny('failed-precondition', `Yetersiz stok: ${product.data().name}`);
+      // Negative inventory is allowed for backorders; quantities remain positive.
+      const stock = int(product.data().stockMilli, -1e12, 1e12);
       const nextStock = type === 'sale' ? stock - quantityMilli : stock + quantityMilli;
       tx.update(productRefs[i], { stockMilli: nextStock });
       const move = ws.collection('stockMoves').doc();
