@@ -337,7 +337,7 @@ class _MainShellState extends State<MainShell> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(names[selected], style: const TextStyle(
-                  color: ink, fontSize: 17, fontWeight: FontWeight.w850)),
+                  color: ink, fontSize: 17, fontWeight: FontWeight.w800)),
               const Text('Çalışma alanı / StokPilot',
                   style: TextStyle(color: muted, fontSize: 11)),
             ],
