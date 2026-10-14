@@ -537,13 +537,15 @@ class _ReportsPageState extends State<ReportsPage> {
         builder: (context, expenses) {
           if (expenses.hasError) return _failure(expenses.error);
           if (!expenses.hasData) return const LinearProgressIndicator();
-          final since =
-              period == 'all'
-                  ? null
-                  : DateTime.now().subtract(Duration(days: int.parse(period)));
+          final since = period == 'all' || period == 'custom'
+              ? null : DateTime.now().subtract(Duration(days: int.parse(period)));
+          final selectedPayments = payments.data!.docs.map((d) => d.data())
+              .where((data) => period != 'custom' || _withinRange(data));
+          final selectedExpenses = expenses.data!.docs.map((d) => d.data())
+              .where((data) => period != 'custom' || _withinRange(data));
           final totals = FinanceTotals.compute(
-            payments: payments.data!.docs.map((d) => d.data()),
-            expenses: expenses.data!.docs.map((d) => d.data()),
+            payments: selectedPayments,
+            expenses: selectedExpenses,
             since: since,
           );
           return DataPanel(
