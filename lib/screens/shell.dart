@@ -359,20 +359,41 @@ class _MainShellState extends State<MainShell> {
   );
 
   Widget _mobileHeader() => Container(
-    height: 64,
+    height: 60,
     decoration: const BoxDecoration(
       color: Colors.white,
       border: Border(bottom: BorderSide(color: line)),
     ),
-    padding: const EdgeInsets.symmetric(horizontal: 10),
+    padding: const EdgeInsets.symmetric(horizontal: 6),
     child: Row(children: [
       IconButton(
         tooltip: 'Menüyü aç',
         onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         icon: const Icon(Icons.menu_rounded, color: ink),
       ),
-      const SizedBox(width: 5),
-      Expanded(child: _brand(compact: false)),
+      const SizedBox(width: 2),
+      Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          color: softGreen,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: const Icon(Icons.layers_rounded, color: green, size: 17),
+      ),
+      const SizedBox(width: 9),
+      Expanded(
+        child: Text(
+          names[selected],
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 15,
+            color: ink,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
       IconButton(
         tooltip: 'Yeni satış',
         onPressed: () => navigate(2),
@@ -464,8 +485,10 @@ class _MainShellState extends State<MainShell> {
                         keyboardDismissBehavior:
                             ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: EdgeInsets.fromLTRB(
-                          mobile ? 15 : 28, mobile ? 20 : 26,
-                          mobile ? 15 : 28, 30,
+                          mobile ? (bounds.maxWidth < 370 ? 10 : 15) : 28,
+                          mobile ? 14 : 26,
+                          mobile ? (bounds.maxWidth < 370 ? 10 : 15) : 28,
+                          30,
                         ),
                         child: Center(
                           child: ConstrainedBox(
