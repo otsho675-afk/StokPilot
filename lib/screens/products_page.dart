@@ -757,29 +757,29 @@ class _ProductsPageState extends State<ProductsPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: alert ? const Color(0xFFF0D8B0) : line),
         ),
         child: Row(
           children: [
             Container(
-              width: 46, height: 46,
+              width: 36, height: 36,
               decoration: BoxDecoration(
                 color: alert ? const Color(0xFFFFF0DD) : softGreen,
                 borderRadius: BorderRadius.circular(13),
               ),
               child: Icon(Icons.inventory_2_outlined, color: alert ? amber : green),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 10),
             Expanded(
               flex: 5,
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('${m['name'] ?? 'Ürün'}',
                   maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: ink, fontSize: 15, fontWeight: FontWeight.w800)),
+                  style: const TextStyle(color: ink, fontSize: 13, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 5),
                 Text('Kod: ${m['sku'] ?? '—'}  ·  Barkod: ${m['barcode'] ?? '—'}',
                   maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -798,16 +798,16 @@ class _ProductsPageState extends State<ProductsPage> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Text(money((m['salePriceMinor'] as num?)?.toInt() ?? 0),
                   maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: green, fontWeight: FontWeight.w900, fontSize: 17)),
+                  style: const TextStyle(color: green, fontWeight: FontWeight.w900, fontSize: 14)),
                 const Text('Satış fiyatı', style: TextStyle(color: muted, fontSize: 11)),
               ]),
             ),
-            const SizedBox(width: 12),
-            StatusPill(label: 'Stok ${quantity(qty)}', color: alert ? amber : green),
+            const SizedBox(width: 9),
+            StatusPill(label: quantity(qty), color: alert ? amber : green),
             IconButton(
               tooltip: 'Stok işlemi',
               onPressed: () => stockDialog(context, p),
-              icon: const Icon(Icons.tune_rounded, color: green),
+              icon: const Icon(Icons.tune_rounded, color: green, size: 18),
             ),
             _productActions(context, p),
           ],
