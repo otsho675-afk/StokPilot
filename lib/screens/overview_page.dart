@@ -19,65 +19,66 @@ class OverviewPage extends StatefulWidget {
 class _QuickActions extends StatelessWidget {
   const _QuickActions({required this.onNavigate});
   final ValueChanged<int> onNavigate;
-
   @override
   Widget build(BuildContext context) {
     const actions = <(String, IconData, int)>[
-      ('Yeni Satış', Icons.receipt_long_outlined, 2),
-      ('Yeni Ürün', Icons.inventory_2_outlined, 1),
-      ('Yeni Cari', Icons.person_add_alt_1_outlined, 4),
-      ('Yeni Alış', Icons.shopping_bag_outlined, 3),
-      ('Tahsilat', Icons.payments_outlined, 6),
+      ('Yeni satış', Icons.point_of_sale_rounded, 2),
+      ('Stok yönetimi', Icons.inventory_2_outlined, 1),
+      ('Müşteri ekle', Icons.person_add_alt_1_outlined, 4),
+      ('Yeni alış', Icons.shopping_bag_outlined, 3),
+      ('Finans', Icons.account_balance_wallet_outlined, 6),
       ('Raporlar', Icons.bar_chart_rounded, 7),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Hızlı işlemler',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: ink)),
-        const SizedBox(height: 5),
-        const Text('En sık kullandığınız işlemlere tek dokunuşla ulaşın.',
-          style: TextStyle(fontSize: 12, color: muted)),
-        const SizedBox(height: 14),
+        const SectionHeading(
+          title: 'Hızlı erişim',
+          subtitle: 'En sık kullanılan işlemlere tek dokunuşla ulaşın',
+        ),
+        const SizedBox(height: 12),
         LayoutBuilder(builder: (context, constraints) {
-          final columns = constraints.maxWidth < 440 ? 2 : constraints.maxWidth < 850 ? 3 : 6;
-          final spacing = 12.0;
-          final width = (constraints.maxWidth - spacing * (columns - 1)) / columns;
-          return Wrap(
-            spacing: spacing,
-            runSpacing: spacing,
-            children: [
-              for (final action in actions)
-                SizedBox(
-                  width: width,
-                  child: Material(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    child: InkWell(
-                      onTap: () => onNavigate(action.$3),
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        constraints: const BoxConstraints(minHeight: 122),
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 18),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: line),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(action.$2, size: 29, color: const Color(0xFF1255B7)),
-                            const SizedBox(height: 12),
-                            Text(action.$1, textAlign: TextAlign.center,
-                              style: const TextStyle(fontWeight: FontWeight.w800, color: ink)),
-                          ],
-                        ),
+          final columns = constraints.maxWidth < 460 ? 2
+              : constraints.maxWidth < 820 ? 3 : 6;
+          const gap = 10.0;
+          final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
+          return Wrap(spacing: gap, runSpacing: gap, children: [
+            for (final action in actions)
+              SizedBox(
+                width: width,
+                child: Material(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  child: InkWell(
+                    onTap: () => onNavigate(action.$3),
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: line),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 32, height: 32,
+                            decoration: BoxDecoration(
+                              color: softGreen, borderRadius: BorderRadius.circular(10)),
+                            child: Icon(action.$2, size: 18, color: green),
+                          ),
+                          const SizedBox(height: 11),
+                          Text(action.$1, maxLines: 1, overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w800,
+                              color: ink, fontSize: 12)),
+                        ],
                       ),
                     ),
                   ),
                 ),
-            ],
-          );
+              ),
+          ]);
         }),
       ],
     );
@@ -91,9 +92,9 @@ class _OverviewPageState extends State<OverviewPage> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      _QuickActions(onNavigate: widget.onNavigate),
-      const SizedBox(height: 18),
       _Hero(onNavigate: widget.onNavigate),
+      const SizedBox(height: 22),
+      _QuickActions(onNavigate: widget.onNavigate),
       const SizedBox(height: 22),
       LayoutBuilder(
         builder: (context, size) {
@@ -371,11 +372,11 @@ class _Hero extends StatelessWidget {
     clipBehavior: Clip.antiAlias,
     decoration: BoxDecoration(
       gradient: const LinearGradient(
-        colors: [Color(0xFF102A35), Color(0xFF14534D), Color(0xFF087C68)],
+        colors: [Color(0xFF172F49), Color(0xFF0C655F), Color(0xFF098A80)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      borderRadius: BorderRadius.circular(26),
+      borderRadius: BorderRadius.circular(20),
     ),
     child: Stack(
       children: [
@@ -395,7 +396,7 @@ class _Hero extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(27),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -421,10 +422,10 @@ class _Hero extends StatelessWidget {
               ),
               const SizedBox(height: 15),
               const Text(
-                'İşletmen, tek bakışta.',
+                'İşletmenin kontrolü sende.',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 28,
+                  fontSize: 27,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -0.6,
                 ),
