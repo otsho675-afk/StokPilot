@@ -19,7 +19,7 @@ class _ContactsPageState extends State<ContactsPage> {
   DateTime? dateFrom, dateTo;
   Future<void> chooseDate(bool start) async {
     final today = DateTime.now();
-    final picked = await showDatePicker(
+    final picked = await showPilotDatePicker(
       context: context,
       initialDate: (start ? dateFrom : dateTo) ?? today,
       firstDate: DateTime(2000),
@@ -901,7 +901,7 @@ Future<void> accountEntryDialog(
                     CompactDateField(
                       label: 'İşlem tarihi', date: date,
                       onTap: () async {
-                        final picked = await showDatePicker(
+                        final picked = await showPilotDatePicker(
                           context: context, initialDate: date,
                           firstDate: DateTime(2000), lastDate: DateTime.now(),
                         );
@@ -919,7 +919,7 @@ Future<void> accountEntryDialog(
                     CompactDateField(
                       label: 'Vade tarihi (isteğe bağlı)', date: dueDate,
                       onTap: () async {
-                        final picked = await showDatePicker(
+                        final picked = await showPilotDatePicker(
                           context: context, initialDate: dueDate ?? date,
                           firstDate: date, lastDate: DateTime(2100),
                         );
@@ -1013,7 +1013,7 @@ class _PartnerCardPageState extends State<PartnerCardPage> {
 
   Future<void> chooseDate(bool beginning) async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
+    final picked = await showPilotDatePicker(
       context: context, initialDate: (beginning ? from : to) ?? now,
       firstDate: DateTime(2000), lastDate: DateTime(now.year + 1),
     );
