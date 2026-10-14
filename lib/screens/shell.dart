@@ -11,6 +11,7 @@ import 'reports_page.dart';
 import 'operations_page.dart';
 import 'finance_page.dart';
 import 'settings_page.dart';
+import 'catalog_management_page.dart';
 import 'overview_page.dart';
 
 class MainShell extends StatefulWidget {
@@ -33,6 +34,7 @@ class _MainShellState extends State<MainShell> {
     'Finans',
     'Raporlar',
     'ERP İşlemleri',
+    'Kategori ve Birimler',
     'Ayarlar',
   ];
   static const icons = [
@@ -45,6 +47,7 @@ class _MainShellState extends State<MainShell> {
     Icons.account_balance_wallet_outlined,
     Icons.insert_chart_outlined,
     Icons.assignment_outlined,
+    Icons.category_outlined,
     Icons.tune_rounded,
   ];
   static const mobileTabs = [0, 1, 2, 4];
@@ -66,6 +69,7 @@ class _MainShellState extends State<MainShell> {
     6 => const FinancePage(),
     7 => const ReportsPage(),
     8 => const OperationsPage(),
+    9 => const CatalogManagementPage(),
     _ => const SettingsPage(),
   };
 
@@ -154,7 +158,7 @@ class _MainShellState extends State<MainShell> {
         ),
         const SizedBox(width: 6),
         IconButton(
-          onPressed: () => navigate(9),
+          onPressed: () => navigate(10),
           tooltip: 'Ayarlar',
           icon: const Icon(Icons.settings_outlined, color: muted),
         ),
@@ -464,7 +468,7 @@ class _MainShellState extends State<MainShell> {
                                       ),
                                       IconButton(
                                         tooltip: 'Ayarlar',
-                                        onPressed: () => navigate(9),
+                                        onPressed: () => navigate(10),
                                         icon: const Icon(
                                           Icons.settings_outlined,
                                         ),
