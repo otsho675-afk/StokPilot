@@ -309,7 +309,7 @@ class ResponsiveFields extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, size) {
-      if (size.maxWidth < 380) {
+      if (size.maxWidth < 520) {
         return Column(children: [first, const SizedBox(height: 10), second]);
       }
       return Row(
@@ -378,7 +378,7 @@ class ResponsiveFormDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
-    final width = (size.width - 48).clamp(200.0, 560.0).toDouble();
+    final width = (size.width - 32).clamp(200.0, 640.0).toDouble();
     final maxHeight =
         (size.height - keyboard - 48).clamp(160.0, 9000.0).toDouble();
 
@@ -396,7 +396,7 @@ class ResponsiveFormDialog extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                padding: const EdgeInsets.fromLTRB(24, 22, 24, 16),
                 child: DefaultTextStyle(
                   style: const TextStyle(
                     fontSize: 20,
@@ -412,15 +412,16 @@ class ResponsiveFormDialog extends StatelessWidget {
                   keyboardDismissBehavior:
                       ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
+                    horizontal: 24,
+                    vertical: 12,
                   ),
                   child: content,
                 ),
               ),
-              if (actions.isNotEmpty)
+              if (actions.isNotEmpty) ...[
+                const Divider(height: 1, color: line),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
                   child: Wrap(
                     alignment: WrapAlignment.end,
                     spacing: 8,
@@ -428,6 +429,7 @@ class ResponsiveFormDialog extends StatelessWidget {
                     children: actions,
                   ),
                 ),
+              ],
             ],
           ),
         ),
