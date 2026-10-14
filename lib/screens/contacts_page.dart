@@ -14,7 +14,22 @@ class ContactsPage extends StatefulWidget {
 class _ContactsPageState extends State<ContactsPage> {
   String search = '';
   int currentPage = 0;
-  static const int pageSize = 20;
+  int pageSize = 10;
+  String balanceFilter = 'all', typeFilter = 'all';
+  DateTime? dateFrom, dateTo;
+  Future<void> chooseDate(bool start) async {
+    final today = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: (start ? dateFrom : dateTo) ?? today,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(today.year + 1),
+    );
+    if (picked != null && mounted) setState(() {
+      if (start) { dateFrom = picked; } else { dateTo = picked; }
+      currentPage = 0;
+    });
+  }
   final searchController = TextEditingController();
   @override
   void dispose() {
@@ -42,6 +57,7 @@ class _ContactsPageState extends State<ContactsPage> {
       ),
       DataPanel(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             TextField(
               controller: searchController,
@@ -68,10 +84,47 @@ class _ContactsPageState extends State<ContactsPage> {
                         ),
               ),
             ),
+            const SizedBox(height: 10),
+            ResponsiveFields(
+              first: DropdownButtonFormField<String>(
+                initialValue: typeFilter,
+                decoration: const InputDecoration(labelText: 'Cari türü', prefixIcon: Icon(Icons.groups_outlined)),
+                items: [
+                  const DropdownMenuItem(value: 'all', child: Text('Tüm cariler')),
+                  DropdownMenuItem(value: widget.kind, child: Text(widget.kind == 'supplier' ? 'Sadece tedarikçiler' : 'Sadece müşteriler')),
+                  const DropdownMenuItem(value: 'both', child: Text('Müşteri / tedarikçi')),
+                ],
+                onChanged: (v) => setState(() { typeFilter = v ?? 'all'; currentPage = 0; }),
+              ),
+              second: DropdownButtonFormField<String>(
+                initialValue: balanceFilter,
+                decoration: const InputDecoration(labelText: 'Bakiye', prefixIcon: Icon(Icons.account_balance_wallet_outlined)),
+                items: const [
+                  DropdownMenuItem(value: 'all', child: Text('Tüm bakiyeler')),
+                  DropdownMenuItem(value: 'positive', child: Text('Alacaklı')),
+                  DropdownMenuItem(value: 'negative', child: Text('Borçlu')),
+                  DropdownMenuItem(value: 'zero', child: Text('Dengede')),
+                ],
+                onChanged: (v) => setState(() { balanceFilter = v ?? 'all'; currentPage = 0; }),
+              ),
+            ),
+            const SizedBox(height: 10),
+            ResponsiveFields(
+              first: CompactDateField(
+                label: 'Başlangıç tarihi', date: dateFrom,
+                onTap: () => chooseDate(true),
+                onClear: () => setState(() { dateFrom = null; currentPage = 0; }),
+              ),
+              second: CompactDateField(
+                label: 'Bitiş tarihi', date: dateTo,
+                onTap: () => chooseDate(false),
+                onClear: () => setState(() { dateTo = null; currentPage = 0; }),
+              ),
+            ),
           ],
         ),
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: 12),
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: AppApi.instance.watch('contacts'),
         builder: (context, snap) {
@@ -83,7 +136,19 @@ class _ContactsPageState extends State<ContactsPage> {
           final entries =
               all.where((d) {
                   final m = d.data();
+                  final balance = (m['balanceMinor'] as num?)?.toInt() ?? 0;
+                  final created = m['createdAt'];
+                  final date = created is Timestamp ? created.toDate() : null;
+                  final balanceOk = switch (balanceFilter) {
+                    'positive' => balance > 0,
+                    'negative' => balance < 0,
+                    'zero' => balance == 0,
+                    _ => true,
+                  };
+                  final dateOk = (dateFrom == null || (date != null && !date.isBefore(DateTime(dateFrom!.year, dateFrom!.month, dateFrom!.day)))) &&
+                    (dateTo == null || (date != null && date.isBefore(DateTime(dateTo!.year, dateTo!.month, dateTo!.day + 1))));
                   return (m['type'] == 'both' || m['type'] == widget.kind) &&
+                      (typeFilter == 'all' || m['type'] == typeFilter) && balanceOk && dateOk &&
                       [m['name'], m['phone'], m['taxNumber']].any(
                         (value) => (value ?? '')
                             .toString()
@@ -149,7 +214,7 @@ class _ContactsPageState extends State<ContactsPage> {
                   );
                 },
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 12),
               DataPanel(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -207,31 +272,11 @@ class _ContactsPageState extends State<ContactsPage> {
                             ],
                           ),
                     ),
-                    if (pages > 1)
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 7,
-                        children: [
-                          IconButton(
-                            onPressed: page == 0 ? null : () => setState(() => currentPage = page - 1),
-                            icon: const Icon(Icons.chevron_left_rounded),
-                          ),
-                          ...List.generate(pages, (i) => i)
-                            .where((i) => pages <= 7 || i == 0 || i == pages - 1 || (i - page).abs() <= 2)
-                            .map((i) => OutlinedButton(
-                              onPressed: () => setState(() => currentPage = i),
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: i == page ? softGreen : Colors.white,
-                                minimumSize: const Size(42, 42),
-                              ),
-                              child: Text('${i + 1}'),
-                            )),
-                          IconButton(
-                            onPressed: page >= pages - 1 ? null : () => setState(() => currentPage = page + 1),
-                            icon: const Icon(Icons.chevron_right_rounded),
-                          ),
-                        ],
-                      ),
+                    ListPager(
+                      total: entries.length, page: page, pageSize: pageSize,
+                      onPageChanged: (n) => setState(() => currentPage = n),
+                      onPageSizeChanged: (n) => setState(() { pageSize = n; currentPage = 0; }),
+                    ),
 
                   ],
                 ),
@@ -296,12 +341,12 @@ class _ContactsPageState extends State<ContactsPage> {
             : muted;
     if (compact) {
       return Padding(
-        padding: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.only(bottom: 7),
         child: Container(
-          padding: const EdgeInsets.all(13),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: canvas,
-            borderRadius: BorderRadius.circular(16),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: line),
           ),
           child: Column(
@@ -344,10 +389,10 @@ class _ContactsPageState extends State<ContactsPage> {
                   _actions(context, item),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 6),
               Wrap(
-                spacing: 10,
-                runSpacing: 10,
+                spacing: 7,
+                runSpacing: 5,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   StatusPill(
@@ -369,7 +414,7 @@ class _ContactsPageState extends State<ContactsPage> {
     return Column(
       children: [
         ListTile(
-          contentPadding: const EdgeInsets.symmetric(vertical: 6),
+          contentPadding: const EdgeInsets.symmetric(vertical: 1),
           onTap: () => contactHistory(context, item),
           leading: CircleAvatar(
             backgroundColor: softGreen,
