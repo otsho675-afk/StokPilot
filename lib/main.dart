@@ -11,8 +11,45 @@ import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const StokPilotApp());
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    runApp(const StokPilotApp());
+  } catch (error) {
+    runApp(MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.cloud_off_rounded, size: 46, color: Color(0xFFB45309)),
+                  const SizedBox(height: 16),
+                  const Text('Firebase bağlantısı yapılandırılmamış',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Web uygulaması için Firebase ayarları eksik. Proje klasöründe FlutterFire CLI ile web platformunu yapılandırın.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  SelectableText('flutterfire configure --project=stokpilot-5bd2e --platforms=android,web',
+                      textAlign: TextAlign.center),
+                  const SizedBox(height: 16),
+                  SelectableText('$error', textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ));
+  }
 }
 
 class StokPilotApp extends StatelessWidget {
