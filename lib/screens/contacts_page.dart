@@ -519,40 +519,46 @@ class _ContactsPageState extends State<ContactsPage> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: line),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(vertical: 1),
-        onTap: () => contactHistory(context, item),
-        leading: CircleAvatar(
-          radius: 17,
-          backgroundColor: softGreen,
-          child: Icon(
-            m['type'] == 'supplier'
-                ? Icons.local_shipping_outlined
-                : Icons.person_outline,
-            color: green,
-          ),
-        ),
-        title: Text(
-          name,
-          style: const TextStyle(fontWeight: FontWeight.w800, color: ink),
-        ),
-        subtitle: Text(
-          '$kind   •   ${m['phone'] ?? ''}',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            StatusPill(label: '$status ${money(balance.abs())}', color: color),
-            const SizedBox(width: 7),
-            IconButton(
-              onPressed: () => paymentDialog(context, item),
-              tooltip: 'Tahsilat / ödeme',
-              icon: const Icon(Icons.payments_outlined, color: green),
+      child: Material(
+        color: Colors.white,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 1),
+          onTap: () => contactHistory(context, item),
+          leading: CircleAvatar(
+            radius: 17,
+            backgroundColor: softGreen,
+            child: Icon(
+              m['type'] == 'supplier'
+                  ? Icons.local_shipping_outlined
+                  : Icons.person_outline,
+              color: green,
             ),
-            _actions(context, item),
-          ],
+          ),
+          title: Text(
+            name,
+            style: const TextStyle(fontWeight: FontWeight.w800, color: ink),
+          ),
+          subtitle: Text(
+            '$kind   •   ${m['phone'] ?? ''}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              StatusPill(
+                label: '$status ${money(balance.abs())}',
+                color: color,
+              ),
+              const SizedBox(width: 7),
+              IconButton(
+                onPressed: () => paymentDialog(context, item),
+                tooltip: 'Tahsilat / ödeme',
+                icon: const Icon(Icons.payments_outlined, color: green),
+              ),
+              _actions(context, item),
+            ],
+          ),
         ),
       ),
     );
@@ -1303,7 +1309,8 @@ class _PartnerCardPageState extends State<PartnerCardPage> {
               ]..sort((a, b) => _time(b).compareTo(_time(a)));
               final filtered =
                   rows.where((row) {
-                    if (movementType != 'all' && row['rowKind'] != movementType) {
+                    if (movementType != 'all' &&
+                        row['rowKind'] != movementType) {
                       return false;
                     }
                     final ts =

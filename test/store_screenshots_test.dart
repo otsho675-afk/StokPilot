@@ -28,7 +28,12 @@ void main() {
       ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
   });
 
-  for (final device in [('android', 360.0, 640.0), ('iphone', 430.0, 932.0)]) {
+  for (final device in [
+    ('android', 360.0, 640.0),
+    ('iphone', 430.0, 932.0),
+    ('iphone_medium', 393.0, 852.0),
+    ('ipad', 1024.0, 1366.0),
+  ]) {
     testWidgets('Real pages fit ${device.$1} and navigate correctly', (
       tester,
     ) async {
@@ -135,10 +140,16 @@ void main() {
         ('customers', 'Müşteriler'),
       ]) {
         await tester.tap(
-          find.descendant(
-            of: find.byType(NavigationBar),
-            matching: find.text(screen.$2),
-          ),
+          device.$1 == 'ipad'
+              ? find.byTooltip(switch (screen.$1) {
+                'dashboard' => 'Genel Bakış',
+                'products' => 'Ürünler',
+                _ => screen.$2,
+              })
+              : find.descendant(
+                of: find.byType(NavigationBar),
+                matching: find.text(screen.$2),
+              ),
         );
         await tester.pumpAndSettle(
           const Duration(milliseconds: 100),
@@ -165,7 +176,9 @@ void main() {
               boundary.currentContext!.findRenderObject()!
                   as RenderRepaintBoundary;
           await tester.runAsync(() async {
-            final image = await render.toImage(pixelRatio: 3);
+            final image = await render.toImage(
+              pixelRatio: device.$1 == 'ipad' ? 2 : 3,
+            );
             final data = await image.toByteData(format: ui.ImageByteFormat.png);
             final folder = Directory('store_assets/screenshots/redesign');
             await folder.create(recursive: true);
