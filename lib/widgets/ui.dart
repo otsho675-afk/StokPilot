@@ -42,42 +42,74 @@ class MetricCard extends StatelessWidget {
           border: Border.all(color: line),
           borderRadius: BorderRadius.circular(16),
           boxShadow: const [
-            BoxShadow(color: Color(0x07152842), blurRadius: 18, offset: Offset(0, 4)),
+            BoxShadow(
+              color: Color(0x07152842),
+              blurRadius: 18,
+              offset: Offset(0, 4),
+            ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              Container(
-                width: 32, height: 32,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: .10),
-                  borderRadius: BorderRadius.circular(10),
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: .10),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 17, color: accent),
                 ),
-                child: Icon(icon, size: 17, color: accent),
-              ),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, color: muted, fontWeight: FontWeight.w700)),
-              ),
-              if (onTap != null) const Icon(Icons.arrow_outward_rounded, size: 16, color: muted),
-            ]),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: muted,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (onTap != null)
+                  const Icon(
+                    Icons.arrow_outward_rounded,
+                    size: 16,
+                    color: muted,
+                  ),
+              ],
+            ),
             const SizedBox(height: 10),
             FittedBox(
-              fit: BoxFit.scaleDown, alignment: Alignment.centerLeft,
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 180),
-                child: Text(value, key: ValueKey<String>(value),
-                  style: const TextStyle(color: ink, fontSize: 24,
-                    fontWeight: FontWeight.w900, letterSpacing: -0.65)),
+                child: Text(
+                  value,
+                  key: ValueKey<String>(value),
+                  style: const TextStyle(
+                    color: ink,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.65,
+                  ),
+                ),
               ),
             ),
             if (subtext != null) ...[
               const SizedBox(height: 4),
-              Text(subtext!, maxLines: 2, overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: muted, fontSize: 11)),
+              Text(
+                subtext!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: muted, fontSize: 11),
+              ),
             ],
           ],
         ),
@@ -99,33 +131,48 @@ class PageTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 20),
-    child: LayoutBuilder(builder: (context, constraints) {
-      final heading = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(fontSize: 26,
-            fontWeight: FontWeight.w900, color: ink, letterSpacing: -1)),
-          const SizedBox(height: 4),
-          Text(subtitle, style: const TextStyle(
-            color: muted, fontSize: 12.5, height: 1.45)),
-        ],
-      );
-      if (constraints.maxWidth < 530) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final heading = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            heading,
-            if (action != null) ...[const SizedBox(height: 12), action!],
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w900,
+                color: ink,
+                letterSpacing: -1,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                color: muted,
+                fontSize: 12.5,
+                height: 1.45,
+              ),
+            ),
           ],
         );
-      }
-      return Row(
-        children: [
-          Expanded(child: heading),
-          if (action != null) ...[const SizedBox(width: 16), action!],
-        ],
-      );
-    }),
+        if (constraints.maxWidth < 530) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              heading,
+              if (action != null) ...[const SizedBox(height: 12), action!],
+            ],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: heading),
+            if (action != null) ...[const SizedBox(width: 16), action!],
+          ],
+        );
+      },
+    ),
   );
 }
 
@@ -154,7 +201,8 @@ class BlankState extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 46, height: 46,
+          width: 46,
+          height: 46,
           decoration: BoxDecoration(
             color: softGreen,
             borderRadius: BorderRadius.circular(14),
@@ -162,14 +210,22 @@ class BlankState extends StatelessWidget {
           child: Icon(icon, size: 22, color: green),
         ),
         const SizedBox(height: 10),
-        Text(title, textAlign: TextAlign.center,
-          style: const TextStyle(color: ink, fontWeight: FontWeight.w800, fontSize: 14)),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: ink,
+            fontWeight: FontWeight.w800,
+            fontSize: 14,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(message, textAlign: TextAlign.center,
-          style: const TextStyle(color: muted, fontSize: 12, height: 1.4)),
-        if (action != null) ...[
-          const SizedBox(height: 12), action!,
-        ],
+        Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: muted, fontSize: 12, height: 1.4),
+        ),
+        if (action != null) ...[const SizedBox(height: 12), action!],
       ],
     ),
   );
@@ -193,7 +249,11 @@ class DataPanel extends StatelessWidget {
       border: Border.all(color: line),
       borderRadius: BorderRadius.circular(17),
       boxShadow: const [
-        BoxShadow(color: Color(0x05152842), blurRadius: 20, offset: Offset(0, 5)),
+        BoxShadow(
+          color: Color(0x05152842),
+          blurRadius: 20,
+          offset: Offset(0, 5),
+        ),
       ],
     ),
     child: child,
@@ -214,18 +274,29 @@ class SectionHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      Expanded(child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(
-            color: ink, fontSize: 16, fontWeight: FontWeight.w900,
-            letterSpacing: -0.25)),
-          if (subtitle != null) ...[
-            const SizedBox(height: 3),
-            Text(subtitle!, style: const TextStyle(color: muted, fontSize: 11.5)),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                color: ink,
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.25,
+              ),
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 3),
+              Text(
+                subtitle!,
+                style: const TextStyle(color: muted, fontSize: 11.5),
+              ),
+            ],
           ],
-        ],
-      )),
+        ),
+      ),
       if (trailing != null) trailing!,
     ],
   );
@@ -313,8 +384,10 @@ class ResponsiveFormDialog extends StatelessWidget {
     final dimensions = MediaQuery.sizeOf(context);
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     final mobile = dimensions.width < 600;
-    final maxHeight = (dimensions.height - keyboard - (mobile ? 8 : 24))
-        .clamp(150.0, 9000.0).toDouble();
+    final maxHeight =
+        (dimensions.height - keyboard - (mobile ? 8 : 24))
+            .clamp(150.0, 9000.0)
+            .toDouble();
 
     final sheet = ConstrainedBox(
       constraints: BoxConstraints(maxHeight: maxHeight),
@@ -382,30 +455,33 @@ class ResponsiveFormDialog extends StatelessWidget {
                 mobile ? 13 : 18,
                 mobile ? 16 : 12,
               ),
-              child: mobile
-                  ? LayoutBuilder(
-                      builder: (context, constraints) {
-                        final width = (constraints.maxWidth - (actions.length - 1) * 9)
-                            / actions.length;
-                        return Wrap(
-                          spacing: 9,
-                          runSpacing: 9,
-                          children: [
-                            for (final action in actions)
-                              SizedBox(
-                                width: width.clamp(104.0, 9000.0).toDouble(),
-                                child: action,
-                              ),
-                          ],
-                        );
-                      },
-                    )
-                  : Wrap(
-                      alignment: WrapAlignment.end,
-                      spacing: 10,
-                      runSpacing: 8,
-                      children: actions,
-                    ),
+              child:
+                  mobile
+                      ? LayoutBuilder(
+                        builder: (context, constraints) {
+                          final width =
+                              (constraints.maxWidth -
+                                  (actions.length - 1) * 9) /
+                              actions.length;
+                          return Wrap(
+                            spacing: 9,
+                            runSpacing: 9,
+                            children: [
+                              for (final action in actions)
+                                SizedBox(
+                                  width: width.clamp(104.0, 9000.0).toDouble(),
+                                  child: action,
+                                ),
+                            ],
+                          );
+                        },
+                      )
+                      : Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: 10,
+                        runSpacing: 8,
+                        children: actions,
+                      ),
             ),
         ],
       ),
@@ -452,8 +528,10 @@ class CompactDateField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final display = date == null ? 'Tarih seç'
-        : '${date!.day.toString().padLeft(2, '0')}.${date!.month.toString().padLeft(2, '0')}.${date!.year}';
+    final display =
+        date == null
+            ? 'Tarih seç'
+            : '${date!.day.toString().padLeft(2, '0')}.${date!.month.toString().padLeft(2, '0')}.${date!.year}';
     return Material(
       color: const Color(0xFFFBFCFE),
       borderRadius: BorderRadius.circular(12),
@@ -467,31 +545,52 @@ class CompactDateField extends StatelessWidget {
             border: Border.all(color: line),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Row(children: [
-            Container(
-              width: 30, height: 30,
-              decoration: BoxDecoration(color: softGreen, borderRadius: BorderRadius.circular(9)),
-              child: const Icon(Icons.calendar_month_outlined, color: green, size: 16),
-            ),
-            const SizedBox(width: 10),
-            Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: const TextStyle(color: muted, fontSize: 10)),
-                const SizedBox(height: 3),
-                Text(display, style: const TextStyle(
-                  color: ink, fontSize: 13, fontWeight: FontWeight.w700)),
-              ],
-            )),
-            if (date != null && onClear != null)
-              IconButton(
-                tooltip: '$label temizle',
-                icon: const Icon(Icons.close_rounded, color: muted, size: 18),
-                onPressed: onClear,
-              )
-            else
-              const Icon(Icons.expand_more_rounded, color: muted, size: 19),
-          ]),
+          child: Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: softGreen,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: const Icon(
+                  Icons.calendar_month_outlined,
+                  color: green,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(color: muted, fontSize: 10),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      display,
+                      style: const TextStyle(
+                        color: ink,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (date != null && onClear != null)
+                IconButton(
+                  tooltip: '$label temizle',
+                  icon: const Icon(Icons.close_rounded, color: muted, size: 18),
+                  onPressed: onClear,
+                )
+              else
+                const Icon(Icons.expand_more_rounded, color: muted, size: 19),
+            ],
+          ),
         ),
       ),
     );
@@ -512,9 +611,10 @@ Future<DateTime?> showPilotDatePicker({
   final first = DateUtils.dateOnly(firstDate);
   final last = DateUtils.dateOnly(lastDate);
   final normalized = DateUtils.dateOnly(initialDate);
-  final initial = normalized.isBefore(first)
-      ? first
-      : normalized.isAfter(last)
+  final initial =
+      normalized.isBefore(first)
+          ? first
+          : normalized.isAfter(last)
           ? last
           : normalized;
 
@@ -537,105 +637,147 @@ Future<DateTime?> showPilotDatePicker({
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
-    builder: (sheetContext) => StatefulBuilder(
-      builder: (sheetContext, update) {
-        final screen = MediaQuery.sizeOf(sheetContext);
-        final height = (screen.height * 0.9).clamp(240.0, 610.0).toDouble();
-        final choices = <(String, DateTime)>[
-          ('Bugün', now),
-          ('Dün', now.subtract(const Duration(days: 1))),
-          ('7 gün önce', now.subtract(const Duration(days: 7))),
-          ('7 gün sonra', now.add(const Duration(days: 7))),
-          ('30 gün sonra', now.add(const Duration(days: 30))),
-        ].where((item) =>
-            !item.$2.isBefore(first) && !item.$2.isAfter(last)).toList();
+    builder:
+        (sheetContext) => StatefulBuilder(
+          builder: (sheetContext, update) {
+            final screen = MediaQuery.sizeOf(sheetContext);
+            final height = (screen.height * 0.9).clamp(240.0, 610.0).toDouble();
+            final choices =
+                <(String, DateTime)>[
+                      ('Bugün', now),
+                      ('Dün', now.subtract(const Duration(days: 1))),
+                      ('7 gün önce', now.subtract(const Duration(days: 7))),
+                      ('7 gün sonra', now.add(const Duration(days: 7))),
+                      ('30 gün sonra', now.add(const Duration(days: 30))),
+                    ]
+                    .where(
+                      (item) =>
+                          !item.$2.isBefore(first) && !item.$2.isAfter(last),
+                    )
+                    .toList();
 
-        return Container(
-          height: height,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(children: [
-            Container(
-              width: 42, height: 4,
-              margin: const EdgeInsets.only(top: 10, bottom: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFCDD7E0),
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(19, 0, 11, 10),
-              child: Row(children: [
-                const Icon(Icons.calendar_month_rounded, color: green, size: 23),
-                const SizedBox(width: 11),
-                Expanded(child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w900, color: ink)),
-                    Text(
-                      '${selected.day.toString().padLeft(2, '0')}.${selected.month.toString().padLeft(2, '0')}.${selected.year}',
-                      style: const TextStyle(fontSize: 12, color: muted)),
-                  ],
-                )),
-                IconButton(
-                  tooltip: 'Kapat',
-                  onPressed: () => Navigator.of(sheetContext).pop(),
-                  icon: const Icon(Icons.close_rounded, color: muted),
-                ),
-              ]),
-            ),
-            if (choices.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(15, 0, 15, 7),
-                child: Wrap(spacing: 7, runSpacing: 6, children: [
-                  for (final choice in choices)
-                    ChoiceChip(
-                      label: Text(choice.$1),
-                      showCheckmark: false,
-                      selected: DateUtils.isSameDay(selected, choice.$2),
-                      onSelected: (_) => update(() => selected = choice.$2),
-                    ),
-                ]),
-              ),
-            const Divider(height: 1, color: line),
-            Expanded(
-              child: SingleChildScrollView(
-                child: CalendarDatePicker(
-                  key: ValueKey<DateTime>(selected),
-                  initialDate: selected,
-                  firstDate: first,
-                  lastDate: last,
-                  onDateChanged: (date) => update(() => selected = date),
-                ),
-              ),
-            ),
-            Container(
+            return Container(
+              height: height,
               decoration: const BoxDecoration(
-                color: Color(0xFFFAFCFD),
-                border: Border(top: BorderSide(color: line)),
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              padding: const EdgeInsets.fromLTRB(16, 11, 16, 16),
-              child: Row(children: [
-                Expanded(child: OutlinedButton(
-                  onPressed: () => Navigator.of(sheetContext).pop(),
-                  child: const Text('Vazgeç'),
-                )),
-                const SizedBox(width: 10),
-                Expanded(child: FilledButton.icon(
-                  onPressed: () => Navigator.of(sheetContext).pop(selected),
-                  icon: const Icon(Icons.check_rounded, size: 18),
-                  label: const Text('Tarihi seç'),
-                )),
-              ]),
-            ),
-          ]),
-        );
-      },
-    ),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 4,
+                    margin: const EdgeInsets.only(top: 10, bottom: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCDD7E0),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(19, 0, 11, 10),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.calendar_month_rounded,
+                          color: green,
+                          size: 23,
+                        ),
+                        const SizedBox(width: 11),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                  color: ink,
+                                ),
+                              ),
+                              Text(
+                                '${selected.day.toString().padLeft(2, '0')}.${selected.month.toString().padLeft(2, '0')}.${selected.year}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Kapat',
+                          onPressed: () => Navigator.of(sheetContext).pop(),
+                          icon: const Icon(Icons.close_rounded, color: muted),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (choices.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(15, 0, 15, 7),
+                      child: Wrap(
+                        spacing: 7,
+                        runSpacing: 6,
+                        children: [
+                          for (final choice in choices)
+                            ChoiceChip(
+                              label: Text(choice.$1),
+                              showCheckmark: false,
+                              selected: DateUtils.isSameDay(
+                                selected,
+                                choice.$2,
+                              ),
+                              onSelected:
+                                  (_) => update(() => selected = choice.$2),
+                            ),
+                        ],
+                      ),
+                    ),
+                  const Divider(height: 1, color: line),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: CalendarDatePicker(
+                        key: ValueKey<DateTime>(selected),
+                        initialDate: selected,
+                        firstDate: first,
+                        lastDate: last,
+                        onDateChanged: (date) => update(() => selected = date),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFAFCFD),
+                      border: Border(top: BorderSide(color: line)),
+                    ),
+                    padding: const EdgeInsets.fromLTRB(16, 11, 16, 16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(sheetContext).pop(),
+                            child: const Text('Vazgeç'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed:
+                                () => Navigator.of(sheetContext).pop(selected),
+                            icon: const Icon(Icons.check_rounded, size: 18),
+                            label: const Text('Tarihi seç'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
   );
 }
 
@@ -660,13 +802,18 @@ class ListPager extends StatelessWidget {
       final pages = ((total + pageSize - 1) ~/ pageSize).clamp(1, 999999);
       final current = page.clamp(0, pages - 1);
       final narrow = constraints.maxWidth < 500;
-      final shown = <int>{
-        0,
-        if (pages > 1) pages - 1,
-        for (var i = current - (narrow ? 0 : 1);
-            i <= current + (narrow ? 0 : 1); i++)
-          if (i >= 0 && i < pages) i,
-      }.toList()..sort();
+      final shown =
+          <int>{
+              0,
+              if (pages > 1) pages - 1,
+              for (
+                var i = current - (narrow ? 0 : 1);
+                i <= current + (narrow ? 0 : 1);
+                i++
+              )
+                if (i >= 0 && i < pages) i,
+            }.toList()
+            ..sort();
 
       final count = Text(
         total == 0
@@ -679,12 +826,15 @@ class ListPager extends StatelessWidget {
         value: pageSize,
         isDense: true,
         underline: const SizedBox.shrink(),
-        items: const [5, 10, 20, 50]
-            .map((n) => DropdownMenuItem(
-                  value: n,
-                  child: Text('$n kayıt', style: TextStyle(fontSize: 12)),
-                ))
-            .toList(),
+        items:
+            const [5, 10, 20, 50]
+                .map(
+                  (n) => DropdownMenuItem(
+                    value: n,
+                    child: Text('$n kayıt', style: TextStyle(fontSize: 12)),
+                  ),
+                )
+                .toList(),
         onChanged: (n) {
           if (n != null) onPageSizeChanged(n);
         },
@@ -708,18 +858,23 @@ class ListPager extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.zero,
                     minimumSize: const Size(32, 32),
-                    backgroundColor: current == index ? softGreen : Colors.white,
+                    backgroundColor:
+                        current == index ? softGreen : Colors.white,
                     side: BorderSide(color: current == index ? green : line),
                   ),
                   onPressed: () => onPageChanged(index),
-                  child: Text('${index + 1}', style: const TextStyle(fontSize: 12)),
+                  child: Text(
+                    '${index + 1}',
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ),
               ),
             ),
           IconButton(
             tooltip: 'Sonraki sayfa',
             visualDensity: VisualDensity.compact,
-            onPressed: current >= pages - 1 ? null : () => onPageChanged(current + 1),
+            onPressed:
+                current >= pages - 1 ? null : () => onPageChanged(current + 1),
             icon: const Icon(Icons.chevron_right_rounded, size: 19),
           ),
         ],
@@ -727,32 +882,28 @@ class ListPager extends StatelessWidget {
 
       return Padding(
         padding: const EdgeInsets.only(top: 12),
-        child: narrow
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(child: count),
-                      sizePicker,
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  SingleChildScrollView(
-                    key: const ValueKey('pager-mobile-scroll'),
-                    scrollDirection: Axis.horizontal,
-                    child: buttons,
-                  ),
-                ],
-              )
-            : Row(
-                children: [
-                  Expanded(child: count),
-                  sizePicker,
-                  const SizedBox(width: 10),
-                  buttons,
-                ],
-              ),
+        child:
+            narrow
+                ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(children: [Expanded(child: count), sizePicker]),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      key: const ValueKey('pager-mobile-scroll'),
+                      scrollDirection: Axis.horizontal,
+                      child: buttons,
+                    ),
+                  ],
+                )
+                : Row(
+                  children: [
+                    Expanded(child: count),
+                    sizePicker,
+                    const SizedBox(width: 10),
+                    buttons,
+                  ],
+                ),
       );
     },
   );

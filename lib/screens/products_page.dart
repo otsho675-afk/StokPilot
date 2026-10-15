@@ -349,49 +349,71 @@ class _ProductsPageState extends State<ProductsPage> {
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
-                      onPressed: () => setState(() => advancedFilters = !advancedFilters),
-                      icon: Icon(advancedFilters ? Icons.tune_rounded : Icons.filter_alt_outlined),
-                      label: Text(advancedFilters ? 'Gelişmiş filtreleri kapat' : 'Gelişmiş filtreler · fiyat aralığı'),
+                      onPressed:
+                          () => setState(
+                            () => advancedFilters = !advancedFilters,
+                          ),
+                      icon: Icon(
+                        advancedFilters
+                            ? Icons.tune_rounded
+                            : Icons.filter_alt_outlined,
+                      ),
+                      label: Text(
+                        advancedFilters
+                            ? 'Gelişmiş filtreleri kapat'
+                            : 'Gelişmiş filtreler · fiyat aralığı',
+                      ),
                     ),
                     if (advancedFilters) ...[
                       const SizedBox(height: 12),
                       ResponsiveFields(
                         first: TextField(
                           controller: minPriceInput,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           decoration: const InputDecoration(
                             labelText: 'En düşük satış fiyatı (₺)',
                             prefixIcon: Icon(Icons.arrow_downward_rounded),
                           ),
-                          onChanged: (value) => setState(() {
-                            minimumPrice = double.tryParse(value.replaceAll(',', '.'));
-                            currentPage = 0;
-                          }),
+                          onChanged:
+                              (value) => setState(() {
+                                minimumPrice = double.tryParse(
+                                  value.replaceAll(',', '.'),
+                                );
+                                currentPage = 0;
+                              }),
                         ),
                         second: TextField(
                           controller: maxPriceInput,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           decoration: const InputDecoration(
                             labelText: 'En yüksek satış fiyatı (₺)',
                             prefixIcon: Icon(Icons.arrow_upward_rounded),
                           ),
-                          onChanged: (value) => setState(() {
-                            maximumPrice = double.tryParse(value.replaceAll(',', '.'));
-                            currentPage = 0;
-                          }),
+                          onChanged:
+                              (value) => setState(() {
+                                maximumPrice = double.tryParse(
+                                  value.replaceAll(',', '.'),
+                                );
+                                currentPage = 0;
+                              }),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton.icon(
-                          onPressed: () => setState(() {
-                            minPriceInput.clear();
-                            maxPriceInput.clear();
-                            minimumPrice = null;
-                            maximumPrice = null;
-                            currentPage = 0;
-                          }),
+                          onPressed:
+                              () => setState(() {
+                                minPriceInput.clear();
+                                maxPriceInput.clear();
+                                minimumPrice = null;
+                                maximumPrice = null;
+                                currentPage = 0;
+                              }),
                           icon: const Icon(Icons.restart_alt_rounded),
                           label: const Text('Fiyat filtresini sıfırla'),
                         ),
@@ -401,7 +423,9 @@ class _ProductsPageState extends State<ProductsPage> {
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Alış fiyatı ve kâr oranını göster'),
-                      subtitle: const Text('Kapalıyken maliyet bilgileri ürün kartlarında gizlenir.'),
+                      subtitle: const Text(
+                        'Kapalıyken maliyet bilgileri ürün kartlarında gizlenir.',
+                      ),
                       value: showPurchasePrice,
                       onChanged: (v) => setState(() => showPurchasePrice = v),
                     ),
@@ -534,9 +558,11 @@ class _ProductsPageState extends State<ProductsPage> {
                       ),
                     );
                   }
-                  final totalPages = (filtered.length + pageSize - 1) ~/ pageSize;
+                  final totalPages =
+                      (filtered.length + pageSize - 1) ~/ pageSize;
                   final page = currentPage.clamp(0, totalPages - 1);
-                  final visible = filtered.skip(page * pageSize).take(pageSize).toList();
+                  final visible =
+                      filtered.skip(page * pageSize).take(pageSize).toList();
                   return DataPanel(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -553,22 +579,54 @@ class _ProductsPageState extends State<ProductsPage> {
                                   if (c.maxWidth >= 650)
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 10),
+                                        horizontal: 16,
+                                        vertical: 10,
+                                      ),
                                       margin: const EdgeInsets.only(bottom: 8),
                                       decoration: BoxDecoration(
                                         color: canvas,
-                                        borderRadius: BorderRadius.circular(10)),
-                                      child: const Row(children: [
-                                        Expanded(flex: 5, child: Text('ÜRÜN BİLGİSİ',
-                                          style: TextStyle(color: muted, fontWeight: FontWeight.w800, fontSize: 10))),
-                                        Expanded(flex: 2, child: Text('SATIŞ FİYATI',
-                                          textAlign: TextAlign.end,
-                                          style: TextStyle(color: muted, fontWeight: FontWeight.w800, fontSize: 10))),
-                                        SizedBox(width: 117, child: Text('STOK',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(color: muted, fontWeight: FontWeight.w800, fontSize: 10))),
-                                        SizedBox(width: 82),
-                                      ]),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: const Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 5,
+                                            child: Text(
+                                              'ÜRÜN BİLGİSİ',
+                                              style: TextStyle(
+                                                color: muted,
+                                                fontWeight: FontWeight.w800,
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              'SATIŞ FİYATI',
+                                              textAlign: TextAlign.end,
+                                              style: TextStyle(
+                                                color: muted,
+                                                fontWeight: FontWeight.w800,
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            width: 117,
+                                            child: Text(
+                                              'STOK',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                color: muted,
+                                                fontWeight: FontWeight.w800,
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(width: 82),
+                                        ],
+                                      ),
                                     ),
                                   ...visible.map(
                                     (item) =>
@@ -584,9 +642,12 @@ class _ProductsPageState extends State<ProductsPage> {
                           page: page,
                           pageSize: pageSize,
                           onPageChanged: (n) => setState(() => currentPage = n),
-                          onPageSizeChanged: (n) => setState(() { pageSize = n; currentPage = 0; }),
+                          onPageSizeChanged:
+                              (n) => setState(() {
+                                pageSize = n;
+                                currentPage = 0;
+                              }),
                         ),
-
                       ],
                     ),
                   );
@@ -719,7 +780,10 @@ class _ProductsPageState extends State<ProductsPage> {
             ),
             if (showPurchasePrice) ...[
               const SizedBox(height: 8),
-              Text('Alış: ${money((m['purchasePriceMinor'] as num?)?.toInt() ?? 0)}', style: const TextStyle(color: muted)),
+              Text(
+                'Alış: ${money((m['purchasePriceMinor'] as num?)?.toInt() ?? 0)}',
+                style: const TextStyle(color: muted),
+              ),
             ],
             const SizedBox(height: 10),
             LayoutBuilder(
@@ -783,41 +847,73 @@ class _ProductsPageState extends State<ProductsPage> {
         child: Row(
           children: [
             Container(
-              width: 36, height: 36,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: alert ? const Color(0xFFFFF0DD) : softGreen,
                 borderRadius: BorderRadius.circular(13),
               ),
-              child: Icon(Icons.inventory_2_outlined, color: alert ? amber : green),
+              child: Icon(
+                Icons.inventory_2_outlined,
+                color: alert ? amber : green,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
               flex: 5,
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('${m['name'] ?? 'Ürün'}',
-                  maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: ink, fontSize: 13, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 5),
-                Text('Kod: ${m['sku'] ?? '—'}  ·  Barkod: ${m['barcode'] ?? '—'}',
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: muted, fontSize: 11)),
-                if (showPurchasePrice) ...[
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${m['name'] ?? 'Ürün'}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: ink,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   const SizedBox(height: 5),
-                  Text('Alış: ${money((m['purchasePriceMinor'] as num?)?.toInt() ?? 0)}'
-                    '${_markup(m) == null ? '' : '  ·  Kâr %${_markup(m)!.toStringAsFixed(1)}'}',
-                    style: const TextStyle(color: muted, fontSize: 12)),
+                  Text(
+                    'Kod: ${m['sku'] ?? '—'}  ·  Barkod: ${m['barcode'] ?? '—'}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: muted, fontSize: 11),
+                  ),
+                  if (showPurchasePrice) ...[
+                    const SizedBox(height: 5),
+                    Text(
+                      'Alış: ${money((m['purchasePriceMinor'] as num?)?.toInt() ?? 0)}'
+                      '${_markup(m) == null ? '' : '  ·  Kâr %${_markup(m)!.toStringAsFixed(1)}'}',
+                      style: const TextStyle(color: muted, fontSize: 12),
+                    ),
+                  ],
                 ],
-              ]),
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
               flex: 2,
-              child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                Text(money((m['salePriceMinor'] as num?)?.toInt() ?? 0),
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: green, fontWeight: FontWeight.w900, fontSize: 14)),
-                const Text('Satış fiyatı', style: TextStyle(color: muted, fontSize: 11)),
-              ]),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    money((m['salePriceMinor'] as num?)?.toInt() ?? 0),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: green,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const Text(
+                    'Satış fiyatı',
+                    style: TextStyle(color: muted, fontSize: 11),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(width: 9),
             StatusPill(label: quantity(qty), color: alert ? amber : green),

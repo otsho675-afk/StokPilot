@@ -17,43 +17,66 @@ void main() {
 
   test('zero sales uses minimum stock instead of invented demand', () {
     final result = InventoryForecast.forProduct(
-      productId: 'a', stockMilli: 0, minimumMilli: 3000,
-      soldMilli: 0, periodDays: 30,
+      productId: 'a',
+      stockMilli: 0,
+      minimumMilli: 3000,
+      soldMilli: 0,
+      periodDays: 30,
     );
     expect(result.daysOfCover, isNull);
     expect(result.recommendedOrderMilli, 6000);
   });
 
   test('sales aggregation ignores purchases, old and future data', () {
-    final sold = InventoryForecast.soldByProduct([
-      {
-        'type': 'sale', 'createdAt': DateTime(2026, 10, 11),
-        'lines': [
-          {'productId': 'cup', 'quantityMilli': 4000},
-          {'productId': 'plate', 'quantityMilli': 2000},
-        ],
-      },
-      {
-        'type': 'sale', 'createdAt': DateTime(2026, 10, 14),
-        'lines': [{'productId': 'cup', 'quantityMilli': 5000}],
-      },
-      {
-        'type': 'purchase', 'createdAt': DateTime(2026, 10, 12),
-        'lines': [{'productId': 'cup', 'quantityMilli': 6000}],
-      },
-      {
-        'type': 'sale', 'createdAt': DateTime(2026, 9, 10),
-        'lines': [{'productId': 'cup', 'quantityMilli': 7000}],
-      },
-    ], now: DateTime(2026, 10, 14, 20), periodDays: 7);
+    final sold = InventoryForecast.soldByProduct(
+      [
+        {
+          'type': 'sale',
+          'createdAt': DateTime(2026, 10, 11),
+          'lines': [
+            {'productId': 'cup', 'quantityMilli': 4000},
+            {'productId': 'plate', 'quantityMilli': 2000},
+          ],
+        },
+        {
+          'type': 'sale',
+          'createdAt': DateTime(2026, 10, 14),
+          'lines': [
+            {'productId': 'cup', 'quantityMilli': 5000},
+          ],
+        },
+        {
+          'type': 'purchase',
+          'createdAt': DateTime(2026, 10, 12),
+          'lines': [
+            {'productId': 'cup', 'quantityMilli': 6000},
+          ],
+        },
+        {
+          'type': 'sale',
+          'createdAt': DateTime(2026, 9, 10),
+          'lines': [
+            {'productId': 'cup', 'quantityMilli': 7000},
+          ],
+        },
+      ],
+      now: DateTime(2026, 10, 14, 20),
+      periodDays: 7,
+    );
     expect(sold['cup'], 9000);
     expect(sold['plate'], 2000);
   });
 
   test('invalid time window is rejected', () {
-    expect(() => InventoryForecast.forProduct(
-      productId: 'a', stockMilli: 0, minimumMilli: 0,
-      soldMilli: 0, periodDays: 0,
-    ), throwsArgumentError);
+    expect(
+      () => InventoryForecast.forProduct(
+        productId: 'a',
+        stockMilli: 0,
+        minimumMilli: 0,
+        soldMilli: 0,
+        periodDays: 0,
+      ),
+      throwsArgumentError,
+    );
   });
 }

@@ -34,8 +34,8 @@ class InventoryForecast {
     // Never predict demand without historical sales; use minimum stock
     // as the conservative baseline when there is no sales history.
     final plannedMilli = (daily * (leadDays + coverDays)).ceil();
-    final targetMilli = plannedMilli > minimumMilli * 2
-        ? plannedMilli : minimumMilli * 2;
+    final targetMilli =
+        plannedMilli > minimumMilli * 2 ? plannedMilli : minimumMilli * 2;
     final orderMilli = targetMilli > stockMilli ? targetMilli - stockMilli : 0;
     return SalesVelocity(
       productId: productId,
@@ -54,8 +54,11 @@ class InventoryForecast {
     required int periodDays,
   }) {
     if (periodDays <= 0) throw ArgumentError.value(periodDays, 'periodDays');
-    final since = DateTime(now.year, now.month, now.day)
-        .subtract(Duration(days: periodDays - 1));
+    final since = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: periodDays - 1));
     final sold = <String, int>{};
     for (final trade in trades) {
       if (trade['type'] != 'sale') continue;

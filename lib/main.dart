@@ -12,43 +12,64 @@ import 'firebase_options.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     runApp(const StokPilotApp());
   } catch (error) {
-    runApp(MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.cloud_off_rounded, size: 46, color: Color(0xFFB45309)),
-                  const SizedBox(height: 16),
-                  const Text('Firebase bağlantısı yapılandırılmamış',
+    runApp(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.cloud_off_rounded,
+                      size: 46,
+                      color: Color(0xFFB45309),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Firebase bağlantısı yapılandırılmamış',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Web uygulaması için Firebase ayarları eksik. Proje klasöründe FlutterFire CLI ile web platformunu yapılandırın.',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  SelectableText('flutterfire configure --project=stokpilot-5bd2e --platforms=android,web',
-                      textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  SelectableText('$error', textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 12, color: Colors.black54)),
-                ],
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Web uygulaması için Firebase ayarları eksik. Proje klasöründe FlutterFire CLI ile web platformunu yapılandırın.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    SelectableText(
+                      'flutterfire configure --project=stokpilot-5bd2e --platforms=android,web',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    SelectableText(
+                      '$error',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 }
 
@@ -89,8 +110,16 @@ class StokPilotApp extends StatelessWidget {
       textTheme: const TextTheme(
         bodyMedium: TextStyle(color: ink, height: 1.4),
         bodyLarge: TextStyle(color: ink, height: 1.4),
-        titleLarge: TextStyle(color: ink, fontWeight: FontWeight.w800, letterSpacing: -0.4),
-        headlineSmall: TextStyle(color: ink, fontWeight: FontWeight.w900, letterSpacing: -0.8),
+        titleLarge: TextStyle(
+          color: ink,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.4,
+        ),
+        headlineSmall: TextStyle(
+          color: ink,
+          fontWeight: FontWeight.w900,
+          letterSpacing: -0.8,
+        ),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.white,
@@ -120,7 +149,10 @@ class StokPilotApp extends StatelessWidget {
         ),
       ),
       tooltipTheme: TooltipThemeData(
-        decoration: BoxDecoration(color: ink, borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(
+          color: ink,
+          borderRadius: BorderRadius.circular(8),
+        ),
         textStyle: const TextStyle(color: Colors.white, fontSize: 12),
       ),
       filledButtonTheme: FilledButtonThemeData(

@@ -268,7 +268,10 @@ class AppApi {
         }
         final qty = _int(lines[i]['quantityMilli'], min: 1);
         final price = _int(lines[i]['priceMinor']);
-        final vatBps = _int(lines[i]['taxBps'] ?? product['taxRateBps'] ?? 0, max: 10000);
+        final vatBps = _int(
+          lines[i]['taxBps'] ?? product['taxRateBps'] ?? 0,
+          max: 10000,
+        );
         final oldStock = _int(product['stockMilli'] ?? 0);
         final nextStock = type == 'sale' ? oldStock - qty : oldStock + qty;
         if (nextStock < 0 || nextStock > 1000000000000) {

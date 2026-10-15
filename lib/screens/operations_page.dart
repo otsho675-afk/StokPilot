@@ -164,9 +164,24 @@ class _OperationsPageState extends State<OperationsPage> {
                 );
           final total = records.fold<int>(
             0,
-            (totalAmount, doc) => totalAmount + _minor(doc.data()['totalMinor']),
+            (totalAmount, doc) =>
+                totalAmount + _minor(doc.data()['totalMinor']),
           );
-          final shown = records.skip(currentPage.clamp(0, ((records.length + pageSize - 1) ~/ pageSize).clamp(1, 999999) - 1) * pageSize).take(pageSize).toList();
+          final shown =
+              records
+                  .skip(
+                    currentPage.clamp(
+                          0,
+                          ((records.length + pageSize - 1) ~/ pageSize).clamp(
+                                1,
+                                999999,
+                              ) -
+                              1,
+                        ) *
+                        pageSize,
+                  )
+                  .take(pageSize)
+                  .toList();
           return DataPanel(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -296,9 +311,17 @@ class _OperationsPageState extends State<OperationsPage> {
                     ),
                   );
                 }),
-                ListPager(total: records.length, page: currentPage, pageSize: pageSize,
+                ListPager(
+                  total: records.length,
+                  page: currentPage,
+                  pageSize: pageSize,
                   onPageChanged: (n) => setState(() => currentPage = n),
-                  onPageSizeChanged: (n) => setState(() { pageSize = n; currentPage = 0; }),),
+                  onPageSizeChanged:
+                      (n) => setState(() {
+                        pageSize = n;
+                        currentPage = 0;
+                      }),
+                ),
               ],
             ),
           );
@@ -342,7 +365,21 @@ class _OperationsPageState extends State<OperationsPage> {
                     b.data()['createdAt'],
                   ).compareTo(_order(a.data()['createdAt'])),
                 );
-          final shown = records.skip(currentPage.clamp(0, ((records.length + pageSize - 1) ~/ pageSize).clamp(1, 999999) - 1) * pageSize).take(pageSize).toList();
+          final shown =
+              records
+                  .skip(
+                    currentPage.clamp(
+                          0,
+                          ((records.length + pageSize - 1) ~/ pageSize).clamp(
+                                1,
+                                999999,
+                              ) -
+                              1,
+                        ) *
+                        pageSize,
+                  )
+                  .take(pageSize)
+                  .toList();
           return DataPanel(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -456,9 +493,17 @@ class _OperationsPageState extends State<OperationsPage> {
                     ),
                   );
                 }),
-                ListPager(total: records.length, page: currentPage, pageSize: pageSize,
+                ListPager(
+                  total: records.length,
+                  page: currentPage,
+                  pageSize: pageSize,
                   onPageChanged: (n) => setState(() => currentPage = n),
-                  onPageSizeChanged: (n) => setState(() { pageSize = n; currentPage = 0; }),),
+                  onPageSizeChanged:
+                      (n) => setState(() {
+                        pageSize = n;
+                        currentPage = 0;
+                      }),
+                ),
               ],
             ),
           );

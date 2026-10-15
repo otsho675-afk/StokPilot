@@ -37,49 +37,73 @@ class _QuickActions extends StatelessWidget {
           subtitle: 'En sık kullanılan işlemlere tek dokunuşla ulaşın',
         ),
         const SizedBox(height: 12),
-        LayoutBuilder(builder: (context, constraints) {
-          final columns = constraints.maxWidth < 460 ? 2
-              : constraints.maxWidth < 820 ? 3 : 6;
-          const gap = 10.0;
-          final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
-          return Wrap(spacing: gap, runSpacing: gap, children: [
-            for (final action in actions)
-              SizedBox(
-                width: width,
-                child: Material(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  child: InkWell(
-                    onTap: () => onNavigate(action.$3),
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
-                      decoration: BoxDecoration(
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns =
+                constraints.maxWidth < 460
+                    ? 2
+                    : constraints.maxWidth < 820
+                    ? 3
+                    : 6;
+            const gap = 10.0;
+            final width =
+                (constraints.maxWidth - gap * (columns - 1)) / columns;
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: [
+                for (final action in actions)
+                  SizedBox(
+                    width: width,
+                    child: Material(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      child: InkWell(
+                        onTap: () => onNavigate(action.$3),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: line),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 32, height: 32,
-                            decoration: BoxDecoration(
-                              color: softGreen, borderRadius: BorderRadius.circular(10)),
-                            child: Icon(action.$2, size: 18, color: green),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 13,
                           ),
-                          const SizedBox(height: 11),
-                          Text(action.$1, maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.w800,
-                              color: ink, fontSize: 12)),
-                        ],
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: line),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: softGreen,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(action.$2, size: 18, color: green),
+                              ),
+                              const SizedBox(height: 11),
+                              Text(
+                                action.$1,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  color: ink,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-          ]);
-        }),
+              ],
+            );
+          },
+        ),
       ],
     );
   }
@@ -183,8 +207,13 @@ class _OverviewPageState extends State<OverviewPage> {
                     for (final product in products)
                       product.id: InventoryForecast.forProduct(
                         productId: product.id,
-                        stockMilli: (product.data()['stockMilli'] as num?)?.toInt() ?? 0,
-                        minimumMilli: (product.data()['minStockMilli'] as num?)?.toInt() ?? 0,
+                        stockMilli:
+                            (product.data()['stockMilli'] as num?)?.toInt() ??
+                            0,
+                        minimumMilli:
+                            (product.data()['minStockMilli'] as num?)
+                                ?.toInt() ??
+                            0,
                         soldMilli: sold[product.id] ?? 0,
                         periodDays: 30,
                       ),
@@ -647,7 +676,11 @@ class _PaymentPanel extends StatelessWidget {
 }
 
 class _RestockPanel extends StatelessWidget {
-  const _RestockPanel({required this.restocks, required this.forecast, required this.onNavigate});
+  const _RestockPanel({
+    required this.restocks,
+    required this.forecast,
+    required this.onNavigate,
+  });
   final List<RestockSuggestion> restocks;
   final Map<String, SalesVelocity> forecast;
   final ValueChanged<int> onNavigate;

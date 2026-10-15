@@ -32,10 +32,13 @@ class _ReportsPageState extends State<ReportsPage> {
     if (picked == null || !mounted) return;
     setState(() {
       period = 'custom';
-      if (start) { startDate = picked; } else { endDate = picked; }
+      if (start) {
+        startDate = picked;
+      } else {
+        endDate = picked;
+      }
     });
   }
-
 
   bool _withinRange(Map<String, dynamic> data) {
     final value = data['createdAt'];
@@ -43,13 +46,24 @@ class _ReportsPageState extends State<ReportsPage> {
     if (date == null) return period == 'all';
     if (period == 'all') return true;
     if (period == 'custom') {
-      if (startDate != null && date.isBefore(DateTime(startDate!.year, startDate!.month, startDate!.day))) { return false; }
-      if (endDate != null && !date.isBefore(DateTime(endDate!.year, endDate!.month, endDate!.day + 1))) { return false; }
+      if (startDate != null &&
+          date.isBefore(
+            DateTime(startDate!.year, startDate!.month, startDate!.day),
+          )) {
+        return false;
+      }
+      if (endDate != null &&
+          !date.isBefore(
+            DateTime(endDate!.year, endDate!.month, endDate!.day + 1),
+          )) {
+        return false;
+      }
       return true;
     }
-    return !date.isBefore(DateTime.now().subtract(Duration(days: int.parse(period))));
+    return !date.isBefore(
+      DateTime.now().subtract(Duration(days: int.parse(period))),
+    );
   }
-
 
   @override
   Widget build(BuildContext context) => Column(
@@ -75,23 +89,37 @@ class _ReportsPageState extends State<ReportsPage> {
           label: 'Başlangıç tarihi',
           date: startDate,
           onTap: () => _chooseDate(true),
-          onClear: () => setState(() { startDate = null; period = 'custom'; }),
+          onClear:
+              () => setState(() {
+                startDate = null;
+                period = 'custom';
+              }),
         ),
         second: CompactDateField(
           label: 'Bitiş tarihi',
           date: endDate,
           onTap: () => _chooseDate(false),
-          onClear: () => setState(() { endDate = null; period = 'custom'; }),
+          onClear:
+              () => setState(() {
+                endDate = null;
+                period = 'custom';
+              }),
         ),
       ),
-      if (period == 'custom') Align(
-        alignment: Alignment.centerRight,
-        child: TextButton.icon(
-          onPressed: () => setState(() { period = '30'; startDate = null; endDate = null; }),
-          icon: const Icon(Icons.restart_alt_rounded, size: 16),
-          label: const Text('Tarihleri sıfırla'),
+      if (period == 'custom')
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed:
+                () => setState(() {
+                  period = '30';
+                  startDate = null;
+                  endDate = null;
+                }),
+            icon: const Icon(Icons.restart_alt_rounded, size: 16),
+            label: const Text('Tarihleri sıfırla'),
+          ),
         ),
-      ),
       const SizedBox(height: 16),
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: AppApi.instance.watch('trades'),
@@ -110,9 +138,14 @@ class _ReportsPageState extends State<ReportsPage> {
                   if (!contacts.hasData) return const LinearProgressIndicator();
                   final metrics = ErpMetrics.compute(
                     products: products.data!.docs.map((d) => d.data()),
-                    trades: trades.data!.docs.map((d) => d.data()).where(_withinRange),
+                    trades: trades.data!.docs
+                        .map((d) => d.data())
+                        .where(_withinRange),
                     contacts: contacts.data!.docs.map((d) => d.data()),
-                    lastDays: period == 'all' || period == 'custom' ? null : int.parse(period),
+                    lastDays:
+                        period == 'all' || period == 'custom'
+                            ? null
+                            : int.parse(period),
                   );
                   final warningProducts =
                       products.data!.docs.where((doc) {
@@ -171,7 +204,12 @@ class _ReportsPageState extends State<ReportsPage> {
   Widget _period(String code, String text) => ChoiceChip(
     label: Text(text),
     selected: period == code,
-    onSelected: (_) => setState(() { period = code; startDate = null; endDate = null; }),
+    onSelected:
+        (_) => setState(() {
+          period = code;
+          startDate = null;
+          endDate = null;
+        }),
   );
 
   Future<void> _copyReport(BuildContext context, ErpMetrics metrics) async {
@@ -179,7 +217,11 @@ class _ReportsPageState extends State<ReportsPage> {
     final csv = erpCsv([
       [
         'StokPilot Yönetim Raporu',
-        period == 'all' ? 'Tüm zamanlar' : period == 'custom' ? 'Özel tarih aralığı' : 'Son $period gün',
+        period == 'all'
+            ? 'Tüm zamanlar'
+            : period == 'custom'
+            ? 'Özel tarih aralığı'
+            : 'Son $period gün',
       ],
       ['Gösterge', 'Değer (kuruş veya adet)'],
       ['Satış işlemi', metrics.saleCount],
@@ -216,7 +258,12 @@ class _ReportsPageState extends State<ReportsPage> {
     List<QueryDocumentSnapshot<Map<String, dynamic>>> warnings,
     Map<String, int> paymentTotals,
   ) {
-    final periodName = period == 'all' ? 'Tüm dönem' : period == 'custom' ? 'Seçilen tarih aralığı' : 'Son $period gün';
+    final periodName =
+        period == 'all'
+            ? 'Tüm dönem'
+            : period == 'custom'
+            ? 'Seçilen tarih aralığı'
+            : 'Son $period gün';
     final sortedDates = m.byDay.keys.toList()..sort();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -304,9 +351,24 @@ class _ReportsPageState extends State<ReportsPage> {
         _financeSummary(),
         const SizedBox(height: 14),
         _metricGrid([
-          MetricCard(title: 'Nakit satışlar', value: money(paymentTotals['cash'] ?? 0), icon: Icons.payments_rounded, accent: const Color(0xFF0C9672)),
-          MetricCard(title: 'POS / Kart satışları', value: money(paymentTotals['card'] ?? 0), icon: Icons.credit_card_rounded, accent: const Color(0xFF2563EB)),
-          MetricCard(title: 'Veresiye satışlar', value: money(paymentTotals['credit'] ?? 0), icon: Icons.receipt_long_rounded, accent: const Color(0xFFB7791F)),
+          MetricCard(
+            title: 'Nakit satışlar',
+            value: money(paymentTotals['cash'] ?? 0),
+            icon: Icons.payments_rounded,
+            accent: const Color(0xFF0C9672),
+          ),
+          MetricCard(
+            title: 'POS / Kart satışları',
+            value: money(paymentTotals['card'] ?? 0),
+            icon: Icons.credit_card_rounded,
+            accent: const Color(0xFF2563EB),
+          ),
+          MetricCard(
+            title: 'Veresiye satışlar',
+            value: money(paymentTotals['credit'] ?? 0),
+            icon: Icons.receipt_long_rounded,
+            accent: const Color(0xFFB7791F),
+          ),
         ]),
         const SizedBox(height: 14),
         DataPanel(
@@ -458,35 +520,51 @@ class _ReportsPageState extends State<ReportsPage> {
                       'Aktif ürünlerin stok seviyeleri tanımlı eşiklerin üzerinde.',
                   icon: Icons.task_alt_rounded,
                 ),
-              ...warnings.skip(warningPage.clamp(0, ((warnings.length + warningSize - 1) ~/ warningSize).clamp(1, 999999) - 1) * warningSize).take(warningSize).map((doc) {
-                final product = doc.data();
-                final name = (product['name'] ?? 'Ürün').toString();
-                final stock = (product['stockMilli'] as num?)?.toInt() ?? 0;
-                final min = (product['minStockMilli'] as num?)?.toInt() ?? 0;
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(
-                    Icons.warning_amber_rounded,
-                    color: amber,
-                  ),
-                  title: Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Text('Kritik eşik: ${quantity(min)}'),
-                  trailing: Text(
-                    quantity(stock),
-                    style: const TextStyle(fontWeight: FontWeight.w900),
-                  ),
-                );
-              }),
+              ...warnings
+                  .skip(
+                    warningPage.clamp(
+                          0,
+                          ((warnings.length + warningSize - 1) ~/ warningSize)
+                                  .clamp(1, 999999) -
+                              1,
+                        ) *
+                        warningSize,
+                  )
+                  .take(warningSize)
+                  .map((doc) {
+                    final product = doc.data();
+                    final name = (product['name'] ?? 'Ürün').toString();
+                    final stock = (product['stockMilli'] as num?)?.toInt() ?? 0;
+                    final min =
+                        (product['minStockMilli'] as num?)?.toInt() ?? 0;
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: amber,
+                      ),
+                      title: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text('Kritik eşik: ${quantity(min)}'),
+                      trailing: Text(
+                        quantity(stock),
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                    );
+                  }),
               ListPager(
                 total: warnings.length,
                 page: warningPage,
                 pageSize: warningSize,
                 onPageChanged: (n) => setState(() => warningPage = n),
-                onPageSizeChanged: (n) => setState(() { warningSize = n; warningPage = 0; }),
+                onPageSizeChanged:
+                    (n) => setState(() {
+                      warningSize = n;
+                      warningPage = 0;
+                    }),
               ),
             ],
           ),
@@ -557,11 +635,15 @@ class _ReportsPageState extends State<ReportsPage> {
         builder: (context, expenses) {
           if (expenses.hasError) return _failure(expenses.error);
           if (!expenses.hasData) return const LinearProgressIndicator();
-          final since = period == 'all' || period == 'custom'
-              ? null : DateTime.now().subtract(Duration(days: int.parse(period)));
-          final selectedPayments = payments.data!.docs.map((d) => d.data())
+          final since =
+              period == 'all' || period == 'custom'
+                  ? null
+                  : DateTime.now().subtract(Duration(days: int.parse(period)));
+          final selectedPayments = payments.data!.docs
+              .map((d) => d.data())
               .where((data) => period != 'custom' || _withinRange(data));
-          final selectedExpenses = expenses.data!.docs.map((d) => d.data())
+          final selectedExpenses = expenses.data!.docs
+              .map((d) => d.data())
               .where((data) => period != 'custom' || _withinRange(data));
           final totals = FinanceTotals.compute(
             payments: selectedPayments,
@@ -598,24 +680,30 @@ class _ReportsPageState extends State<ReportsPage> {
                   children: [
                     const SectionHeading(
                       title: 'Para hareketi özeti',
-                  subtitle:
-                      'Seçilen dönemde kaydedilen tahsilat, ödeme ve giderler',
-                ),
-                const SizedBox(height: 10),
-                _summaryRow('Tahsilatlar', money(totals.collectionsMinor)),
-                _summaryRow('Tedarikçi ödemeleri', money(totals.payoutsMinor)),
-                _summaryRow('İşletme giderleri', money(totals.expensesMinor)),
-                const Divider(),
-                _summaryRow(
-                  'Net para hareketi',
-                  money(totals.netMinor),
-                  highlighted: true,
-                ),
-                const SizedBox(height: 7),
-                const Text(
-                  'Bu tutar kayıtlı para hareketlerinin farkıdır; kâr veya banka bakiyesi değildir.',
-                  style: TextStyle(color: muted, fontSize: 11),
-                ),
+                      subtitle:
+                          'Seçilen dönemde kaydedilen tahsilat, ödeme ve giderler',
+                    ),
+                    const SizedBox(height: 10),
+                    _summaryRow('Tahsilatlar', money(totals.collectionsMinor)),
+                    _summaryRow(
+                      'Tedarikçi ödemeleri',
+                      money(totals.payoutsMinor),
+                    ),
+                    _summaryRow(
+                      'İşletme giderleri',
+                      money(totals.expensesMinor),
+                    ),
+                    const Divider(),
+                    _summaryRow(
+                      'Net para hareketi',
+                      money(totals.netMinor),
+                      highlighted: true,
+                    ),
+                    const SizedBox(height: 7),
+                    const Text(
+                      'Bu tutar kayıtlı para hareketlerinin farkıdır; kâr veya banka bakiyesi değildir.',
+                      style: TextStyle(color: muted, fontSize: 11),
+                    ),
                   ],
                 ),
               ),
@@ -683,56 +771,71 @@ class _ReportsPageState extends State<ReportsPage> {
             message: 'Satış yaptıkça ürün sıralaması burada görünür.',
             icon: Icons.bar_chart_rounded,
           ),
-        ...metrics.topProducts.asMap().entries
-          .skip(topPage.clamp(0, ((metrics.topProducts.length + topSize - 1) ~/ topSize).clamp(1, 999999) - 1) * topSize)
-          .take(topSize).map((entry) {
-          final item = entry.value;
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 7),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 26,
-                  child: Text(
-                    '${entry.key + 1}.',
-                    style: const TextStyle(
-                      color: green,
-                      fontWeight: FontWeight.bold,
+        ...metrics.topProducts
+            .asMap()
+            .entries
+            .skip(
+              topPage.clamp(
+                    0,
+                    ((metrics.topProducts.length + topSize - 1) ~/ topSize)
+                            .clamp(1, 999999) -
+                        1,
+                  ) *
+                  topSize,
+            )
+            .take(topSize)
+            .map((entry) {
+              final item = entry.value;
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 7),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 26,
+                      child: Text(
+                        '${entry.key + 1}.',
+                        style: const TextStyle(
+                          color: green,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          Text(
+                            'Miktar: ${quantity(item.quantityMilli)}',
+                            style: const TextStyle(color: muted, fontSize: 12),
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Miktar: ${quantity(item.quantityMilli)}',
-                        style: const TextStyle(color: muted, fontSize: 12),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      money(item.netMinor),
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 5),
-                Text(
-                  money(item.netMinor),
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ],
-            ),
-          );
-        }),
+              );
+            }),
         ListPager(
           total: metrics.topProducts.length,
           page: topPage,
           pageSize: topSize,
           onPageChanged: (n) => setState(() => topPage = n),
-          onPageSizeChanged: (n) => setState(() { topSize = n; topPage = 0; }),
+          onPageSizeChanged:
+              (n) => setState(() {
+                topSize = n;
+                topPage = 0;
+              }),
         ),
       ],
     ),

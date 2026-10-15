@@ -17,8 +17,7 @@ class SettingsPage extends StatelessWidget {
     children: [
       const PageTitle(
         title: 'İşletme ayarları',
-        subtitle:
-            'Hesap, abonelik ve işletme tercihlerini yönetin.',
+        subtitle: 'Hesap, abonelik ve işletme tercihlerini yönetin.',
       ),
       const _AlertSettings(),
       const SizedBox(height: 18),

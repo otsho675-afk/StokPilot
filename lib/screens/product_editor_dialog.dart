@@ -26,8 +26,11 @@ class ProductFormScaffold extends StatelessWidget {
       toolbarHeight: 65,
       backgroundColor: Colors.white,
       title: DefaultTextStyle(
-        style: const TextStyle(fontSize: 17, color: ink,
-          fontWeight: FontWeight.w900),
+        style: const TextStyle(
+          fontSize: 17,
+          color: ink,
+          fontWeight: FontWeight.w900,
+        ),
         child: title,
       ),
       bottom: const PreferredSize(
@@ -53,7 +56,8 @@ class ProductFormScaffold extends StatelessWidget {
                 children: [
                   Expanded(
                     child: SingleChildScrollView(
-                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: const EdgeInsets.all(22),
                       child: Material(color: Colors.white, child: content),
                     ),
@@ -65,7 +69,9 @@ class ProductFormScaffold extends StatelessWidget {
                         border: Border(top: BorderSide(color: line)),
                       ),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 12),
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
                       child: Wrap(
                         alignment: WrapAlignment.end,
                         spacing: 9,

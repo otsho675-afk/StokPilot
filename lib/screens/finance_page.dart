@@ -34,9 +34,12 @@ class _FinancePageState extends State<FinancePage> {
   DateTime? startDate, endDate;
   Future<void> chooseDate(bool start) async {
     final now = DateTime.now();
-    final picked = await showPilotDatePicker(context: context,
+    final picked = await showPilotDatePicker(
+      context: context,
       initialDate: (start ? startDate : endDate) ?? now,
-      firstDate: DateTime(2000), lastDate: DateTime(now.year + 1));
+      firstDate: DateTime(2000),
+      lastDate: DateTime(now.year + 1),
+    );
     if (picked != null && mounted) {
       setState(() {
         period = 'custom';
@@ -49,7 +52,6 @@ class _FinancePageState extends State<FinancePage> {
       });
     }
   }
-
 
   DateTime? get since =>
       period == 'all' || period == 'custom'
@@ -86,7 +88,8 @@ class _FinancePageState extends State<FinancePage> {
               onSelected:
                   (_) => setState(() {
                     period = item.key;
-                    startDate = null; endDate = null;
+                    startDate = null;
+                    endDate = null;
                     currentPage = 0;
                   }),
             ),
@@ -95,14 +98,26 @@ class _FinancePageState extends State<FinancePage> {
       const SizedBox(height: 10),
       ResponsiveFields(
         first: CompactDateField(
-          label: 'Başlangıç tarihi', date: startDate,
+          label: 'Başlangıç tarihi',
+          date: startDate,
           onTap: () => chooseDate(true),
-          onClear: () => setState(() { startDate = null; period = 'custom'; currentPage = 0; }),
+          onClear:
+              () => setState(() {
+                startDate = null;
+                period = 'custom';
+                currentPage = 0;
+              }),
         ),
         second: CompactDateField(
-          label: 'Bitiş tarihi', date: endDate,
+          label: 'Bitiş tarihi',
+          date: endDate,
           onTap: () => chooseDate(false),
-          onClear: () => setState(() { endDate = null; period = 'custom'; currentPage = 0; }),
+          onClear:
+              () => setState(() {
+                endDate = null;
+                period = 'custom';
+                currentPage = 0;
+              }),
         ),
       ),
       const SizedBox(height: 14),
@@ -163,10 +178,19 @@ class _FinancePageState extends State<FinancePage> {
       final value = data['createdAt'];
       final date = value is Timestamp ? value.toDate() : null;
       if (date == null) return false;
-      if (startDate != null && date.isBefore(DateTime(startDate!.year, startDate!.month, startDate!.day))) return false;
-      if (endDate != null && !date.isBefore(DateTime(endDate!.year, endDate!.month, endDate!.day + 1))) return false;
+      if (startDate != null &&
+          date.isBefore(
+            DateTime(startDate!.year, startDate!.month, startDate!.day),
+          ))
+        return false;
+      if (endDate != null &&
+          !date.isBefore(
+            DateTime(endDate!.year, endDate!.month, endDate!.day + 1),
+          ))
+        return false;
       return true;
     }
+
     final totals = FinanceTotals.compute(
       payments: payments.map((d) => d.data()).where(withinRange),
       expenses: expenses.map((d) => d.data()).where(withinRange),
@@ -345,7 +369,19 @@ class _FinancePageState extends State<FinancePage> {
                   title: 'Hareket bulunamadı',
                   message: 'Dönemi değiştir veya yeni bir gider kaydet.',
                 ),
-              for (final row in rows.skip(currentPage.clamp(0, ((rows.length + pageSize - 1) ~/ pageSize).clamp(1, 999999) - 1) * pageSize).take(pageSize)) ...[
+              for (final row in rows
+                  .skip(
+                    currentPage.clamp(
+                          0,
+                          ((rows.length + pageSize - 1) ~/ pageSize).clamp(
+                                1,
+                                999999,
+                              ) -
+                              1,
+                        ) *
+                        pageSize,
+                  )
+                  .take(pageSize)) ...[
                 LayoutBuilder(
                   builder: (context, box) {
                     final amount =
@@ -433,7 +469,11 @@ class _FinancePageState extends State<FinancePage> {
                 page: currentPage,
                 pageSize: pageSize,
                 onPageChanged: (n) => setState(() => currentPage = n),
-                onPageSizeChanged: (n) => setState(() { pageSize = n; currentPage = 0; }),
+                onPageSizeChanged:
+                    (n) => setState(() {
+                      pageSize = n;
+                      currentPage = 0;
+                    }),
               ),
             ],
           ),

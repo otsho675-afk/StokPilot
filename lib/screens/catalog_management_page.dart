@@ -11,7 +11,8 @@ class CatalogManagementPage extends StatelessWidget {
     children: [
       PageTitle(
         title: 'Kategori ve birimler',
-        subtitle: 'Ürün kategorilerini, ölçü birimlerini ve KDV oranlarını yönetin.',
+        subtitle:
+            'Ürün kategorilerini, ölçü birimlerini ve KDV oranlarını yönetin.',
       ),
       MasterData(
         title: 'Kategoriler',
