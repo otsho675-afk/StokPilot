@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/app_api.dart';
@@ -33,11 +32,11 @@ class _MainShellState extends State<MainShell> {
     'Ürünler',
     'Satış',
     'Alış',
-    'Müşteri carileri',
+    'Müşteriler',
     'Tedarikçiler',
     'Finans',
     'Raporlar',
-    'ERP İşlemleri',
+    'İşlem geçmişi',
     'Kategori ve Birimler',
     'Ayarlar',
   ];
@@ -82,7 +81,7 @@ class _MainShellState extends State<MainShell> {
   };
 
   Future<void> _signOut() async {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = AppApi.instance.auth.currentUser;
     if (user?.isAnonymous == true) {
       if (!await confirm(
         context,
@@ -93,7 +92,7 @@ class _MainShellState extends State<MainShell> {
       }
     }
     await BillingService.instance.logout();
-    await FirebaseAuth.instance.signOut();
+    await AppApi.instance.auth.signOut();
   }
 
   Widget _brand({required bool compact}) => Row(
@@ -104,7 +103,7 @@ class _MainShellState extends State<MainShell> {
         height: 40,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF0C8E89), Color(0xFF075E79)],
+            colors: [green, Color(0xFF302987)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -118,12 +117,24 @@ class _MainShellState extends State<MainShell> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('StokPilot',
-                style: TextStyle(color: ink, fontSize: 20,
-                    fontWeight: FontWeight.w900, letterSpacing: -0.9)),
-            Text('İŞLETME PLATFORMU',
-                style: TextStyle(color: muted, fontSize: 9,
-                    fontWeight: FontWeight.w700, letterSpacing: 1.15)),
+            Text(
+              'StokPilot',
+              style: TextStyle(
+                color: ink,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.9,
+              ),
+            ),
+            Text(
+              'İŞLETME PLATFORMU',
+              style: TextStyle(
+                color: muted,
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.15,
+              ),
+            ),
           ],
         ),
       ],
@@ -139,21 +150,22 @@ class _MainShellState extends State<MainShell> {
         if (drawer) Navigator.of(context).pop();
       },
       child: Container(
-        height: 43,
+        height: 48,
         decoration: BoxDecoration(
-          color: active ? const Color(0xFFE8F5F3) : Colors.transparent,
+          color: active ? softGreen : Colors.transparent,
           borderRadius: BorderRadius.circular(11),
-          border: active
-              ? Border.all(color: const Color(0xFFD4EAE6))
-              : null,
+          border: active ? Border.all(color: line) : null,
         ),
         padding: EdgeInsets.symmetric(horizontal: compact ? 0 : 12),
         child: Row(
-          mainAxisAlignment: compact
-              ? MainAxisAlignment.center : MainAxisAlignment.start,
+          mainAxisAlignment:
+              compact ? MainAxisAlignment.center : MainAxisAlignment.start,
           children: [
-            Icon(icons[index], size: 19,
-                color: active ? green : const Color(0xFF718095)),
+            Icon(
+              icons[index],
+              size: 19,
+              color: active ? green : const Color(0xFF718095),
+            ),
             if (!compact) ...[
               const SizedBox(width: 12),
               Expanded(
@@ -161,7 +173,7 @@ class _MainShellState extends State<MainShell> {
                   names[index],
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: active ? const Color(0xFF075E68) : ink,
+                    color: active ? green : ink,
                     fontSize: 13,
                     fontWeight: active ? FontWeight.w800 : FontWeight.w600,
                   ),
@@ -169,9 +181,12 @@ class _MainShellState extends State<MainShell> {
               ),
               if (active)
                 Container(
-                  width: 5, height: 5,
+                  width: 5,
+                  height: 5,
                   decoration: const BoxDecoration(
-                    shape: BoxShape.circle, color: green),
+                    shape: BoxShape.circle,
+                    color: green,
+                  ),
                 ),
             ],
           ],
@@ -184,133 +199,172 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  Widget _sidebar({required bool compact, bool drawer = false}) =>
-      Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(right: BorderSide(color: line)),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(compact ? 13 : 18, 18, compact ? 13 : 10, 15),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (compact) Expanded(child: Center(child: _brand(compact: true)))
-                    else Expanded(child: _brand(compact: false)),
-                    if (!compact && !drawer)
-                      IconButton(
-                        onPressed: () => setState(() => sidebarCollapsed = true),
-                        tooltip: 'Menüyü daralt',
-                        icon: const Icon(Icons.keyboard_double_arrow_left_rounded,
-                            size: 19, color: muted),
-                      ),
-                  ],
-                ),
-              ),
-              if (compact && !drawer)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: IconButton(
-                    tooltip: 'Menüyü genişlet',
-                    onPressed: () => setState(() => sidebarCollapsed = false),
-                    icon: const Icon(Icons.keyboard_double_arrow_right_rounded,
-                        color: muted, size: 19),
+  Widget _sidebar({required bool compact, bool drawer = false}) => Container(
+    decoration: const BoxDecoration(
+      color: Colors.white,
+      border: Border(right: BorderSide(color: line)),
+    ),
+    child: SafeArea(
+      child: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              compact ? 13 : 18,
+              18,
+              compact ? 13 : 10,
+              15,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                if (compact)
+                  Expanded(child: Center(child: _brand(compact: true)))
+                else
+                  Expanded(child: _brand(compact: false)),
+                if (!compact && !drawer)
+                  IconButton(
+                    onPressed: () => setState(() => sidebarCollapsed = true),
+                    tooltip: 'Menüyü daralt',
+                    icon: const Icon(
+                      Icons.keyboard_double_arrow_left_rounded,
+                      size: 19,
+                      color: muted,
+                    ),
                   ),
-                ),
-              const Divider(height: 1, color: line),
-              Expanded(
-                child: ListView(
-                  padding: EdgeInsets.fromLTRB(compact ? 9 : 13, 10, compact ? 9 : 13, 8),
-                  children: [
-                    for (var i = 0; i < names.length; i++) ...[
-                      if (!compact && sectionStarts.contains(i))
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(11, i == 0 ? 5 : 20, 6, 8),
-                          child: Text(
-                            sectionNames[sectionStarts.indexOf(i)],
-                            style: const TextStyle(
-                              color: Color(0xFF8B97A7),
-                              fontSize: 10,
-                              letterSpacing: 1.1,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                      if (compact && sectionStarts.contains(i) && i != 0)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
-                          child: Divider(height: 1, color: line),
-                        ),
-                      _navItem(i, compact: compact, drawer: drawer),
-                    ],
-                  ],
+              ],
+            ),
+          ),
+          if (compact && !drawer)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: IconButton(
+                tooltip: 'Menüyü genişlet',
+                onPressed: () => setState(() => sidebarCollapsed = false),
+                icon: const Icon(
+                  Icons.keyboard_double_arrow_right_rounded,
+                  color: muted,
+                  size: 19,
                 ),
               ),
-              const Divider(height: 1, color: line),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                    horizontal: compact ? 10 : 14, vertical: 12),
-                child: compact
+            ),
+          const Divider(height: 1, color: line),
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.fromLTRB(
+                compact ? 9 : 13,
+                10,
+                compact ? 9 : 13,
+                8,
+              ),
+              children: [
+                for (var i = 0; i < names.length; i++) ...[
+                  if (!compact && sectionStarts.contains(i))
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(11, i == 0 ? 5 : 20, 6, 8),
+                      child: Text(
+                        sectionNames[sectionStarts.indexOf(i)],
+                        style: const TextStyle(
+                          color: Color(0xFF8B97A7),
+                          fontSize: 10,
+                          letterSpacing: 1.1,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  if (compact && sectionStarts.contains(i) && i != 0)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Divider(height: 1, color: line),
+                    ),
+                  _navItem(i, compact: compact, drawer: drawer),
+                ],
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: line),
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 10 : 14,
+              vertical: 12,
+            ),
+            child:
+                compact
                     ? IconButton(
-                        tooltip: 'Güvenli çıkış',
-                        onPressed: drawer ? () async {
-                          Navigator.of(context).pop();
-                          await _signOut();
-                        } : _signOut,
-                        icon: const Icon(Icons.logout_rounded, color: muted),
-                      )
+                      tooltip: 'Güvenli çıkış',
+                      onPressed:
+                          drawer
+                              ? () async {
+                                Navigator.of(context).pop();
+                                await _signOut();
+                              }
+                              : _signOut,
+                      icon: const Icon(Icons.logout_rounded, color: muted),
+                    )
                     : Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(children: [
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
                             CircleAvatar(
                               radius: 17,
                               backgroundColor: softGreen,
-                              child: const Icon(Icons.person_outline_rounded,
-                                  color: green, size: 19),
+                              child: const Icon(
+                                Icons.person_outline_rounded,
+                                color: green,
+                                size: 19,
+                              ),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Çalışma hesabı',
-                                      style: TextStyle(fontSize: 12,
-                                          fontWeight: FontWeight.w800, color: ink)),
+                                  const Text(
+                                    'Çalışma hesabı',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      color: ink,
+                                    ),
+                                  ),
                                   Text(
-                                    FirebaseAuth.instance.currentUser?.email ??
+                                    AppApi.instance.auth.currentUser?.email ??
                                         'Oturum açık',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(color: muted, fontSize: 10),
+                                    style: const TextStyle(
+                                      color: muted,
+                                      fontSize: 10,
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
-                          ]),
-                          const SizedBox(height: 8),
-                          TextButton.icon(
-                            onPressed: drawer ? () async {
-                              Navigator.of(context).pop();
-                              await _signOut();
-                            } : _signOut,
-                            icon: const Icon(Icons.logout_rounded, size: 16),
-                            label: const Text('Güvenli çıkış'),
-                            style: TextButton.styleFrom(
-                              alignment: Alignment.centerLeft,
-                              foregroundColor: muted,
-                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton.icon(
+                          onPressed:
+                              drawer
+                                  ? () async {
+                                    Navigator.of(context).pop();
+                                    await _signOut();
+                                  }
+                                  : _signOut,
+                          icon: const Icon(Icons.logout_rounded, size: 16),
+                          label: const Text('Güvenli çıkış'),
+                          style: TextButton.styleFrom(
+                            alignment: Alignment.centerLeft,
+                            foregroundColor: muted,
                           ),
-                        ],
-                      ),
-              ),
-            ],
+                        ),
+                      ],
+                    ),
           ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 
   Widget _desktopHeader() => Container(
     height: 76,
@@ -336,19 +390,21 @@ class _MainShellState extends State<MainShell> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(names[selected], style: const TextStyle(
-                  color: ink, fontSize: 17, fontWeight: FontWeight.w800)),
-              const Text('Çalışma alanı / StokPilot',
-                  style: TextStyle(color: muted, fontSize: 11)),
+              Text(
+                names[selected],
+                style: const TextStyle(
+                  color: ink,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const Text(
+                'Çalışma alanı / StokPilot',
+                style: TextStyle(color: muted, fontSize: 11),
+              ),
             ],
           ),
         ),
-        FilledButton.icon(
-          onPressed: () => navigate(2),
-          icon: const Icon(Icons.add_rounded, size: 18),
-          label: const Text('Yeni satış'),
-        ),
-        const SizedBox(width: 12),
         IconButton(
           tooltip: 'Ayarlar',
           onPressed: () => navigate(10),
@@ -365,49 +421,47 @@ class _MainShellState extends State<MainShell> {
       border: Border(bottom: BorderSide(color: line)),
     ),
     padding: const EdgeInsets.symmetric(horizontal: 6),
-    child: Row(children: [
-      IconButton(
-        tooltip: 'Menüyü aç',
-        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-        icon: const Icon(Icons.menu_rounded, color: ink),
-      ),
-      const SizedBox(width: 2),
-      Container(
-        width: 30,
-        height: 30,
-        decoration: BoxDecoration(
-          color: softGreen,
-          borderRadius: BorderRadius.circular(9),
+    child: Row(
+      children: [
+        const SizedBox(width: 10),
+        Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: softGreen,
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: const Icon(Icons.layers_rounded, color: green, size: 17),
         ),
-        child: const Icon(Icons.layers_rounded, color: green, size: 17),
-      ),
-      const SizedBox(width: 9),
-      Expanded(
-        child: Text(
-          names[selected],
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 15,
-            color: ink,
-            fontWeight: FontWeight.w800,
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text(
+            names[selected],
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 15,
+              color: ink,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
-      ),
-      IconButton(
-        tooltip: 'Yeni satış',
-        onPressed: () => navigate(2),
-        icon: const Icon(Icons.add_circle_outline_rounded, color: green),
-      ),
-    ]),
+        IconButton(
+          tooltip: 'Ayarlar',
+          onPressed: () => navigate(10),
+          icon: const Icon(Icons.settings_outlined, color: muted),
+        ),
+      ],
+    ),
   );
 
   Widget _bottomNav() => NavigationBar(
-    height: 64,
+    height: 76,
     backgroundColor: Colors.white,
     elevation: 0,
     labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-    selectedIndex: mobileTabs.contains(selected) ? mobileTabs.indexOf(selected) : 4,
+    selectedIndex:
+        mobileTabs.contains(selected) ? mobileTabs.indexOf(selected) : 4,
     onDestinationSelected: (index) {
       if (index == 4) {
         _scaffoldKey.currentState?.openDrawer();
@@ -434,79 +488,90 @@ class _MainShellState extends State<MainShell> {
       NavigationDestination(
         icon: Icon(Icons.people_outline),
         selectedIcon: Icon(Icons.people_rounded),
-        label: 'Cariler',
+        label: 'Müşteriler',
       ),
-      NavigationDestination(
-        icon: Icon(Icons.menu_rounded),
-        label: 'Menü',
-      ),
+      NavigationDestination(icon: Icon(Icons.menu_rounded), label: 'Menü'),
     ],
   );
 
   @override
-  Widget build(BuildContext context) =>
-      StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: AppApi.instance.entitlement(),
-        builder: (context, state) {
-          if (state.hasError) {
-            return Scaffold(
-              body: Center(child: Text(
-                  'Abonelik bilgisi alınamadı: ${state.error}')),
-            );
-          }
-          if (!state.hasData) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()));
-          }
-          return LayoutBuilder(builder: (context, bounds) {
-            final desktop = bounds.maxWidth >= 1100;
-            final showSide = bounds.maxWidth >= 760;
-            final compact = !desktop || sidebarCollapsed;
-            final mobile = !showSide;
-            return Scaffold(
-              key: _scaffoldKey,
-              backgroundColor: canvas,
-              drawer: mobile ? Drawer(
-                width: 292,
-                backgroundColor: Colors.white,
-                child: _sidebar(compact: false, drawer: true),
-              ) : null,
-              body: Row(children: [
+  Widget build(
+    BuildContext context,
+  ) => StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+    stream: AppApi.instance.entitlement(),
+    builder: (context, state) {
+      if (state.hasError) {
+        return Scaffold(
+          body: Center(
+            child: Text('Abonelik bilgisi alınamadı: ${state.error}'),
+          ),
+        );
+      }
+      if (!state.hasData) {
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      }
+      return LayoutBuilder(
+        builder: (context, bounds) {
+          final desktop = bounds.maxWidth >= 1100;
+          final showSide = bounds.maxWidth >= 760;
+          final compact = !desktop || sidebarCollapsed;
+          final mobile = !showSide;
+          return Scaffold(
+            key: _scaffoldKey,
+            backgroundColor: canvas,
+            drawer:
+                mobile
+                    ? Drawer(
+                      width: 292,
+                      backgroundColor: Colors.white,
+                      child: _sidebar(compact: false, drawer: true),
+                    )
+                    : null,
+            body: Row(
+              children: [
                 if (showSide)
                   SizedBox(
                     width: compact ? 76 : 262,
                     child: _sidebar(compact: compact),
                   ),
-                Expanded(child: SafeArea(
-                  child: Column(children: [
-                    if (mobile) _mobileHeader() else _desktopHeader(),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        padding: EdgeInsets.fromLTRB(
-                          mobile ? (bounds.maxWidth < 370 ? 10 : 15) : 28,
-                          mobile ? 14 : 26,
-                          mobile ? (bounds.maxWidth < 370 ? 10 : 15) : 28,
-                          30,
-                        ),
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 1320),
-                            child: KeyedSubtree(
-                              key: ValueKey(selected),
-                              child: screen(),
+                Expanded(
+                  child: SafeArea(
+                    child: Column(
+                      children: [
+                        if (mobile) _mobileHeader() else _desktopHeader(),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
+                            padding: EdgeInsets.fromLTRB(
+                              mobile ? (bounds.maxWidth < 370 ? 10 : 15) : 28,
+                              mobile ? 14 : 26,
+                              mobile ? (bounds.maxWidth < 370 ? 10 : 15) : 28,
+                              30,
+                            ),
+                            child: Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 1320,
+                                ),
+                                child: KeyedSubtree(
+                                  key: ValueKey(selected),
+                                  child: screen(),
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ]),
-                )),
-              ]),
-              bottomNavigationBar: mobile ? _bottomNav() : null,
-            );
-          });
+                  ),
+                ),
+              ],
+            ),
+            bottomNavigationBar: mobile ? _bottomNav() : null,
+          );
         },
       );
+    },
+  );
 }

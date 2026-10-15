@@ -6,6 +6,7 @@ analyzer:
     - build/**
     - android/**
     - ios/**
+    - web/**
 linter:
   rules:
     prefer_const_constructors: false

@@ -1,5 +1,4 @@
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../services/billing.dart';
 import '../widgets/ui.dart';
@@ -13,6 +12,7 @@ class PaywallPage extends StatefulWidget {
 
 class _PaywallPageState extends State<PaywallPage> {
   bool loading = false;
+  late Future<List<Package>> offerings = BillingService.instance.packages();
   Future<void> run(Future<void> Function() action) async {
     setState(() => loading = true);
     try {
@@ -53,27 +53,59 @@ class _PaywallPageState extends State<PaywallPage> {
               ),
               const SizedBox(height: 10),
               const Text(
-                'İlk 50 ürününüz ücretsiz. Sınırsız ürün eklemek için StokPilot Pro aylık aboneliğine geçin. Türkiye hedef fiyatı 50 TL/aydır; ödeme öncesinde mağazadaki kesin fiyatı kontrol edin.',
+                'İlk 50 ürün ücretsiz. İşletmeniz büyüdüğünde aylık Pro aboneliğiyle sınırsız ürün ekleyin. Mevcut kayıtlarınıza erişmeye devam edebilirsiniz.',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 22),
-              if (!BillingService.verifiedBackendReady)
-                const Text(
-                  'Test sürümü: güvenli mağaza doğrulaması henüz kurulmadı; ödeme alınmaz. İlk 50 ürün ücretsizdir.',
-                  textAlign: TextAlign.center,
+              const DataPanel(
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: Icon(Icons.inventory_2_outlined, color: green),
+                      title: Text('Sınırsız ürün'),
+                      subtitle: Text(
+                        '50 üründen sonra da büyümeye devam edin.',
+                      ),
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.cloud_done_outlined, color: green),
+                      title: Text('Aynı çalışma alanı'),
+                      subtitle: Text(
+                        'Ürünleriniz ve işlem geçmişiniz korunur.',
+                      ),
+                    ),
+                  ],
                 ),
-              if (!BillingService.instance.available)
-                const Text(
-                  'Mağaza abonelik anahtarları henüz yapılandırılmamış. Kurulum rehberini uygulayın.',
-                  textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              if (!BillingService.verifiedBackendReady ||
+                  !BillingService.instance.available)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    'Abonelik bu sürümde henüz satışa açık değil. Mevcut ürünlerinizi yönetmeye devam edebilirsiniz.',
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               FutureBuilder(
-                future: BillingService.instance.packages(),
+                future: offerings,
                 builder: (context, snap) {
                   if (snap.hasError) {
-                    return Text(
-                      'Mağaza ürünleri yüklenemedi: ${snap.error}',
-                      textAlign: TextAlign.center,
+                    return Column(
+                      children: [
+                        const Text(
+                          'Mağazaya bağlanılamadı. Lütfen tekrar deneyin.',
+                        ),
+                        TextButton(
+                          onPressed:
+                              () => setState(
+                                () =>
+                                    offerings =
+                                        BillingService.instance.packages(),
+                              ),
+                          child: const Text('Tekrar dene'),
+                        ),
+                      ],
                     );
                   }
                   final packages =
@@ -85,9 +117,11 @@ class _PaywallPageState extends State<PaywallPage> {
                   }
                   return Column(
                     children: [
-                      if (packages.isEmpty)
+                      if (packages.isEmpty &&
+                          BillingService.verifiedBackendReady &&
+                          BillingService.instance.available)
                         const Text(
-                          'Aylık abonelik ürünü bulunamadı. Google Play / App Store ve RevenueCat ürün eşleştirmelerini kontrol edin.',
+                          'Aylık abonelik şu anda alınamıyor. Lütfen daha sonra tekrar deneyin.',
                           textAlign: TextAlign.center,
                         ),
                       ...packages.map(
@@ -123,7 +157,9 @@ class _PaywallPageState extends State<PaywallPage> {
               ),
               TextButton(
                 onPressed:
-                    loading ? null : () => run(BillingService.instance.restore),
+                    loading || !BillingService.instance.available
+                        ? null
+                        : () => run(BillingService.instance.restore),
                 child: const Text('Satın alımları geri yükle'),
               ),
               Wrap(
@@ -150,18 +186,7 @@ class _PaywallPageState extends State<PaywallPage> {
                         ),
                     child: const Text('Koşullar'),
                   ),
-                  TextButton(
-                    onPressed: () => requestAccountDeletion(context),
-                    child: const Text('Hesabı sil'),
-                  ),
                 ],
-              ),
-              TextButton(
-                onPressed: () async {
-                  await BillingService.instance.logout();
-                  await FirebaseAuth.instance.signOut();
-                },
-                child: const Text('Başka hesapla giriş yap'),
               ),
             ],
           ),

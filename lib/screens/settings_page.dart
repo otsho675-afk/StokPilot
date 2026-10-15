@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'auth_page.dart';
@@ -17,8 +16,7 @@ class SettingsPage extends StatelessWidget {
     children: [
       const PageTitle(
         title: 'İşletme ayarları',
-        subtitle:
-            'Hesap, abonelik ve işletme tercihlerini yönetin.',
+        subtitle: 'Hesap, abonelik ve işletme tercihlerini yönetin.',
       ),
       const _AlertSettings(),
       const SizedBox(height: 18),
@@ -43,7 +41,7 @@ class SettingsPage extends StatelessWidget {
                   ),
               child: const Text('Pro aylık aboneliği görüntüle'),
             ),
-            if (FirebaseAuth.instance.currentUser?.isAnonymous ?? false) ...[
+            if (AppApi.instance.auth.currentUser?.isAnonymous ?? false) ...[
               const SizedBox(height: 10),
               const Text(
                 'Misafir hesabını kalıcı hesaba bağla (mevcut veriler korunur):',

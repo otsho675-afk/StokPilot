@@ -16,75 +16,6 @@ class OverviewPage extends StatefulWidget {
   State<OverviewPage> createState() => _OverviewPageState();
 }
 
-class _QuickActions extends StatelessWidget {
-  const _QuickActions({required this.onNavigate});
-  final ValueChanged<int> onNavigate;
-  @override
-  Widget build(BuildContext context) {
-    const actions = <(String, IconData, int)>[
-      ('Yeni satış', Icons.point_of_sale_rounded, 2),
-      ('Stok yönetimi', Icons.inventory_2_outlined, 1),
-      ('Müşteri ekle', Icons.person_add_alt_1_outlined, 4),
-      ('Yeni alış', Icons.shopping_bag_outlined, 3),
-      ('Finans', Icons.account_balance_wallet_outlined, 6),
-      ('Raporlar', Icons.bar_chart_rounded, 7),
-    ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionHeading(
-          title: 'Hızlı erişim',
-          subtitle: 'En sık kullanılan işlemlere tek dokunuşla ulaşın',
-        ),
-        const SizedBox(height: 12),
-        LayoutBuilder(builder: (context, constraints) {
-          final columns = constraints.maxWidth < 460 ? 2
-              : constraints.maxWidth < 820 ? 3 : 6;
-          const gap = 10.0;
-          final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
-          return Wrap(spacing: gap, runSpacing: gap, children: [
-            for (final action in actions)
-              SizedBox(
-                width: width,
-                child: Material(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  child: InkWell(
-                    onTap: () => onNavigate(action.$3),
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: line),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 32, height: 32,
-                            decoration: BoxDecoration(
-                              color: softGreen, borderRadius: BorderRadius.circular(10)),
-                            child: Icon(action.$2, size: 18, color: green),
-                          ),
-                          const SizedBox(height: 11),
-                          Text(action.$1, maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.w800,
-                              color: ink, fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ]);
-        }),
-      ],
-    );
-  }
-}
-
 class _OverviewPageState extends State<OverviewPage> {
   int periodDays = 7;
 
@@ -94,15 +25,13 @@ class _OverviewPageState extends State<OverviewPage> {
     children: [
       _Hero(onNavigate: widget.onNavigate),
       const SizedBox(height: 22),
-      _QuickActions(onNavigate: widget.onNavigate),
-      const SizedBox(height: 22),
       LayoutBuilder(
         builder: (context, size) {
           final headline = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'İşletme kontrol merkezi',
+                'İşletme özeti',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
@@ -183,8 +112,13 @@ class _OverviewPageState extends State<OverviewPage> {
                     for (final product in products)
                       product.id: InventoryForecast.forProduct(
                         productId: product.id,
-                        stockMilli: (product.data()['stockMilli'] as num?)?.toInt() ?? 0,
-                        minimumMilli: (product.data()['minStockMilli'] as num?)?.toInt() ?? 0,
+                        stockMilli:
+                            (product.data()['stockMilli'] as num?)?.toInt() ??
+                            0,
+                        minimumMilli:
+                            (product.data()['minStockMilli'] as num?)
+                                ?.toInt() ??
+                            0,
                         soldMilli: sold[product.id] ?? 0,
                         periodDays: 30,
                       ),
@@ -255,7 +189,7 @@ class _OverviewPageState extends State<OverviewPage> {
                           final cols =
                               c.maxWidth >= 1000
                                   ? 4
-                                  : c.maxWidth >= 500
+                                  : c.maxWidth >= 340
                                   ? 2
                                   : 1;
                           final width = (c.maxWidth - (cols - 1) * 12) / cols;
@@ -337,7 +271,6 @@ class _OverviewPageState extends State<OverviewPage> {
                         },
                       ),
                       const SizedBox(height: 15),
-                      _QuickActions(onNavigate: widget.onNavigate),
                     ],
                   );
                 },
@@ -368,102 +301,13 @@ class _Hero extends StatelessWidget {
   const _Hero({required this.onNavigate});
   final ValueChanged<int> onNavigate;
   @override
-  Widget build(BuildContext context) => Container(
-    clipBehavior: Clip.antiAlias,
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [Color(0xFF172F49), Color(0xFF0C655F), Color(0xFF098A80)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Stack(
-      children: [
-        Positioned(
-          top: -75,
-          right: -72,
-          child: Container(
-            height: 240,
-            width: 240,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
-                width: 40,
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(27),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.auto_graph_rounded,
-                    color: Color(0xFF73EAC8),
-                    size: 18,
-                  ),
-                  SizedBox(width: 7),
-                  Text(
-                    'STOKPILOT  /  İŞLETME PANELİ',
-                    style: TextStyle(
-                      color: Color(0xFFB7DED4),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 15),
-              const Text(
-                'İşletmenin kontrolü sende.',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 27,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.6,
-                ),
-              ),
-              const SizedBox(height: 7),
-              const Text(
-                'Satışları izle, kritik stokları önceden gör ve işlerini hızlandır.',
-                style: TextStyle(color: Color(0xFFCAE6DF), height: 1.45),
-              ),
-              const SizedBox(height: 19),
-              Wrap(
-                spacing: 9,
-                runSpacing: 9,
-                children: [
-                  FilledButton.icon(
-                    onPressed: () => onNavigate(2),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: ink,
-                    ),
-                    icon: const Icon(Icons.point_of_sale_rounded, size: 18),
-                    label: const Text('Yeni satış'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: () => onNavigate(1),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Color(0xFF86C5B9)),
-                    ),
-                    icon: const Icon(Icons.add_box_outlined, size: 18),
-                    label: const Text('Ürünler'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
+  Widget build(BuildContext context) => PageTitle(
+    title: 'İşletmenize genel bakış',
+    subtitle: 'Stok, satış ve hesaplarınız. Her şey bir arada.',
+    action: FilledButton.icon(
+      onPressed: () => onNavigate(2),
+      icon: const Icon(Icons.point_of_sale_outlined, size: 19),
+      label: const Text('Satış ekranını aç'),
     ),
   );
 }
@@ -647,7 +491,11 @@ class _PaymentPanel extends StatelessWidget {
 }
 
 class _RestockPanel extends StatelessWidget {
-  const _RestockPanel({required this.restocks, required this.forecast, required this.onNavigate});
+  const _RestockPanel({
+    required this.restocks,
+    required this.forecast,
+    required this.onNavigate,
+  });
   final List<RestockSuggestion> restocks;
   final Map<String, SalesVelocity> forecast;
   final ValueChanged<int> onNavigate;

@@ -26,8 +26,11 @@ class ProductFormScaffold extends StatelessWidget {
       toolbarHeight: 65,
       backgroundColor: Colors.white,
       title: DefaultTextStyle(
-        style: const TextStyle(fontSize: 17, color: ink,
-          fontWeight: FontWeight.w900),
+        style: const TextStyle(
+          fontSize: 17,
+          color: ink,
+          fontWeight: FontWeight.w900,
+        ),
         child: title,
       ),
       bottom: const PreferredSize(
@@ -53,7 +56,8 @@ class ProductFormScaffold extends StatelessWidget {
                 children: [
                   Expanded(
                     child: SingleChildScrollView(
-                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: const EdgeInsets.all(22),
                       child: Material(color: Colors.white, child: content),
                     ),
@@ -65,13 +69,10 @@ class ProductFormScaffold extends StatelessWidget {
                         border: Border(top: BorderSide(color: line)),
                       ),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 12),
-                      child: Wrap(
-                        alignment: WrapAlignment.end,
-                        spacing: 9,
-                        runSpacing: 8,
-                        children: actions,
+                        horizontal: 18,
+                        vertical: 12,
                       ),
+                      child: FormActions(actions: actions),
                     ),
                 ],
               ),
@@ -354,6 +355,11 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const FormSectionLabel(
+              '1',
+              'Ürün bilgileri',
+              'Ürünü tanımlayın; isteğe bağlı alanları sonra tamamlayabilirsiniz.',
+            ),
             TextField(
               controller: name,
               textInputAction: TextInputAction.next,
@@ -474,8 +480,14 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
               ),
             ),
             const SizedBox(height: 12),
+            const Divider(height: 32),
+            const FormSectionLabel(
+              '2',
+              'Fiyatlandırma',
+              'Alış, satış ve KDV bilgilerini birlikte kontrol edin.',
+            ),
             Material(
-              color: const Color(0xFFF1F8F6),
+              color: softGreen,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
                 side: const BorderSide(color: Color(0xFFD6ECE4)),
@@ -488,7 +500,7 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
                   style: TextStyle(color: ink, fontWeight: FontWeight.w800),
                 ),
                 subtitle: const Text(
-                  'Değiştirince girilmiş tutarlar dönüştürülür; kayıtlarda net fiyat saklanır.',
+                  'Alış ve satış tutarları seçiminize göre otomatik dönüştürülür.',
                   style: TextStyle(color: muted, fontSize: 11),
                 ),
                 value: pricesIncludeVat,
@@ -601,6 +613,12 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
               ),
             ),
             const SizedBox(height: 12),
+            const Divider(height: 32),
+            const FormSectionLabel(
+              '3',
+              'Stok takibi',
+              'Azalan ürünler için uyarı seviyesini belirleyin.',
+            ),
             TextField(
               controller: minimum,
               keyboardType: const TextInputType.numberWithOptions(
