@@ -1,7 +1,7 @@
 name: stokpilot
 description: Profesyonel stok, cari, satis ve tedarik yonetimi.
 publish_to: none
-version: 1.0.0+7
+version: 1.0.0+8
 environment:
   sdk: '>=3.7.0 <4.0.0'
 dependencies:
@@ -52,3 +52,4 @@ flutter_native_splash:
   android_12:
     color: '#F5F7F7'
     image: assets/icons/stokpilot_icon.png
+
