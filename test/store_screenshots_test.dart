@@ -28,7 +28,7 @@ void main() {
       ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
   });
 
-  for (final device in [('android', 360.0, 800.0), ('iphone', 430.0, 932.0)]) {
+  for (final device in [('android', 360.0, 640.0), ('iphone', 430.0, 932.0)]) {
     testWidgets('Real pages fit ${device.$1} and navigate correctly', (
       tester,
     ) async {
