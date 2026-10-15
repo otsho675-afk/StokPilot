@@ -2,12 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../core/global_search.dart';
 import '../services/app_api.dart';
 import '../services/billing.dart';
 import '../widgets/ui.dart';
 import 'catalog_management_page.dart';
 import 'contacts_page.dart';
 import 'finance_page.dart';
+import 'global_search_dialog.dart';
 import 'operations_page.dart';
 import 'overview_page.dart';
 import 'products_page.dart';
@@ -65,6 +67,29 @@ class _MainShellState extends State<MainShell> {
 
   void navigate(int index) {
     if (selected != index && mounted) setState(() => selected = index);
+  }
+
+  Future<void> _openSearch() async {
+    final selection = await showDialog<SearchSelection>(
+      context: context,
+      builder: (_) => const GlobalSearchDialog(),
+    );
+    if (!mounted || selection == null) return;
+    switch (selection.item.kind) {
+      case SearchKind.product:
+        navigate(1);
+        final record = selection.document;
+        if (record != null) await productDialog(context, item: record);
+      case SearchKind.customer:
+      case SearchKind.supplier:
+        navigate(selection.item.kind == SearchKind.supplier ? 5 : 4);
+        final record = selection.document;
+        if (record != null) await contactDialog(context, item: record);
+      case SearchKind.sale:
+        navigate(2);
+      case SearchKind.purchase:
+        navigate(3);
+    }
   }
 
   Widget screen() => switch (selected) {
@@ -343,6 +368,11 @@ class _MainShellState extends State<MainShell> {
             ],
           ),
         ),
+        IconButton(
+          tooltip: 'Tüm kayıtlarda ara',
+          onPressed: _openSearch,
+          icon: const Icon(Icons.search_rounded, color: muted),
+        ),
         FilledButton.icon(
           onPressed: () => navigate(2),
           icon: const Icon(Icons.add_rounded, size: 18),
@@ -393,6 +423,11 @@ class _MainShellState extends State<MainShell> {
             fontWeight: FontWeight.w800,
           ),
         ),
+      ),
+      IconButton(
+        tooltip: 'Tüm kayıtlarda ara',
+        onPressed: _openSearch,
+        icon: const Icon(Icons.search_rounded, color: ink),
       ),
       IconButton(
         tooltip: 'Yeni satış',
