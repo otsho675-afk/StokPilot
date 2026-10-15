@@ -2,9 +2,9 @@
 
 ## Doğrulanan sürüm
 
-- [1.0.0+10 GitHub çalıştırması](https://github.com/otsho675-afk/StokPilot/actions/runs/38783144014): Flutter analiz ve ekran görüntüsü testleri, imzalı Android AAB derlemesi, Play dahili test yüklemesi ve imzalı iOS IPA derlemesi başarılı.
+- [1.0.0+11 GitHub çalıştırması](https://github.com/otsho675-afk/StokPilot/actions/runs/38785346194): Flutter analiz ve ekran görüntüsü testleri, imzalı Android AAB derlemesi, Play dahili test yüklemesi ve imzalı iOS IPA derlemesi başarılı.
 - Apple IPA, aynı çalıştırmada App Store Connect'e otomatik yüklendi. Apple işleme ve uygulama incelemesi ayrıca tamamlanmalıdır.
-- Play Console, sürüm kodu 10'u dahili test kullanıcıları için etkin gösteriyor. Genel yayın henüz açık değil.
+- Play Console, sürüm kodu 11'i dahili test kullanıcıları için etkin gösteriyor. Genel yayın henüz açık değil.
 - Ekran görüntüsü testi 320, 360, 393 ve 430 piksel telefon genişlikleri ile 1024 piksel iPad görünümünü kontrol ediyor.
 
 ## Mağaza ve ödeme durumu
@@ -18,7 +18,7 @@
 
 - Mobil gezinme, ürün ve müşteri ekranları, formlar, raporlar, özet ve Pro ekranı yenilendi. Android, iPhone ve iPad mağaza görselleri gerçek uygulama bileşenleri ve kurgusal verilerle üretildi.
 - Genel arama ürün, barkod, SKU, müşteri, tedarikçi ve fiş kayıtlarını bulur. Ürün/firma kartı veya seçilen fiş açılabilir.
-- Kritik stok ve fiyat güncelliği uyarıları ürün ekranında; sonraki sürümde üst çubukta rozetli hatırlatıcı merkezinde de gösterilecek.
+- Kritik stok ve fiyat güncelliği uyarıları ürün ekranında ve üst çubuktaki rozetli hatırlatıcı merkezinde gösteriliyor.
 - Ücretsiz ürün kotası toplam 50 oluşturmadır. Ürün silmek kotayı geri kazandırmaz.
 
 ## Kalan yayın işleri
