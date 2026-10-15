@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../core/global_search.dart';
 import '../services/app_api.dart';
 import '../services/billing.dart';
+import '../widgets/inventory_alert_button.dart';
 import '../widgets/ui.dart';
 import 'catalog_management_page.dart';
 import 'contacts_page.dart';
@@ -88,8 +89,24 @@ class _MainShellState extends State<MainShell> {
         }
       case SearchKind.sale:
         navigate(2);
+        if (selection.document != null) {
+          showTradeDetails(context, selection.document!.data());
+        }
       case SearchKind.purchase:
         navigate(3);
+        if (selection.document != null) {
+          showTradeDetails(context, selection.document!.data());
+        }
+    }
+  }
+
+  void _openAlert(InventoryAlertSelection selection) {
+    if (!mounted) return;
+    navigate(1);
+    if (selection.alert.kind == 'stock') {
+      stockDialog(context, selection.product);
+    } else {
+      productDialog(context, item: selection.product);
     }
   }
 
@@ -437,6 +454,7 @@ class _MainShellState extends State<MainShell> {
           onPressed: _openSearch,
           icon: const Icon(Icons.search_rounded, color: muted),
         ),
+        InventoryAlertButton(onSelected: _openAlert),
         IconButton(
           tooltip: 'Ayarlar',
           onPressed: () => navigate(10),
@@ -483,6 +501,7 @@ class _MainShellState extends State<MainShell> {
           onPressed: _openSearch,
           icon: const Icon(Icons.search_rounded, color: ink),
         ),
+        InventoryAlertButton(onSelected: _openAlert),
         IconButton(
           tooltip: 'Ayarlar',
           onPressed: () => navigate(10),

@@ -25,6 +25,15 @@ void main() {
     );
     expect(
       findProductMatch(
+        name: 'icli kofte',
+        sku: '',
+        barcode: '',
+        products: products,
+      )?.kind,
+      ProductMatchKind.name,
+    );
+    expect(
+      findProductMatch(
         name: 'Başka',
         sku: 'ik-7',
         barcode: '',

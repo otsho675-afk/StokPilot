@@ -29,6 +29,7 @@ void main() {
   });
 
   for (final device in [
+    ('compact_android', 320.0, 640.0),
     ('android', 360.0, 640.0),
     ('iphone', 430.0, 932.0),
     ('iphone_medium', 393.0, 852.0),

@@ -1,9 +1,15 @@
 /// Product matching and reminders shared by the editor and dashboard.
 String normalizeProductText(String value) => value
     .replaceAll('İ', 'i')
-    .replaceAll('I', 'ı')
+    .replaceAll('I', 'i')
     .toLowerCase()
-    .replaceAll(RegExp(r'[^a-z0-9çğıöşü]+', unicode: true), ' ')
+    .replaceAll('ı', 'i')
+    .replaceAll('ğ', 'g')
+    .replaceAll('ü', 'u')
+    .replaceAll('ş', 's')
+    .replaceAll('ö', 'o')
+    .replaceAll('ç', 'c')
+    .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
     .trim()
     .replaceAll(RegExp(r'\s+'), ' ');
 

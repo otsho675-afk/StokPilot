@@ -1,41 +1,28 @@
 # StokPilot mağaza teslim durumu — 15 Ekim 2026
 
-## Tasarım ve doğrulama
+## Doğrulanan sürüm
 
-- Flutter analyze sorunsuz; tam Flutter test paketi 48 testle geçti.
-- Ortak tema, mobil gezinme, form eylemleri, ürün ve müşteri filtreleri, genel bakış ve Pro ekranı yenilendi.
-- Gerçek uygulama bileşenleri, izole ve kurgusal mağaza kayıtlarıyla Android, iki iPhone boyutu ve iPad üzerinde ekran görüntüsü testinden geçirilir.
-- `screenshots/redesign/` dosyaları bu testlerden üretilir; canlı müşteri bilgileri içermez.
-- Ücretsiz kota toplam 50 ürün oluşturmadır. Ürün silmek kotayı geri kazandırmaz.
+- [1.0.0+10 GitHub çalıştırması](https://github.com/otsho675-afk/StokPilot/actions/runs/38783144014): Flutter analiz ve ekran görüntüsü testleri, imzalı Android AAB derlemesi, Play dahili test yüklemesi ve imzalı iOS IPA derlemesi başarılı.
+- Apple IPA, aynı çalıştırmada App Store Connect'e otomatik yüklendi. Apple işleme ve uygulama incelemesi ayrıca tamamlanmalıdır.
+- Play Console, sürüm kodu 10'u dahili test kullanıcıları için etkin gösteriyor. Genel yayın henüz açık değil.
+- Ekran görüntüsü testi 320, 360, 393 ve 430 piksel telefon genişlikleri ile 1024 piksel iPad görünümünü kontrol ediyor.
 
-## Google Play
+## Mağaza ve ödeme durumu
 
-- `stokpilot_pro_monthly` / `monthly-50`: Türkiye'de vergi dahil **50,00 TRY / ay**, aktif.
-- RevenueCat ürünü Published; `pro` yetkisine ve `default` offering içindeki Monthly paketine bağlı.
-- Dört yeni Android ekran görüntüsü yüklendi ve Türkçe mağaza girişi kaydedildi. Kayıt incelemeye gönderilmeye hazır; kamuya yayınlandığı anlamına gelmez.
-- 1.0.0+6 Android derlemesi ve dahili test yüklemesi: https://github.com/otsho675-afk/StokPilot/actions/runs/38714574013
-- Üretime erişim için konsolun istediği en az 12 test kullanıcısıyla 14 kesintisiz günlük kapalı test henüz tamamlanmadı.
+- Google Play `stokpilot_pro_monthly` / `monthly-50` ürünü Türkiye'de 50,00 TRY/ay fiyatla aktif; RevenueCat `pro` yetkisine ve Monthly paketine bağlı.
+- Apple `stokpilot_pro_monthly` aboneliği 1 aylık ve Türkiye için 50,00 TRY olarak kaydedildi; abonelik incelemesi ve gerçek mağaza satın alma testi tamamlanmadı.
+- `RC_VERIFIED_BACKEND_READY=false` korunuyor. Sandbox satın alma, geri yükleme, yenileme, süre bitimi ve Firebase Pro erişim güncellemesi uçtan uca doğrulanana kadar uygulama aylık ücret tahsil etmiyor.
+- Google Play üretim erişimi için konsolun istediği en az 12 kayıtlı test kullanıcısı ve 14 kesintisiz günlük kapalı test henüz tamamlanmadı.
 
-## Apple
+## Tasarım ve veri
 
-- Developer Program License Agreement, hesapta 15 Ekim 2026 kabul tarihiyle doğrulandı.
-- Paid Apps Agreement güncellemesi kullanıcı onayı ve cihaz doğrulamasıyla tamamlandı; 15 Ekim 2026 başlangıç tarihiyle Active durumu doğrulandı.
-- 1.0.0+6 imzalı IPA aynı GitHub çalıştırmasında oluşturuldu. App Store Connect yükleme anahtarları eksik olduğundan derleme başarısı Apple'a yükleme anlamına gelmez.
-- iPhone 1179×2556 ve 1290×2796, iPad 2048×2732 ekran görüntüleri hazır.
-- Dört iPhone (1179×2556) ve dört iPad (2048×2732) görseli Apple sürüm sayfasına yüklendi; sayfa yenilenerek kayıtları doğrulandı.
-- Apple stokpilot_pro_monthly aboneliği: 1 ay, Türkiye fiyatı tam 50,00 TRY olarak kaydedildi; henüz incelemeye gönderilmedi.
-- StokPilot GitHub Upload adlı Developer yetkili anahtar kullanıcı onayıyla oluşturuldu. Apple indirmeyi tamamlanmış saydı ancak tarayıcı dosya yolu döndürmedi; özel .p8 dosyası yerelde bulunamadı. GitHub sırlarına henüz bağlanamadı.
-- RevenueCat iOS bağlantı formu hazır; Apple In-App Purchase `.p8` anahtarı, Key ID ve Issuer ID gerekiyor.
+- Mobil gezinme, ürün ve müşteri ekranları, formlar, raporlar, özet ve Pro ekranı yenilendi. Android, iPhone ve iPad mağaza görselleri gerçek uygulama bileşenleri ve kurgusal verilerle üretildi.
+- Genel arama ürün, barkod, SKU, müşteri, tedarikçi ve fiş kayıtlarını bulur. Ürün/firma kartı veya seçilen fiş açılabilir.
+- Kritik stok ve fiyat güncelliği uyarıları ürün ekranında; sonraki sürümde üst çubukta rozetli hatırlatıcı merkezinde de gösterilecek.
+- Ücretsiz ürün kotası toplam 50 oluşturmadır. Ürün silmek kotayı geri kazandırmaz.
 
-## Canlı servisler ve kalan işler
+## Kalan yayın işleri
 
-- Firebase CLI ile `stokpilot-5bd2e` projesi, Android/iOS uygulama kimlikleri ve `(default)` Standard Firestore veritabanı (`europe-west3`) doğrulandı. Firebase web konsolu aralıklı yükleme/izin hatası verdi.
-- RevenueCat webhook test olayı ödeme sunucusundan HTTP 200 / `ignored` aldı. TEST olayının yok sayılması beklenir; bu test satın alma yetkisinin yazıldığını kanıtlamaz.
-- Gerçek mağaza sandbox satın alma, Pro erişimi, geri yükleme, yenileme ve süre bitimi doğrulanmadı. Bu nedenle `RC_VERIFIED_BACKEND_READY=false` kalır.
-- iOS anahtarlarını bağlama, gerçek satın alma testleri ve mağaza incelemeleri tamamlanmadan sürüm bitmiş/üretimde olarak değerlendirilmemelidir.
-
-
-## Son derleme
-
-- 1.0.0+7 / 324c543 GitHub çalıştırması başlatıldı: https://github.com/otsho675-afk/StokPilot/actions/runs/38717935361
-- İncelenebilir tasarım değişiklikleri: https://github.com/otsho675-afk/StokPilot/pull/5
+- Apple yüklenen derlemeyi işlemeli; App Store sürüm incelemesi ve abonelik incelemesi başlatılmalı.
+- Google Play kapalı test kullanıcıları ve süre koşulu tamamlanmalı; ardından üretim erişimine başvurulmalı.
+- Gerçek mağaza sandbox satın alımları ve sunucu doğrulaması geçmeden Pro ödeme anahtarı etkinleştirilmemeli.
