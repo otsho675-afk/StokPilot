@@ -5,7 +5,7 @@
 ## Abonelik ürünlerini oluştur
 
 - Google Play Console > Subscriptions: ürün `stokpilot_pro_monthly`, base plan `monthly-50`, otomatik yenileme **1 ay**, Türkiye fiyatı vergi dahil **50,00 TRY**. Plan aktiftir (15 Ekim 2026).
-- App Store Connect > Subscriptions: ürün `stokpilot_pro_monthly`, otomatik yenileme **1 ay**, Türkiye hedef fiyatı **50,00 TRY**; Apple fiyatı henüz yapılandırılmadı. İlk abonelik uygulamanın yeni sürümüyle incelemeye gönderilmelidir.
+- App Store Connect > Subscriptions: ürün `stokpilot_pro_monthly`, otomatik yenileme **1 ay**, Türkiye fiyatı **50,00 TRY** olarak kaydedildi (15 Ekim 2026); henüz incelemeye gönderilmedi. İlk abonelik uygulamanın yeni sürümüyle incelemeye gönderilmelidir.
 - RevenueCat'te Android/iOS uygulamalarını bağla, **`pro`** entitlement oluştur, **`default`** offering içindeki `$rc_monthly`/Monthly paketini ilgili mağaza ürününe bağla.
 - RevenueCat SDK **public** anahtarları Google için `goog_...`, Apple için `appl_...`; bunları Flutter `--dart-define` ile kullan.
 
@@ -51,4 +51,5 @@ iOS için `RC_IOS_PUBLIC_KEY=appl_SIZIN_ANAHTARINIZ`. `RC_VERIFIED_BACKEND_READY
 - `CANCELLATION` otomatik yenileme iptali demektir, mevcut ödenmiş süre bitmeden Pro kapanmaz. `EXPIRATION` veya süre sonu kurallarca erişimi kapatır.
 - Kullanıcı hesabını Firebase Auth'tan silmek, mağaza aboneliğini otomatik iptal etmez.
 - Worker `https://stokpilot-billing.otsho675.workers.dev` adresinde yayındadır; `/health`, kimlik doğrulama ve sentetik webhook yetki döngüsü test edilmiştir. Gerçek Apple/Google satın alma, yenileme ve iptal akışı doğrulanmadan ödeme bayrağını açmayın.
+
 

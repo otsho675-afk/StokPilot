@@ -22,7 +22,9 @@
 - Paid Apps Agreement güncellemesi kullanıcı onayı ve cihaz doğrulamasıyla tamamlandı; 15 Ekim 2026 başlangıç tarihiyle Active durumu doğrulandı.
 - 1.0.0+6 imzalı IPA aynı GitHub çalıştırmasında oluşturuldu. App Store Connect yükleme anahtarları eksik olduğundan derleme başarısı Apple'a yükleme anlamına gelmez.
 - iPhone 1179×2556 ve 1290×2796, iPad 2048×2732 ekran görüntüleri hazır.
-- Apple görsel yükleme denemesi hata verdi; kaydedilmiş iOS görsel yüklemesi henüz doğrulanmadı.
+- Dört iPhone (1179×2556) ve dört iPad (2048×2732) görseli Apple sürüm sayfasına yüklendi; sayfa yenilenerek kayıtları doğrulandı.
+- Apple stokpilot_pro_monthly aboneliği: 1 ay, Türkiye fiyatı tam 50,00 TRY olarak kaydedildi; henüz incelemeye gönderilmedi.
+- StokPilot GitHub Upload adlı Developer yetkili anahtar kullanıcı onayıyla oluşturuldu. Apple indirmeyi tamamlanmış saydı ancak tarayıcı dosya yolu döndürmedi; özel .p8 dosyası yerelde bulunamadı. GitHub sırlarına henüz bağlanamadı.
 - RevenueCat iOS bağlantı formu hazır; Apple In-App Purchase `.p8` anahtarı, Key ID ve Issuer ID gerekiyor.
 
 ## Canlı servisler ve kalan işler
@@ -30,5 +32,11 @@
 - Firebase CLI ile `stokpilot-5bd2e` projesi, Android/iOS uygulama kimlikleri ve `(default)` Standard Firestore veritabanı (`europe-west3`) doğrulandı. Firebase web konsolu aralıklı yükleme/izin hatası verdi.
 - RevenueCat webhook test olayı ödeme sunucusundan HTTP 200 / `ignored` aldı. TEST olayının yok sayılması beklenir; bu test satın alma yetkisinin yazıldığını kanıtlamaz.
 - Gerçek mağaza sandbox satın alma, Pro erişimi, geri yükleme, yenileme ve süre bitimi doğrulanmadı. Bu nedenle `RC_VERIFIED_BACKEND_READY=false` kalır.
-- iOS anahtarlarını bağlama, gerçek satın alma testleri, Apple görsellerini kaydetme ve mağaza incelemeleri tamamlanmadan sürüm bitmiş/üretimde olarak değerlendirilmemelidir.
+- iOS anahtarlarını bağlama, gerçek satın alma testleri ve mağaza incelemeleri tamamlanmadan sürüm bitmiş/üretimde olarak değerlendirilmemelidir.
+
+
+## Son derleme
+
+- 1.0.0+7 / 324c543 GitHub çalıştırması başlatıldı: https://github.com/otsho675-afk/StokPilot/actions/runs/38717935361
+- İncelenebilir tasarım değişiklikleri: https://github.com/otsho675-afk/StokPilot/pull/5
 
