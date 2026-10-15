@@ -150,20 +150,23 @@ class _AuthPageState extends State<AuthPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Align(alignment: Alignment.centerLeft, child: Container(
-                width: 58,
-                height: 58,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: green,
-                  borderRadius: BorderRadius.circular(17),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: 58,
+                  height: 58,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: green,
+                    borderRadius: BorderRadius.circular(17),
+                  ),
+                  child: const Icon(
+                    Icons.layers_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.layers_rounded,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              )),
+              ),
               const SizedBox(height: 16),
               const Text(
                 'StokPilot',
