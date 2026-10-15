@@ -72,12 +72,7 @@ class ProductFormScaffold extends StatelessWidget {
                         horizontal: 18,
                         vertical: 12,
                       ),
-                      child: Wrap(
-                        alignment: WrapAlignment.end,
-                        spacing: 9,
-                        runSpacing: 8,
-                        children: actions,
-                      ),
+                      child: FormActions(actions: actions),
                     ),
                 ],
               ),
@@ -360,6 +355,11 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const FormSectionLabel(
+              '1',
+              'Ürün bilgileri',
+              'Ürünü tanımlayın; isteğe bağlı alanları sonra tamamlayabilirsiniz.',
+            ),
             TextField(
               controller: name,
               textInputAction: TextInputAction.next,
@@ -480,8 +480,14 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
               ),
             ),
             const SizedBox(height: 12),
+            const Divider(height: 32),
+            const FormSectionLabel(
+              '2',
+              'Fiyatlandırma',
+              'Alış, satış ve KDV bilgilerini birlikte kontrol edin.',
+            ),
             Material(
-              color: const Color(0xFFF1F8F6),
+              color: softGreen,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
                 side: const BorderSide(color: Color(0xFFD6ECE4)),
@@ -494,7 +500,7 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
                   style: TextStyle(color: ink, fontWeight: FontWeight.w800),
                 ),
                 subtitle: const Text(
-                  'Değiştirince girilmiş tutarlar dönüştürülür; kayıtlarda net fiyat saklanır.',
+                  'Alış ve satış tutarları seçiminize göre otomatik dönüştürülür.',
                   style: TextStyle(color: muted, fontSize: 11),
                 ),
                 value: pricesIncludeVat,
@@ -607,6 +613,12 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
               ),
             ),
             const SizedBox(height: 12),
+            const Divider(height: 32),
+            const FormSectionLabel(
+              '3',
+              'Stok takibi',
+              'Azalan ürünler için uyarı seviyesini belirleyin.',
+            ),
             TextField(
               controller: minimum,
               keyboardType: const TextInputType.numberWithOptions(

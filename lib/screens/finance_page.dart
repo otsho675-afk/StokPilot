@@ -181,13 +181,15 @@ class _FinancePageState extends State<FinancePage> {
       if (startDate != null &&
           date.isBefore(
             DateTime(startDate!.year, startDate!.month, startDate!.day),
-          ))
+          )) {
         return false;
+      }
       if (endDate != null &&
           !date.isBefore(
             DateTime(endDate!.year, endDate!.month, endDate!.day + 1),
-          ))
+          )) {
         return false;
+      }
       return true;
     }
 

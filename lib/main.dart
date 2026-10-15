@@ -6,7 +6,7 @@ import 'services/app_api.dart';
 import 'services/billing.dart';
 import 'screens/auth_page.dart';
 import 'screens/shell.dart';
-import 'widgets/ui.dart';
+import 'widgets/pilot_theme.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -82,121 +82,7 @@ class StokPilotApp extends StatelessWidget {
     locale: const Locale('tr', 'TR'),
     supportedLocales: const [Locale('tr', 'TR')],
     localizationsDelegates: GlobalMaterialLocalizations.delegates,
-    theme: ThemeData(
-      useMaterial3: true,
-      fontFamily: 'Roboto',
-      scaffoldBackgroundColor: canvas,
-      splashFactory: InkSparkle.splashFactory,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: green,
-        primary: green,
-        surface: Colors.white,
-      ),
-      dividerTheme: const DividerThemeData(color: line, thickness: 1),
-      visualDensity: VisualDensity.compact,
-      textSelectionTheme: const TextSelectionThemeData(
-        cursorColor: green,
-        selectionColor: Color(0xFFB5EADB),
-      ),
-      chipTheme: ChipThemeData(
-        backgroundColor: Colors.white,
-        selectedColor: softGreen,
-        checkmarkColor: green,
-        side: const BorderSide(color: line),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        labelStyle: const TextStyle(color: ink, fontWeight: FontWeight.w700),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      ),
-      textTheme: const TextTheme(
-        bodyMedium: TextStyle(color: ink, height: 1.4),
-        bodyLarge: TextStyle(color: ink, height: 1.4),
-        titleLarge: TextStyle(
-          color: ink,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -0.4,
-        ),
-        headlineSmall: TextStyle(
-          color: ink,
-          fontWeight: FontWeight.w900,
-          letterSpacing: -0.8,
-        ),
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
-        foregroundColor: ink,
-        elevation: 0,
-        centerTitle: false,
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: const Color(0xFFFBFCFE),
-        hintStyle: const TextStyle(color: muted),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(11),
-          borderSide: const BorderSide(color: line),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(11),
-          borderSide: const BorderSide(color: line),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(11),
-          borderSide: const BorderSide(color: green, width: 1.6),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 13,
-          vertical: 11,
-        ),
-      ),
-      tooltipTheme: TooltipThemeData(
-        decoration: BoxDecoration(
-          color: ink,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        textStyle: const TextStyle(color: Colors.white, fontSize: 12),
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          minimumSize: const Size(110, 43),
-          padding: const EdgeInsets.symmetric(horizontal: 19, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(11),
-          ),
-        ),
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(minimumSize: const Size(90, 44)),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(105, 43),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(13),
-          ),
-        ),
-      ),
-      cardTheme: CardThemeData(
-        color: Colors.white,
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ),
-      navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: Colors.white,
-        indicatorColor: softGreen,
-        labelTextStyle: WidgetStateProperty.all(
-          const TextStyle(
-            color: ink,
-            fontWeight: FontWeight.w700,
-            fontSize: 11,
-          ),
-        ),
-      ),
-      dialogTheme: DialogThemeData(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      ),
-    ),
+    theme: buildPilotTheme(),
     home: StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {

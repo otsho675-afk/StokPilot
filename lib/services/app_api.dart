@@ -1,14 +1,27 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import '../core/smart_inventory.dart';
 
 /// Firebase Spark backend. Secure quota is enforced in Firestore rules.
 class AppApi {
-  AppApi._();
-  static final instance = AppApi._();
+  AppApi._({FirebaseAuth? auth, FirebaseFirestore? firestore})
+    : auth = auth ?? FirebaseAuth.instance,
+      firestore = firestore ?? FirebaseFirestore.instance;
+  static final _production = AppApi._();
+  static AppApi? _testBackend;
+  static AppApi get instance => _testBackend ?? _production;
 
-  final FirebaseAuth auth = FirebaseAuth.instance;
-  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  @visibleForTesting
+  static void useTestBackend(FirebaseAuth auth, FirebaseFirestore firestore) {
+    _testBackend = AppApi._(auth: auth, firestore: firestore);
+  }
+
+  @visibleForTesting
+  static void resetTestBackend() => _testBackend = null;
+
+  final FirebaseAuth auth;
+  final FirebaseFirestore firestore;
 
   String get uid => auth.currentUser!.uid;
   DocumentReference<Map<String, dynamic>> get workspace =>

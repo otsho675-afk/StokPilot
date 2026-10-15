@@ -92,78 +92,104 @@ class _ContactsPageState extends State<ContactsPage> {
               ),
             ),
             const SizedBox(height: 10),
-            ResponsiveFields(
-              first: DropdownButtonFormField<String>(
-                initialValue: typeFilter,
-                decoration: const InputDecoration(
-                  labelText: 'Cari türü',
-                  prefixIcon: Icon(Icons.groups_outlined),
-                ),
-                items: [
-                  const DropdownMenuItem(
-                    value: 'all',
-                    child: Text('Tüm cariler'),
-                  ),
-                  DropdownMenuItem(
-                    value: widget.kind,
-                    child: Text(
-                      widget.kind == 'supplier'
-                          ? 'Sadece tedarikçiler'
-                          : 'Sadece müşteriler',
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: const Text(
+                'Filtreler',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                balanceFilter != 'all' ||
+                        typeFilter != 'all' ||
+                        dateFrom != null ||
+                        dateTo != null
+                    ? 'Filtre uygulanıyor'
+                    : 'Cari türü, bakiye ve tarih',
+              ),
+              children: [
+                ResponsiveFields(
+                  first: DropdownButtonFormField<String>(
+                    initialValue: typeFilter,
+                    decoration: const InputDecoration(
+                      labelText: 'Cari türü',
+                      prefixIcon: Icon(Icons.groups_outlined),
                     ),
+                    items: [
+                      const DropdownMenuItem(
+                        value: 'all',
+                        child: Text('Tüm cariler'),
+                      ),
+                      DropdownMenuItem(
+                        value: widget.kind,
+                        child: Text(
+                          widget.kind == 'supplier'
+                              ? 'Sadece tedarikçiler'
+                              : 'Sadece müşteriler',
+                        ),
+                      ),
+                      const DropdownMenuItem(
+                        value: 'both',
+                        child: Text('Müşteri / tedarikçi'),
+                      ),
+                    ],
+                    onChanged:
+                        (v) => setState(() {
+                          typeFilter = v ?? 'all';
+                          currentPage = 0;
+                        }),
                   ),
-                  const DropdownMenuItem(
-                    value: 'both',
-                    child: Text('Müşteri / tedarikçi'),
+                  second: DropdownButtonFormField<String>(
+                    initialValue: balanceFilter,
+                    decoration: const InputDecoration(
+                      labelText: 'Bakiye',
+                      prefixIcon: Icon(Icons.account_balance_wallet_outlined),
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'all',
+                        child: Text('Tüm bakiyeler'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'positive',
+                        child: Text('Alacaklı'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'negative',
+                        child: Text('Borçlu'),
+                      ),
+                      DropdownMenuItem(value: 'zero', child: Text('Dengede')),
+                    ],
+                    onChanged:
+                        (v) => setState(() {
+                          balanceFilter = v ?? 'all';
+                          currentPage = 0;
+                        }),
                   ),
-                ],
-                onChanged:
-                    (v) => setState(() {
-                      typeFilter = v ?? 'all';
-                      currentPage = 0;
-                    }),
-              ),
-              second: DropdownButtonFormField<String>(
-                initialValue: balanceFilter,
-                decoration: const InputDecoration(
-                  labelText: 'Bakiye',
-                  prefixIcon: Icon(Icons.account_balance_wallet_outlined),
                 ),
-                items: const [
-                  DropdownMenuItem(value: 'all', child: Text('Tüm bakiyeler')),
-                  DropdownMenuItem(value: 'positive', child: Text('Alacaklı')),
-                  DropdownMenuItem(value: 'negative', child: Text('Borçlu')),
-                  DropdownMenuItem(value: 'zero', child: Text('Dengede')),
-                ],
-                onChanged:
-                    (v) => setState(() {
-                      balanceFilter = v ?? 'all';
-                      currentPage = 0;
-                    }),
-              ),
-            ),
-            const SizedBox(height: 10),
-            ResponsiveFields(
-              first: CompactDateField(
-                label: 'Başlangıç tarihi',
-                date: dateFrom,
-                onTap: () => chooseDate(true),
-                onClear:
-                    () => setState(() {
-                      dateFrom = null;
-                      currentPage = 0;
-                    }),
-              ),
-              second: CompactDateField(
-                label: 'Bitiş tarihi',
-                date: dateTo,
-                onTap: () => chooseDate(false),
-                onClear:
-                    () => setState(() {
-                      dateTo = null;
-                      currentPage = 0;
-                    }),
-              ),
+                const SizedBox(height: 10),
+                ResponsiveFields(
+                  first: CompactDateField(
+                    label: 'Başlangıç tarihi',
+                    date: dateFrom,
+                    onTap: () => chooseDate(true),
+                    onClear:
+                        () => setState(() {
+                          dateFrom = null;
+                          currentPage = 0;
+                        }),
+                  ),
+                  second: CompactDateField(
+                    label: 'Bitiş tarihi',
+                    date: dateTo,
+                    onTap: () => chooseDate(false),
+                    onClear:
+                        () => setState(() {
+                          dateTo = null;
+                          currentPage = 0;
+                        }),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -493,40 +519,46 @@ class _ContactsPageState extends State<ContactsPage> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: line),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(vertical: 1),
-        onTap: () => contactHistory(context, item),
-        leading: CircleAvatar(
-          radius: 17,
-          backgroundColor: softGreen,
-          child: Icon(
-            m['type'] == 'supplier'
-                ? Icons.local_shipping_outlined
-                : Icons.person_outline,
-            color: green,
-          ),
-        ),
-        title: Text(
-          name,
-          style: const TextStyle(fontWeight: FontWeight.w800, color: ink),
-        ),
-        subtitle: Text(
-          '$kind   •   ${m['phone'] ?? ''}',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            StatusPill(label: '$status ${money(balance.abs())}', color: color),
-            const SizedBox(width: 7),
-            IconButton(
-              onPressed: () => paymentDialog(context, item),
-              tooltip: 'Tahsilat / ödeme',
-              icon: const Icon(Icons.payments_outlined, color: green),
+      child: Material(
+        color: Colors.white,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 1),
+          onTap: () => contactHistory(context, item),
+          leading: CircleAvatar(
+            radius: 17,
+            backgroundColor: softGreen,
+            child: Icon(
+              m['type'] == 'supplier'
+                  ? Icons.local_shipping_outlined
+                  : Icons.person_outline,
+              color: green,
             ),
-            _actions(context, item),
-          ],
+          ),
+          title: Text(
+            name,
+            style: const TextStyle(fontWeight: FontWeight.w800, color: ink),
+          ),
+          subtitle: Text(
+            '$kind   •   ${m['phone'] ?? ''}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              StatusPill(
+                label: '$status ${money(balance.abs())}',
+                color: color,
+              ),
+              const SizedBox(width: 7),
+              IconButton(
+                onPressed: () => paymentDialog(context, item),
+                tooltip: 'Tahsilat / ödeme',
+                icon: const Icon(Icons.payments_outlined, color: green),
+              ),
+              _actions(context, item),
+            ],
+          ),
         ),
       ),
     );
@@ -1277,8 +1309,10 @@ class _PartnerCardPageState extends State<PartnerCardPage> {
               ]..sort((a, b) => _time(b).compareTo(_time(a)));
               final filtered =
                   rows.where((row) {
-                    if (movementType != 'all' && row['rowKind'] != movementType)
+                    if (movementType != 'all' &&
+                        row['rowKind'] != movementType) {
                       return false;
+                    }
                     final ts =
                         row['rowKind'] == 'entry'
                             ? row['effectiveAt']
@@ -1288,14 +1322,16 @@ class _PartnerCardPageState extends State<PartnerCardPage> {
                         (date == null ||
                             date.isBefore(
                               DateTime(from!.year, from!.month, from!.day),
-                            )))
+                            ))) {
                       return false;
+                    }
                     if (to != null &&
                         (date == null ||
                             !date.isBefore(
                               DateTime(to!.year, to!.month, to!.day + 1),
-                            )))
+                            ))) {
                       return false;
+                    }
                     return true;
                   }).toList();
               final pageCount = (filtered.length + pageSize - 1) ~/ pageSize;

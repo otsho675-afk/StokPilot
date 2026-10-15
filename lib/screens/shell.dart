@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../core/global_search.dart';
@@ -35,11 +34,11 @@ class _MainShellState extends State<MainShell> {
     'Ürünler',
     'Satış',
     'Alış',
-    'Müşteri carileri',
+    'Müşteriler',
     'Tedarikçiler',
     'Finans',
     'Raporlar',
-    'ERP İşlemleri',
+    'İşlem geçmişi',
     'Kategori ve Birimler',
     'Ayarlar',
   ];
@@ -78,13 +77,15 @@ class _MainShellState extends State<MainShell> {
     switch (selection.item.kind) {
       case SearchKind.product:
         navigate(1);
-        final record = selection.document;
-        if (record != null) await productDialog(context, item: record);
+        if (selection.document != null) {
+          await productDialog(context, item: selection.document);
+        }
       case SearchKind.customer:
       case SearchKind.supplier:
         navigate(selection.item.kind == SearchKind.supplier ? 5 : 4);
-        final record = selection.document;
-        if (record != null) await contactDialog(context, item: record);
+        if (selection.document != null) {
+          await contactDialog(context, item: selection.document);
+        }
       case SearchKind.sale:
         navigate(2);
       case SearchKind.purchase:
@@ -107,7 +108,7 @@ class _MainShellState extends State<MainShell> {
   };
 
   Future<void> _signOut() async {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = AppApi.instance.auth.currentUser;
     if (user?.isAnonymous == true) {
       if (!await confirm(
         context,
@@ -118,7 +119,7 @@ class _MainShellState extends State<MainShell> {
       }
     }
     await BillingService.instance.logout();
-    await FirebaseAuth.instance.signOut();
+    await AppApi.instance.auth.signOut();
   }
 
   Widget _brand({required bool compact}) => Row(
@@ -129,7 +130,7 @@ class _MainShellState extends State<MainShell> {
         height: 40,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF0C8E89), Color(0xFF075E79)],
+            colors: [green, Color(0xFF302987)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -176,11 +177,11 @@ class _MainShellState extends State<MainShell> {
         if (drawer) Navigator.of(context).pop();
       },
       child: Container(
-        height: 43,
+        height: 48,
         decoration: BoxDecoration(
-          color: active ? const Color(0xFFE8F5F3) : Colors.transparent,
+          color: active ? softGreen : Colors.transparent,
           borderRadius: BorderRadius.circular(11),
-          border: active ? Border.all(color: const Color(0xFFD4EAE6)) : null,
+          border: active ? Border.all(color: line) : null,
         ),
         padding: EdgeInsets.symmetric(horizontal: compact ? 0 : 12),
         child: Row(
@@ -199,7 +200,7 @@ class _MainShellState extends State<MainShell> {
                   names[index],
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: active ? const Color(0xFF075E68) : ink,
+                    color: active ? green : ink,
                     fontSize: 13,
                     fontWeight: active ? FontWeight.w800 : FontWeight.w600,
                   ),
@@ -354,7 +355,7 @@ class _MainShellState extends State<MainShell> {
                                     ),
                                   ),
                                   Text(
-                                    FirebaseAuth.instance.currentUser?.email ??
+                                    AppApi.instance.auth.currentUser?.email ??
                                         'Oturum açık',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -436,12 +437,6 @@ class _MainShellState extends State<MainShell> {
           onPressed: _openSearch,
           icon: const Icon(Icons.search_rounded, color: muted),
         ),
-        FilledButton.icon(
-          onPressed: () => navigate(2),
-          icon: const Icon(Icons.add_rounded, size: 18),
-          label: const Text('Yeni satış'),
-        ),
-        const SizedBox(width: 12),
         IconButton(
           tooltip: 'Ayarlar',
           onPressed: () => navigate(10),
@@ -460,12 +455,7 @@ class _MainShellState extends State<MainShell> {
     padding: const EdgeInsets.symmetric(horizontal: 6),
     child: Row(
       children: [
-        IconButton(
-          tooltip: 'Menüyü aç',
-          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-          icon: const Icon(Icons.menu_rounded, color: ink),
-        ),
-        const SizedBox(width: 2),
+        const SizedBox(width: 10),
         Container(
           width: 30,
           height: 30,
@@ -494,16 +484,16 @@ class _MainShellState extends State<MainShell> {
           icon: const Icon(Icons.search_rounded, color: ink),
         ),
         IconButton(
-          tooltip: 'Yeni satış',
-          onPressed: () => navigate(2),
-          icon: const Icon(Icons.add_circle_outline_rounded, color: green),
+          tooltip: 'Ayarlar',
+          onPressed: () => navigate(10),
+          icon: const Icon(Icons.settings_outlined, color: muted),
         ),
       ],
     ),
   );
 
   Widget _bottomNav() => NavigationBar(
-    height: 64,
+    height: 76,
     backgroundColor: Colors.white,
     elevation: 0,
     labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
@@ -535,7 +525,7 @@ class _MainShellState extends State<MainShell> {
       NavigationDestination(
         icon: Icon(Icons.people_outline),
         selectedIcon: Icon(Icons.people_rounded),
-        label: 'Cariler',
+        label: 'Müşteriler',
       ),
       NavigationDestination(icon: Icon(Icons.menu_rounded), label: 'Menü'),
     ],

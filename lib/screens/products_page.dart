@@ -23,7 +23,6 @@ class _ProductsPageState extends State<ProductsPage> {
   int currentPage = 0;
   int pageSize = 20;
   bool showPurchasePrice = false;
-  bool advancedFilters = false;
   double? minimumPrice;
   double? maximumPrice;
   final minPriceInput = TextEditingController();
@@ -150,115 +149,128 @@ class _ProductsPageState extends State<ProductsPage> {
           label: const Text('Yeni ürün'),
         ),
       ),
-      const _InventoryAlertsPanel(),
-      StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: AppApi.instance.workspace.snapshots(),
-        builder:
-            (
-              context,
-              ws,
-            ) => StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-              stream: AppApi.instance.entitlement(),
-              builder: (context, ent) {
-                final e = ent.data?.data() ?? {};
-                final expiry = e['expiresAt'];
-                final pro =
-                    e['status'] == 'active' &&
-                    (e['source'] == 'revenuecat' ||
-                        (AppApi.instance.uid ==
-                                'gbw2USpZ8cNtcSyge5a2BEwJw3E3' &&
-                            e['source'] == 'review')) &&
-                    expiry is Timestamp &&
-                    expiry.toDate().isAfter(DateTime.now());
-                final count =
-                    (ws.data?.data()?['productCount'] as num?)?.toInt() ?? 0;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: DataPanel(
-                    child: LayoutBuilder(
-                      builder: (context, c) {
-                        final remaining = (50 - count).clamp(0, 50);
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
+      ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        title: const Text(
+          'Kullanım ve uyarılar',
+          style: TextStyle(fontSize: 14),
+        ),
+        leading: const Icon(Icons.notifications_none_rounded, size: 20),
+        children: [
+          StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+            stream: AppApi.instance.workspace.snapshots(),
+            builder:
+                (
+                  context,
+                  ws,
+                ) => StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                  stream: AppApi.instance.entitlement(),
+                  builder: (context, ent) {
+                    final e = ent.data?.data() ?? {};
+                    final expiry = e['expiresAt'];
+                    final pro =
+                        e['status'] == 'active' &&
+                        (e['source'] == 'revenuecat' ||
+                            (AppApi.instance.uid ==
+                                    'gbw2USpZ8cNtcSyge5a2BEwJw3E3' &&
+                                e['source'] == 'review')) &&
+                        expiry is Timestamp &&
+                        expiry.toDate().isAfter(DateTime.now());
+                    final count =
+                        (ws.data?.data()?['productCount'] as num?)?.toInt() ??
+                        0;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: DataPanel(
+                        child: LayoutBuilder(
+                          builder: (context, c) {
+                            final remaining = (50 - count).clamp(0, 50);
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.all(9),
-                                  decoration: BoxDecoration(
-                                    color: softGreen,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    pro
-                                        ? Icons.workspace_premium_outlined
-                                        : Icons.inventory_2_outlined,
-                                    color: green,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        pro
-                                            ? 'StokPilot Pro • Sınırsız ürün'
-                                            : '$count / 50 ücretsiz ürün',
-                                        style: const TextStyle(
-                                          color: ink,
-                                          fontWeight: FontWeight.w800,
-                                        ),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(9),
+                                      decoration: BoxDecoration(
+                                        color: softGreen,
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
-                                      if (!pro)
-                                        Text(
-                                          '$remaining ürün hakkın kaldı',
-                                          style: const TextStyle(
-                                            color: muted,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                if (!pro && c.maxWidth > 380)
-                                  TextButton.icon(
-                                    onPressed:
-                                        () => Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => const PaywallPage(),
-                                          ),
-                                        ),
-                                    icon: const Icon(
-                                      Icons.workspace_premium_outlined,
+                                      child: Icon(
+                                        pro
+                                            ? Icons.workspace_premium_outlined
+                                            : Icons.inventory_2_outlined,
+                                        color: green,
+                                      ),
                                     ),
-                                    label: const Text('Pro'),
-                                  ),
-                              ],
-                            ),
-                            if (!pro) ...[
-                              const SizedBox(height: 12),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(20),
-                                child: LinearProgressIndicator(
-                                  value: (count / 50).clamp(0.0, 1.0),
-                                  minHeight: 7,
-                                  color: count >= 45 ? amber : green,
-                                  backgroundColor: const Color(0xFFE5EEED),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            pro
+                                                ? 'StokPilot Pro • Sınırsız ürün'
+                                                : '$count / 50 ücretsiz ürün',
+                                            style: const TextStyle(
+                                              color: ink,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                          if (!pro)
+                                            Text(
+                                              '$remaining ürün hakkın kaldı',
+                                              style: const TextStyle(
+                                                color: muted,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (!pro && c.maxWidth > 380)
+                                      TextButton.icon(
+                                        onPressed:
+                                            () => Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) => const PaywallPage(),
+                                              ),
+                                            ),
+                                        icon: const Icon(
+                                          Icons.workspace_premium_outlined,
+                                        ),
+                                        label: const Text('Pro'),
+                                      ),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                );
-              },
-            ),
+                                if (!pro) ...[
+                                  const SizedBox(height: 12),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: LinearProgressIndicator(
+                                      value: (count / 50).clamp(0.0, 1.0),
+                                      minHeight: 7,
+                                      color: count >= 45 ? amber : green,
+                                      backgroundColor: const Color(0xFFE5EEED),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+          ),
+          const _InventoryAlertsPanel(),
+        ],
       ),
+      const SizedBox(height: 12),
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: AppApi.instance.watch('categories'),
         builder: (context, categories) {
@@ -272,35 +284,48 @@ class _ProductsPageState extends State<ProductsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    LayoutBuilder(
-                      builder: (context, c) {
-                        final searchField = TextField(
-                          controller: search,
-                          textInputAction: TextInputAction.search,
-                          onChanged:
-                              (s) => setState(() {
-                                query = s.trim();
-                                currentPage = 0;
-                              }),
-                          decoration: InputDecoration(
-                            hintText: 'Ürün adı, barkod veya stok kodu',
-                            prefixIcon: const Icon(Icons.search_rounded),
-                            suffixIcon:
-                                query.isEmpty
-                                    ? null
-                                    : IconButton(
-                                      tooltip: 'Aramayı temizle',
-                                      icon: const Icon(Icons.close_rounded),
-                                      onPressed:
-                                          () => setState(() {
-                                            search.clear();
-                                            query = '';
-                                            currentPage = 0;
-                                          }),
-                                    ),
-                          ),
-                        );
-                        final category = DropdownButtonFormField<String>(
+                    TextField(
+                      controller: search,
+                      textInputAction: TextInputAction.search,
+                      onChanged:
+                          (s) => setState(() {
+                            query = s.trim();
+                            currentPage = 0;
+                          }),
+                      decoration: InputDecoration(
+                        hintText: 'Ürün adı, barkod veya stok kodu',
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        suffixIcon:
+                            query.isEmpty
+                                ? null
+                                : IconButton(
+                                  tooltip: 'Aramayı temizle',
+                                  icon: const Icon(Icons.close_rounded),
+                                  onPressed:
+                                      () => setState(() {
+                                        search.clear();
+                                        query = '';
+                                        currentPage = 0;
+                                      }),
+                                ),
+                      ),
+                    ),
+                    ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      title: const Text(
+                        'Filtrele ve sırala',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      subtitle: Text(
+                        stockFilter != 'all' ||
+                                categoryFilter.isNotEmpty ||
+                                minimumPrice != null ||
+                                maximumPrice != null
+                            ? 'Filtre uygulanıyor'
+                            : 'Kategori, stok durumu ve fiyat',
+                      ),
+                      children: [
+                        DropdownButtonFormField<String>(
                           key: ValueKey(selectedCategory),
                           initialValue: selectedCategory,
                           isExpanded: true,
@@ -328,185 +353,158 @@ class _ProductsPageState extends State<ProductsPage> {
                                 categoryFilter = s ?? '';
                                 currentPage = 0;
                               }),
-                        );
-                        if (c.maxWidth < 560) {
-                          return Column(
-                            children: [
-                              searchField,
-                              const SizedBox(height: 10),
-                              category,
-                            ],
-                          );
-                        }
-                        return Row(
+                        ),
+                        const SizedBox(height: 12),
+                        const SizedBox(height: 12),
+                        ResponsiveFields(
+                          first: TextField(
+                            controller: minPriceInput,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: 'En düşük satış fiyatı (₺)',
+                              prefixIcon: Icon(Icons.arrow_downward_rounded),
+                            ),
+                            onChanged:
+                                (value) => setState(() {
+                                  minimumPrice = double.tryParse(
+                                    value.replaceAll(',', '.'),
+                                  );
+                                  currentPage = 0;
+                                }),
+                          ),
+                          second: TextField(
+                            controller: maxPriceInput,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: 'En yüksek satış fiyatı (₺)',
+                              prefixIcon: Icon(Icons.arrow_upward_rounded),
+                            ),
+                            onChanged:
+                                (value) => setState(() {
+                                  maximumPrice = double.tryParse(
+                                    value.replaceAll(',', '.'),
+                                  );
+                                  currentPage = 0;
+                                }),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton.icon(
+                            onPressed:
+                                () => setState(() {
+                                  minPriceInput.clear();
+                                  maxPriceInput.clear();
+                                  minimumPrice = null;
+                                  maximumPrice = null;
+                                  currentPage = 0;
+                                }),
+                            icon: const Icon(Icons.restart_alt_rounded),
+                            label: const Text('Fiyat filtresini sıfırla'),
+                          ),
+                        ),
+                        const Divider(height: 18),
+                        SwitchListTile.adaptive(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text(
+                            'Alış fiyatı ve kâr oranını göster',
+                          ),
+                          subtitle: const Text(
+                            'Kapalıyken maliyet bilgileri ürün kartlarında gizlenir.',
+                          ),
+                          value: showPurchasePrice,
+                          onChanged:
+                              (v) => setState(() => showPurchasePrice = v),
+                        ),
+                        const SizedBox(height: 14),
+                        Wrap(
+                          spacing: 7,
+                          runSpacing: 7,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            Expanded(flex: 3, child: searchField),
-                            const SizedBox(width: 12),
-                            Expanded(flex: 2, child: category),
+                            _filter('all', 'Tümü', Icons.apps_rounded),
+                            _filter(
+                              'low',
+                              'Kritik',
+                              Icons.warning_amber_rounded,
+                            ),
+                            _filter(
+                              'loss',
+                              'Zarar riski',
+                              Icons.trending_down_rounded,
+                            ),
+                            _filter(
+                              'empty',
+                              'Tükenen',
+                              Icons.remove_shopping_cart_outlined,
+                            ),
+                            _filter(
+                              'inactive',
+                              'Pasif',
+                              Icons.visibility_off_outlined,
+                            ),
+                            PopupMenuButton<String>(
+                              tooltip: 'Sıralama',
+                              initialValue: sortBy,
+                              onSelected:
+                                  (s) => setState(() {
+                                    sortBy = s;
+                                    currentPage = 0;
+                                  }),
+                              itemBuilder:
+                                  (_) => const [
+                                    PopupMenuItem(
+                                      value: 'name',
+                                      child: Text('Ada göre (A-Z)'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'stock',
+                                      child: Text('Az stok önce'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'price',
+                                      child: Text('Yüksek fiyat önce'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'new',
+                                      child: Text('Yeni eklenen önce'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'markup',
+                                      child: Text('En düşük kâr oranı'),
+                                    ),
+                                  ],
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 8,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.sort_rounded,
+                                      color: green,
+                                      size: 19,
+                                    ),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      'Sırala',
+                                      style: TextStyle(
+                                        color: green,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed:
-                          () => setState(
-                            () => advancedFilters = !advancedFilters,
-                          ),
-                      icon: Icon(
-                        advancedFilters
-                            ? Icons.tune_rounded
-                            : Icons.filter_alt_outlined,
-                      ),
-                      label: Text(
-                        advancedFilters
-                            ? 'Gelişmiş filtreleri kapat'
-                            : 'Gelişmiş filtreler · fiyat aralığı',
-                      ),
-                    ),
-                    if (advancedFilters) ...[
-                      const SizedBox(height: 12),
-                      ResponsiveFields(
-                        first: TextField(
-                          controller: minPriceInput,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          decoration: const InputDecoration(
-                            labelText: 'En düşük satış fiyatı (₺)',
-                            prefixIcon: Icon(Icons.arrow_downward_rounded),
-                          ),
-                          onChanged:
-                              (value) => setState(() {
-                                minimumPrice = double.tryParse(
-                                  value.replaceAll(',', '.'),
-                                );
-                                currentPage = 0;
-                              }),
-                        ),
-                        second: TextField(
-                          controller: maxPriceInput,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          decoration: const InputDecoration(
-                            labelText: 'En yüksek satış fiyatı (₺)',
-                            prefixIcon: Icon(Icons.arrow_upward_rounded),
-                          ),
-                          onChanged:
-                              (value) => setState(() {
-                                maximumPrice = double.tryParse(
-                                  value.replaceAll(',', '.'),
-                                );
-                                currentPage = 0;
-                              }),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton.icon(
-                          onPressed:
-                              () => setState(() {
-                                minPriceInput.clear();
-                                maxPriceInput.clear();
-                                minimumPrice = null;
-                                maximumPrice = null;
-                                currentPage = 0;
-                              }),
-                          icon: const Icon(Icons.restart_alt_rounded),
-                          label: const Text('Fiyat filtresini sıfırla'),
-                        ),
-                      ),
-                    ],
-                    const Divider(height: 18),
-                    SwitchListTile.adaptive(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Alış fiyatı ve kâr oranını göster'),
-                      subtitle: const Text(
-                        'Kapalıyken maliyet bilgileri ürün kartlarında gizlenir.',
-                      ),
-                      value: showPurchasePrice,
-                      onChanged: (v) => setState(() => showPurchasePrice = v),
-                    ),
-                    const SizedBox(height: 14),
-                    Wrap(
-                      spacing: 7,
-                      runSpacing: 7,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        _filter('all', 'Tümü', Icons.apps_rounded),
-                        _filter('low', 'Kritik', Icons.warning_amber_rounded),
-                        _filter(
-                          'loss',
-                          'Zarar riski',
-                          Icons.trending_down_rounded,
-                        ),
-                        _filter(
-                          'empty',
-                          'Tükenen',
-                          Icons.remove_shopping_cart_outlined,
-                        ),
-                        _filter(
-                          'inactive',
-                          'Pasif',
-                          Icons.visibility_off_outlined,
-                        ),
-                        PopupMenuButton<String>(
-                          tooltip: 'Sıralama',
-                          initialValue: sortBy,
-                          onSelected:
-                              (s) => setState(() {
-                                sortBy = s;
-                                currentPage = 0;
-                              }),
-                          itemBuilder:
-                              (_) => const [
-                                PopupMenuItem(
-                                  value: 'name',
-                                  child: Text('Ada göre (A-Z)'),
-                                ),
-                                PopupMenuItem(
-                                  value: 'stock',
-                                  child: Text('Az stok önce'),
-                                ),
-                                PopupMenuItem(
-                                  value: 'price',
-                                  child: Text('Yüksek fiyat önce'),
-                                ),
-                                PopupMenuItem(
-                                  value: 'new',
-                                  child: Text('Yeni eklenen önce'),
-                                ),
-                                PopupMenuItem(
-                                  value: 'markup',
-                                  child: Text('En düşük kâr oranı'),
-                                ),
-                              ],
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 8,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.sort_rounded,
-                                  color: green,
-                                  size: 19,
-                                ),
-                                SizedBox(width: 5),
-                                Text(
-                                  'Sırala',
-                                  style: TextStyle(
-                                    color: green,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         ),
                       ],
                     ),

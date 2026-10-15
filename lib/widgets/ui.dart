@@ -3,12 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/app_api.dart';
 
 // StokPilot design system: consistent contrast and mobile-safe components.
-const ink = Color(0xFF172B43);
-const green = Color(0xFF087F79);
-const canvas = Color(0xFFF6F8FB);
-const muted = Color(0xFF758397);
-const line = Color(0xFFE6ECF1);
-const softGreen = Color(0xFFE4F3F0);
+const ink = Color(0xFF20243A);
+const green = Color(0xFF4F46C8);
+const canvas = Color(0xFFF5F5FA);
+const muted = Color(0xFF646A7D);
+const line = Color(0xFFE5E6EF);
+const softGreen = Color(0xFFEEEDFC);
 const amber = Color(0xFFB87929);
 
 class MetricCard extends StatelessWidget {
@@ -96,7 +96,7 @@ class MetricCard extends StatelessWidget {
                   style: const TextStyle(
                     color: ink,
                     fontSize: 24,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: -0.65,
                   ),
                 ),
@@ -139,8 +139,8 @@ class PageTitle extends StatelessWidget {
             Text(
               title,
               style: const TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w900,
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
                 color: ink,
                 letterSpacing: -1,
               ),
@@ -256,7 +256,7 @@ class DataPanel extends StatelessWidget {
         ),
       ],
     ),
-    child: child,
+    child: Material(color: Colors.transparent, child: child),
   );
 }
 
@@ -283,7 +283,7 @@ class SectionHeading extends StatelessWidget {
               style: const TextStyle(
                 color: ink,
                 fontSize: 16,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
                 letterSpacing: -0.25,
               ),
             ),
@@ -420,7 +420,7 @@ class ResponsiveFormDialog extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 18,
                       color: ink,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                       letterSpacing: -0.35,
                     ),
                     child: title,
@@ -455,33 +455,7 @@ class ResponsiveFormDialog extends StatelessWidget {
                 mobile ? 13 : 18,
                 mobile ? 16 : 12,
               ),
-              child:
-                  mobile
-                      ? LayoutBuilder(
-                        builder: (context, constraints) {
-                          final width =
-                              (constraints.maxWidth -
-                                  (actions.length - 1) * 9) /
-                              actions.length;
-                          return Wrap(
-                            spacing: 9,
-                            runSpacing: 9,
-                            children: [
-                              for (final action in actions)
-                                SizedBox(
-                                  width: width.clamp(104.0, 9000.0).toDouble(),
-                                  child: action,
-                                ),
-                            ],
-                          );
-                        },
-                      )
-                      : Wrap(
-                        alignment: WrapAlignment.end,
-                        spacing: 10,
-                        runSpacing: 8,
-                        children: actions,
-                      ),
+              child: FormActions(actions: actions),
             ),
         ],
       ),
@@ -511,6 +485,85 @@ class ResponsiveFormDialog extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Shared action hierarchy for dialogs and full-screen forms.
+class FormActions extends StatelessWidget {
+  const FormActions({super.key, required this.actions});
+  final List<Widget> actions;
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, bounds) {
+      final stack =
+          bounds.maxWidth < 420 ||
+          MediaQuery.textScalerOf(context).scale(14) > 18;
+      if (stack) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = actions.length - 1; i >= 0; i--) ...[
+              actions[i],
+              if (i > 0) const SizedBox(height: 8),
+            ],
+          ],
+        );
+      }
+      return Wrap(
+        alignment: WrapAlignment.end,
+        spacing: 12,
+        runSpacing: 8,
+        children: actions,
+      );
+    },
+  );
+}
+
+class FormSectionLabel extends StatelessWidget {
+  const FormSectionLabel(this.number, this.title, this.subtitle, {super.key});
+  final String number, title, subtitle;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 8, bottom: 20),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CircleAvatar(
+          radius: 16,
+          backgroundColor: softGreen,
+          child: Text(
+            number,
+            style: const TextStyle(
+              color: green,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: ink,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                style: const TextStyle(color: muted, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class CompactDateField extends StatelessWidget {
@@ -692,7 +745,7 @@ Future<DateTime?> showPilotDatePicker({
                                 title,
                                 style: const TextStyle(
                                   fontSize: 18,
-                                  fontWeight: FontWeight.w900,
+                                  fontWeight: FontWeight.w700,
                                   color: ink,
                                 ),
                               ),

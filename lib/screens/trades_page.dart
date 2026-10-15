@@ -808,21 +808,24 @@ class _TradesPageState extends State<TradesPage> {
                                     border: Border.all(color: line),
                                     borderRadius: BorderRadius.circular(14),
                                   ),
-                                  child: SwitchListTile.adaptive(
-                                    contentPadding: EdgeInsets.zero,
-                                    title: const Text(
-                                      'Satışa KDV ekle',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w800,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: SwitchListTile.adaptive(
+                                      contentPadding: EdgeInsets.zero,
+                                      title: const Text(
+                                        'Satışa KDV ekle',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                        ),
                                       ),
+                                      subtitle: Text(
+                                        addVatToSale
+                                            ? 'Üründeki KDV oranı satış tutarına ayrıca eklenir.'
+                                            : 'Kapalı: Ürüne yazdığın satış fiyatı aynen alınır.',
+                                      ),
+                                      value: addVatToSale,
+                                      onChanged: busy ? null : _setSaleVat,
                                     ),
-                                    subtitle: Text(
-                                      addVatToSale
-                                          ? 'Üründeki KDV oranı satış tutarına ayrıca eklenir.'
-                                          : 'Kapalı: Ürüne yazdığın satış fiyatı aynen alınır.',
-                                    ),
-                                    value: addVatToSale,
-                                    onChanged: busy ? null : _setSaleVat,
                                   ),
                                 ),
                               const SizedBox(height: 14),

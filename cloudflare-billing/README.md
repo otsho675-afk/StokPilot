@@ -4,8 +4,8 @@
 
 ## Abonelik ürünlerini oluştur
 
-- Google Play Console > Subscriptions: ürün `stokpilot_pro_monthly`, base plan `monthly-50`, otomatik yenileme **1 ay**, Türkiye fiyatı **49,99 TRY**. Plan şu anda taslaktır.
-- App Store Connect > Subscriptions: ürün `stokpilot_pro_monthly`, otomatik yenileme **1 ay**, Türkiye fiyatı **49,99 TRY**. İlk abonelik uygulamanın yeni sürümüyle incelemeye gönderilmelidir.
+- Google Play Console > Subscriptions: ürün `stokpilot_pro_monthly`, base plan `monthly-50`, otomatik yenileme **1 ay**, Türkiye fiyatı vergi dahil **50,00 TRY**. Plan aktiftir (15 Ekim 2026).
+- App Store Connect > Subscriptions: ürün `stokpilot_pro_monthly`, otomatik yenileme **1 ay**, Türkiye fiyatı **50,00 TRY** olarak kaydedildi (15 Ekim 2026); henüz incelemeye gönderilmedi. İlk abonelik uygulamanın yeni sürümüyle incelemeye gönderilmelidir.
 - RevenueCat'te Android/iOS uygulamalarını bağla, **`pro`** entitlement oluştur, **`default`** offering içindeki `$rc_monthly`/Monthly paketini ilgili mağaza ürününe bağla.
 - RevenueCat SDK **public** anahtarları Google için `goog_...`, Apple için `appl_...`; bunları Flutter `--dart-define` ile kullan.
 

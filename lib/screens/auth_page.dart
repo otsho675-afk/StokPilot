@@ -150,7 +150,7 @@ class _AuthPageState extends State<AuthPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
+              Align(alignment: Alignment.centerLeft, child: Container(
                 width: 58,
                 height: 58,
                 alignment: Alignment.center,
@@ -163,7 +163,7 @@ class _AuthPageState extends State<AuthPage> {
                   color: Colors.white,
                   size: 28,
                 ),
-              ),
+              )),
               const SizedBox(height: 16),
               const Text(
                 'StokPilot',

@@ -39,9 +39,11 @@ flutter run
 
 Ücretsiz katmanlı Cloudflare Worker ve RevenueCat bağlantısı: [cloudflare-billing/README.md](cloudflare-billing/README.md).
 
-RevenueCat Google Play doğrulaması, Cloudflare Worker ve Firebase yetki köprüsü kuruludur. Google Play abonelik planı taslak durumundadır; iOS RevenueCat bağlantısı ve gerçek mağaza satın alma testleri tamamlanmamıştır. Bu nedenle `RC_VERIFIED_BACKEND_READY=false` kalır ve uygulama henüz aylık ödeme almaz. Gerçek mağaza fiyatı açıldığında mağaza SDK'sından gelir.
+RevenueCat Google Play doğrulaması, Cloudflare Worker ve Firebase yetki köprüsü kuruludur. Google Play abonelik planı Türkiye için vergi dahil 50 TL/ay fiyatla aktiftir; iOS RevenueCat bağlantısı ve gerçek mağaza satın alma testleri tamamlanmamıştır. Bu nedenle `RC_VERIFIED_BACKEND_READY=false` kalır ve uygulama henüz aylık ödeme almaz. Gerçek mağaza fiyatı açıldığında mağaza SDK'sından gelir.
 
 `.github/workflows/store-release.yml` manuel Android/iOS seçimi veya `v*` etiketiyle imzalı Android AAB ve macOS üzerinde iOS IPA oluşturur. 13 Ekim 2026'da [Android otomasyonu](https://github.com/otsho675-afk/StokPilot/actions/runs/38393974750) başarılı oldu ve 1.0.0+5 (sürüm kodu 5) Play Console dahili testte kullanılabilir olarak doğrulandı. [iOS otomasyonu](https://github.com/otsho675-afk/StokPilot/actions/runs/38395460755) imzalı IPA'yı başarıyla oluşturdu; dosya çalıştırmanın `stokpilot-ios-ipa` artifact'inde bulunur. Apple'a otomatik yükleme için gereken App Store Connect API anahtarının `.p8` dosyası bu tarayıcıda indirilemediğinden `ASC_API_KEY_P8_BASE64`, `ASC_API_KEY_ID` ve `ASC_API_ISSUER_ID` sırları henüz tanımlı değildir ve yükleme adımı atlanır. Diğer uygulamalara ait Apple anahtarları kullanılmamalıdır.
+
+Güncel derleme, görsel yükleme ve yayın engelleri: [Mağaza teslim durumu](store_assets/RELEASE_STATUS.md).
 
 ## Güvenlik ve sınırlamalar
 
