@@ -4,6 +4,8 @@ compatibility_date = "2026-10-01"
 
 [vars]
 FIREBASE_PROJECT_ID = "stokpilot-5bd2e"
+APPLE_BUNDLE_ID = "com.yesildas.stokpilot"
+GOOGLE_PACKAGE_NAME = "com.yesildas.stokpilot"
 
 [triggers]
 crons = ["0 * * * *"]
