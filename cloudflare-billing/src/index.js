@@ -144,7 +144,7 @@ export function evaluateGoogleSubscription(body, now = Date.now()) {
   return expiresMs > now ? {platform:'android', expiresMs} : null;
 }
 async function verifyGoogle(purchaseToken, env) {
-  if (!/^[a-zA-Z0-9._:-]{12,2048}$/.test(purchaseToken)) throw Error('invalid Google purchase token');
+  if (typeof purchaseToken !== 'string' || purchaseToken.length < 12 || purchaseToken.length > 4096 || /\s/.test(purchaseToken)) throw Error('invalid Google purchase token');
   if (!env.GOOGLE_PLAY_PACKAGE_NAME || !env.PLAY_SERVICE_ACCOUNT_JSON) {
     throw Error('Google Play service credentials incomplete');
   }
