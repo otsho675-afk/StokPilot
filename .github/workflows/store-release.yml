@@ -71,7 +71,7 @@ jobs:
       - name: Run tests and build signed bundle
         run: |
           flutter test
-          flutter build appbundle --release --dart-define=RC_VERIFIED_BACKEND_READY=false
+          flutter build appbundle --release --dart-define=DIRECT_BILLING_READY=${{ vars.DIRECT_BILLING_READY || 'false' }}
       - uses: actions/upload-artifact@v4
         with:
           name: stokpilot-android-aab
@@ -166,7 +166,7 @@ jobs:
         run: |
           flutter pub get
           flutter test
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --dart-define=RC_VERIFIED_BACKEND_READY=false
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --dart-define=DIRECT_BILLING_READY=${{ vars.DIRECT_BILLING_READY || 'false' }}
       - uses: actions/upload-artifact@v4
         with:
           name: stokpilot-ios-ipa
