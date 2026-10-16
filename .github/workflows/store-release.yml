@@ -69,9 +69,12 @@ jobs:
             printf 'storeFile=upload-keystore.jks\n'
           } > android/key.properties
       - name: Run tests and build signed bundle
+        env:
+          BILLING_ENDPOINT: ${{ vars.STORE_BILLING_ENDPOINT }}
+          BILLING_READY: ${{ vars.STORE_BILLING_READY }}
         run: |
           flutter test
-          flutter build appbundle --release --dart-define=RC_VERIFIED_BACKEND_READY=false
+          flutter build appbundle --release --dart-define="STORE_BILLING_ENDPOINT=$BILLING_ENDPOINT" --dart-define="STORE_BILLING_READY=${BILLING_READY:-false}"
       - uses: actions/upload-artifact@v4
         with:
           name: stokpilot-android-aab
@@ -163,10 +166,13 @@ jobs:
               }, output)
           PY
       - name: Build signed IPA
+        env:
+          BILLING_ENDPOINT: ${{ vars.STORE_BILLING_ENDPOINT }}
+          BILLING_READY: ${{ vars.STORE_BILLING_READY }}
         run: |
           flutter pub get
           flutter test
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --dart-define=RC_VERIFIED_BACKEND_READY=false
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --dart-define="STORE_BILLING_ENDPOINT=$BILLING_ENDPOINT" --dart-define="STORE_BILLING_READY=${BILLING_READY:-false}"
       - uses: actions/upload-artifact@v4
         with:
           name: stokpilot-ios-ipa
