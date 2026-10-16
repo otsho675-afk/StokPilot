@@ -42,7 +42,7 @@ flutter run
 
 RevenueCat Google Play doğrulaması, Cloudflare Worker ve Firebase yetki köprüsü kuruludur. Google Play abonelik planı Türkiye için vergi dahil 50 TL/ay fiyatla aktiftir; iOS RevenueCat bağlantısı ve gerçek mağaza satın alma testleri tamamlanmamıştır. Bu nedenle `RC_VERIFIED_BACKEND_READY=false` kalır ve uygulama henüz aylık ödeme almaz. Gerçek mağaza fiyatı açıldığında mağaza SDK'sından gelir.
 
-`.github/workflows/store-release.yml` manuel Android/iOS seçimi veya `v*` etiketiyle imzalı Android AAB ve macOS üzerinde iOS IPA oluşturur. [1.0.0+11 otomasyonu](https://github.com/otsho675-afk/StokPilot/actions/runs/38785346194) Android paketini Play dahili teste yükledi; Play Console sürüm kodu 11'i etkin gösteriyor. Aynı çalıştırmada imzalı iOS IPA oluşturuldu ve App Store Connect yükleme adımı başarılı oldu. Bu, mağaza incelemesinin veya genel yayının tamamlandığı anlamına gelmez.
+`.github/workflows/store-release.yml` manuel Android/iOS seçimi veya `v*` etiketiyle imzalı Android AAB ve macOS üzerinde iOS IPA oluşturur. [1.0.0+12 otomasyonu](https://github.com/otsho675-afk/StokPilot/actions/runs/38924949447) Android paketini Play dahili teste, imzalı iOS IPA'yı App Store Connect'e başarıyla yükledi. Bu, mağaza incelemesinin veya genel yayının tamamlandığı anlamına gelmez.
 
 Güncel derleme, görsel yükleme ve yayın engelleri: [Mağaza teslim durumu](store_assets/RELEASE_STATUS.md).
 

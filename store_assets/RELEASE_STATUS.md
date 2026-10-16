@@ -1,11 +1,10 @@
-# StokPilot mağaza teslim durumu — 15 Ekim 2026
+# StokPilot mağaza teslim durumu — 16 Ekim 2026
 
 ## Doğrulanan sürüm
 
-- [1.0.0+11 GitHub çalıştırması](https://github.com/otsho675-afk/StokPilot/actions/runs/38785346194): Flutter analiz ve ekran görüntüsü testleri, imzalı Android AAB derlemesi, Play dahili test yüklemesi ve imzalı iOS IPA derlemesi başarılı.
-- Apple IPA, aynı çalıştırmada App Store Connect'e otomatik yüklendi. Apple işleme ve uygulama incelemesi ayrıca tamamlanmalıdır.
-- Play Console, sürüm kodu 11'i dahili test kullanıcıları için etkin gösteriyor. Genel yayın henüz açık değil.
-- Ekran görüntüsü testi 320, 360, 393 ve 430 piksel telefon genişlikleri ile 1024 piksel iPad görünümünü kontrol ediyor.
+- [1.0.0+12 GitHub çalıştırması](https://github.com/otsho675-afk/StokPilot/actions/runs/38924949447): Flutter analiz ve ekran testleri, imzalı Android AAB ile iOS IPA derlemeleri, Play dahili test yüklemesi ve App Store Connect IPA yüklemesi başarılı. AAB ve IPA bu çalıştırmanın indirilebilir paketleri arasında.
+- Apple'ın yüklenen IPA'yı işlemesi, uygulama ve abonelik incelemesi ayrıca tamamlanmalıdır. Genel yayın henüz açık değil.
+- Ekran testi 320, 360, 393 ve 430 piksel telefon genişlikleri ile 1024 piksel iPad görünümünü kontrol ediyor; rapor ekranı da bu boyutlarda denetlendi.
 
 ## Mağaza ve ödeme durumu
 
@@ -16,7 +15,10 @@
 
 ## Tasarım ve veri
 
-- Mobil gezinme, ürün ve müşteri ekranları, formlar, raporlar, özet ve Pro ekranı yenilendi. Android, iPhone ve iPad mağaza görselleri gerçek uygulama bileşenleri ve kurgusal verilerle üretildi.
+- Satış/alış formu sadeleştirildi: ürün adı, SKU ve barkodla arama; müşteri/tedarikçiyi isim veya telefonla bulma; yazılan isim için yeni cari kartı açıp işlemde seçme; belge ve vergi ayrıntılarını isteğe bağlı açma; mobilde sepetten ödemeye geçiş.
+- Ürün kartları ad, satış fiyatı ve stok durumuna odaklandı. Ürün listesi ile gelişmiş filtreler ayrıldı; satış ve ürün görselleri Android, iPhone ve iPad boyutlarında yenilendi.
+- Raporlarda dönem satışları, alış ve stok, güncel cari durum ve para hareketleri ayrı gösteriliyor. Satışta alınan ilk ödeme ile sonradan yapılan cari tahsilat birbirine karıştırılmıyor.
+- Sepet, satış öncesi stok yetersizliğini engeller; satış sonrası kritik stok ve işlem sırasında değişen fiyat için uyarı verir. Ürün formu tam ismin yazılması kısa süre durduktan sonra benzer kayıtları önerir; birebir mükerrer kaydı engellemeyi sürdürür.
 - Genel arama ürün, barkod, SKU, müşteri, tedarikçi ve fiş kayıtlarını bulur. Ürün/firma kartı veya seçilen fiş açılabilir.
 - Kritik stok ve fiyat güncelliği uyarıları ürün ekranında ve üst çubuktaki rozetli hatırlatıcı merkezinde gösteriliyor.
 - Ücretsiz ürün kotası toplam 50 oluşturmadır. Ürün silmek kotayı geri kazandırmaz.
