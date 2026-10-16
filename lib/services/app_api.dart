@@ -69,6 +69,13 @@ class AppApi {
     ).add({...data, 'createdAt': FieldValue.serverTimestamp()});
   }
 
+  Future<String> createContact(Map<String, dynamic> data) async {
+    final document = await collection(
+      'contacts',
+    ).add({...data, 'createdAt': FieldValue.serverTimestamp()});
+    return document.id;
+  }
+
   Future<void> edit(String name, String id, Map<String, dynamic> data) async {
     if (!const [
       'products',

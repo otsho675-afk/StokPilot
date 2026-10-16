@@ -70,8 +70,8 @@ class _ReportsPageState extends State<ReportsPage> {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       const PageTitle(
-        title: 'Analiz ve raporlar',
-        subtitle: 'Satış, alış, nakit tahsilatı, stok ve cari görünürlüğü.',
+        title: 'Raporlar',
+        subtitle: 'Dönem işlemleri ve bugünkü bakiyeler ayrı gösterilir.',
       ),
       Wrap(
         spacing: 7,
@@ -80,31 +80,42 @@ class _ReportsPageState extends State<ReportsPage> {
           _period('7', '7 gün'),
           _period('30', '30 gün'),
           _period('90', '90 gün'),
-          _period('all', 'Tüm zamanlar'),
+          _period('all', 'Tümü'),
         ],
       ),
       const SizedBox(height: 12),
-      ResponsiveFields(
-        first: CompactDateField(
-          label: 'Başlangıç tarihi',
-          date: startDate,
-          onTap: () => _chooseDate(true),
-          onClear:
-              () => setState(() {
-                startDate = null;
-                period = 'custom';
-              }),
+      ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        title: const Text(
+          'Özel tarih aralığı',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
-        second: CompactDateField(
-          label: 'Bitiş tarihi',
-          date: endDate,
-          onTap: () => _chooseDate(false),
-          onClear:
-              () => setState(() {
-                endDate = null;
-                period = 'custom';
-              }),
-        ),
+        leading: const Icon(Icons.date_range_outlined, size: 20),
+        initiallyExpanded: period == 'custom',
+        children: [
+          ResponsiveFields(
+            first: CompactDateField(
+              label: 'Başlangıç tarihi',
+              date: startDate,
+              onTap: () => _chooseDate(true),
+              onClear:
+                  () => setState(() {
+                    startDate = null;
+                    period = 'custom';
+                  }),
+            ),
+            second: CompactDateField(
+              label: 'Bitiş tarihi',
+              date: endDate,
+              onTap: () => _chooseDate(false),
+              onClear:
+                  () => setState(() {
+                    endDate = null;
+                    period = 'custom';
+                  }),
+            ),
+          ),
+        ],
       ),
       if (period == 'custom')
         Align(
@@ -227,8 +238,11 @@ class _ReportsPageState extends State<ReportsPage> {
       ['Satış işlemi', metrics.saleCount],
       ['Satış toplamı', metrics.salesGrossMinor],
       ['Satış KDV', metrics.outputVatMinor],
-      ['Satış tahsil edilen', metrics.salesPaidMinor],
-      ['Satış açık bakiye', metrics.outstandingSalesMinor],
+      ['Satışta alınan ilk ödeme', metrics.salesPaidMinor],
+      [
+        'Satıştan ilk kalan (sonraki cari tahsilatlar hariç)',
+        metrics.outstandingSalesMinor,
+      ],
       ['Alış işlemi', metrics.purchaseCount],
       ['Alış toplamı', metrics.purchasesGrossMinor],
       ['Alış KDV', metrics.inputVatMinor],
@@ -268,108 +282,92 @@ class _ReportsPageState extends State<ReportsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          padding: const EdgeInsets.all(19),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEAF5F2),
-            border: Border.all(color: const Color(0xFFCEE7E0)),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: LayoutBuilder(
-            builder: (context, size) {
-              final title = Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Finansal genel görünüm',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    '$periodName • İşletme kayıtlarından hesaplanır',
-                    style: const TextStyle(color: muted, fontSize: 12),
-                  ),
-                ],
-              );
-              final export = OutlinedButton.icon(
-                onPressed: () => _copyReport(context, m),
-                icon: const Icon(Icons.content_copy_rounded, size: 18),
-                label: const Text('CSV kopyala'),
-              );
-              if (size.maxWidth < 470) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [title, const SizedBox(height: 12), export],
-                );
-              }
-              return Row(children: [Expanded(child: title), export]);
-            },
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '$periodName verileri',
+                style: const TextStyle(color: muted, fontSize: 12, fontWeight: FontWeight.w700),
+              ),
+            ),
+            IconButton(
+              tooltip: 'Raporu CSV olarak kopyala',
+              onPressed: () => _copyReport(context, m),
+              icon: const Icon(Icons.content_copy_rounded, size: 20),
+            ),
+          ],
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 8),
+        SectionHeading(
+          title: 'Dönem satışları',
+          subtitle: '$periodName • İşlem anındaki tutarlar',
+        ),
+        const SizedBox(height: 10),
         _metricGrid([
           MetricCard(
-            title: 'Satış cirosu (KDV dahil)',
+            title: 'Toplam satış',
             value: money(m.salesGrossMinor),
             icon: Icons.trending_up_rounded,
-            subtext: '${m.saleCount} satış işlemi',
+            subtext: '${m.saleCount} satış • KDV dahil',
           ),
           MetricCard(
-            title: 'Alış toplamı (KDV dahil)',
-            value: money(m.purchasesGrossMinor),
-            icon: Icons.shopping_cart_outlined,
-            subtext: '${m.purchaseCount} alış işlemi',
-          ),
-          MetricCard(
-            title: 'Satış tahsilatı',
+            title: 'Satışta alınan',
             value: money(m.salesPaidMinor),
             icon: Icons.payments_outlined,
-            subtext: 'Dönem satışlarında kaydedilen ödeme',
+            subtext: 'Satış kaydında alınan ödeme',
           ),
           MetricCard(
-            title: 'Satış açık tutarı',
+            title: 'Satıştan ilk kalan',
             value: money(m.outstandingSalesMinor),
             icon: Icons.pending_actions_outlined,
-            subtext: 'Dönem satışlarından ilk kalan tutar',
-          ),
-          MetricCard(
-            title: 'Güncel stok maliyeti',
-            value: money(m.inventoryCostMinor),
-            icon: Icons.warehouse_outlined,
-            subtext: 'Güncel miktar × son tanımlı alış fiyatı',
-          ),
-          MetricCard(
-            title: 'Cari alacak / borç',
-            value: '${money(m.receivableMinor)} / ${money(m.payableMinor)}',
-            icon: Icons.account_balance_wallet_outlined,
-            subtext: 'Güncel cari bakiyeler • tüm zamanlar',
+            subtext: 'Sonraki cari tahsilatlar hariç',
           ),
         ]),
-        const SizedBox(height: 14),
-        _financeSummary(),
-        const SizedBox(height: 14),
+        const SizedBox(height: 22),
+        SectionHeading(
+          title: 'Alış ve stok',
+          subtitle: 'Alışlar $periodName • Stok maliyeti bugün',
+        ),
+        const SizedBox(height: 10),
         _metricGrid([
           MetricCard(
-            title: 'Nakit satışlar',
-            value: money(paymentTotals['cash'] ?? 0),
-            icon: Icons.payments_rounded,
-            accent: const Color(0xFF0C9672),
+            title: 'Dönem alışları',
+            value: money(m.purchasesGrossMinor),
+            icon: Icons.shopping_cart_outlined,
+            subtext: '${m.purchaseCount} alış • KDV dahil',
           ),
           MetricCard(
-            title: 'POS / Kart satışları',
-            value: money(paymentTotals['card'] ?? 0),
-            icon: Icons.credit_card_rounded,
-            accent: const Color(0xFF2563EB),
-          ),
-          MetricCard(
-            title: 'Veresiye satışlar',
-            value: money(paymentTotals['credit'] ?? 0),
-            icon: Icons.receipt_long_rounded,
-            accent: const Color(0xFFB7791F),
+            title: 'Bugünkü stok maliyeti',
+            value: money(m.inventoryCostMinor),
+            icon: Icons.warehouse_outlined,
+            subtext: 'Güncel miktar × tanımlı alış fiyatı',
           ),
         ]),
+        const SizedBox(height: 22),
+        const SectionHeading(
+          title: 'Güncel cari durum',
+          subtitle: 'Tarih filtresinden bağımsız • tüm cari kayıtlar',
+        ),
+        const SizedBox(height: 10),
+        _metricGrid([
+          MetricCard(
+            title: 'Cari alacak',
+            value: money(m.receivableMinor),
+            icon: Icons.call_received_rounded,
+          ),
+          MetricCard(
+            title: 'Cari borç',
+            value: money(m.payableMinor),
+            icon: Icons.call_made_rounded,
+          ),
+        ]),
+        const SizedBox(height: 22),
+        SectionHeading(
+          title: 'Para hareketleri',
+          subtitle: '$periodName • Tahsilat, ödeme ve gider kayıtları',
+        ),
+        const SizedBox(height: 10),
+        _financeSummary(),
         const SizedBox(height: 14),
         DataPanel(
           child: Column(
@@ -653,27 +651,6 @@ class _ReportsPageState extends State<ReportsPage> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _metricGrid([
-                MetricCard(
-                  title: 'Müşteri tahsilatları',
-                  value: money(totals.collectionsMinor),
-                  icon: Icons.call_received_rounded,
-                  accent: const Color(0xFF0D9874),
-                ),
-                MetricCard(
-                  title: 'Firma / tedarikçi ödemeleri',
-                  value: money(totals.payoutsMinor),
-                  icon: Icons.local_shipping_outlined,
-                  accent: const Color(0xFF2563EB),
-                ),
-                MetricCard(
-                  title: 'İşletme giderleri',
-                  value: money(totals.expensesMinor),
-                  icon: Icons.receipt_long_outlined,
-                  accent: const Color(0xFFC17C27),
-                ),
-              ]),
-              const SizedBox(height: 14),
               DataPanel(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,

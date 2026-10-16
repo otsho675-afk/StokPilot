@@ -113,8 +113,8 @@ class _MainShellState extends State<MainShell> {
   Widget screen() => switch (selected) {
     0 => OverviewPage(onNavigate: navigate),
     1 => const ProductsPage(),
-    2 => const TradesPage(type: 'sale'),
-    3 => const TradesPage(type: 'purchase'),
+    2 => const TradesPage(key: ValueKey('sale-trade'), type: 'sale'),
+    3 => const TradesPage(key: ValueKey('purchase-trade'), type: 'purchase'),
     4 => const ContactsPage(kind: 'customer'),
     5 => const ContactsPage(kind: 'supplier'),
     6 => const FinancePage(),

@@ -141,136 +141,14 @@ class _ProductsPageState extends State<ProductsPage> {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       PageTitle(
-        title: 'Ürünler ve stoklar',
-        subtitle: 'Ürünlerini ara, düzenle, kritik seviyeleri takip et.',
+        title: 'Ürünler',
+        subtitle: 'Stok, fiyat ve ürün kartlarını tek yerden yönet.',
         action: FilledButton.icon(
           onPressed: _openingProduct ? null : _addProduct,
           icon: const Icon(Icons.add_rounded),
           label: const Text('Yeni ürün'),
         ),
       ),
-      ExpansionTile(
-        tilePadding: EdgeInsets.zero,
-        title: const Text(
-          'Kullanım ve uyarılar',
-          style: TextStyle(fontSize: 14),
-        ),
-        leading: const Icon(Icons.notifications_none_rounded, size: 20),
-        children: [
-          StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-            stream: AppApi.instance.workspace.snapshots(),
-            builder:
-                (
-                  context,
-                  ws,
-                ) => StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                  stream: AppApi.instance.entitlement(),
-                  builder: (context, ent) {
-                    final e = ent.data?.data() ?? {};
-                    final expiry = e['expiresAt'];
-                    final pro =
-                        e['status'] == 'active' &&
-                        (e['source'] == 'revenuecat' ||
-                            (AppApi.instance.uid ==
-                                    'gbw2USpZ8cNtcSyge5a2BEwJw3E3' &&
-                                e['source'] == 'review')) &&
-                        expiry is Timestamp &&
-                        expiry.toDate().isAfter(DateTime.now());
-                    final count =
-                        (ws.data?.data()?['productCount'] as num?)?.toInt() ??
-                        0;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: DataPanel(
-                        child: LayoutBuilder(
-                          builder: (context, c) {
-                            final remaining = (50 - count).clamp(0, 50);
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(9),
-                                      decoration: BoxDecoration(
-                                        color: softGreen,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(
-                                        pro
-                                            ? Icons.workspace_premium_outlined
-                                            : Icons.inventory_2_outlined,
-                                        color: green,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            pro
-                                                ? 'StokPilot Pro • Sınırsız ürün'
-                                                : '$count / 50 ücretsiz ürün',
-                                            style: const TextStyle(
-                                              color: ink,
-                                              fontWeight: FontWeight.w800,
-                                            ),
-                                          ),
-                                          if (!pro)
-                                            Text(
-                                              '$remaining ürün hakkın kaldı',
-                                              style: const TextStyle(
-                                                color: muted,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                    if (!pro && c.maxWidth > 380)
-                                      TextButton.icon(
-                                        onPressed:
-                                            () => Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (_) => const PaywallPage(),
-                                              ),
-                                            ),
-                                        icon: const Icon(
-                                          Icons.workspace_premium_outlined,
-                                        ),
-                                        label: const Text('Pro'),
-                                      ),
-                                  ],
-                                ),
-                                if (!pro) ...[
-                                  const SizedBox(height: 12),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: LinearProgressIndicator(
-                                      value: (count / 50).clamp(0.0, 1.0),
-                                      minHeight: 7,
-                                      color: count >= 45 ? amber : green,
-                                      backgroundColor: const Color(0xFFE5EEED),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                ),
-          ),
-          const _InventoryAlertsPanel(),
-        ],
-      ),
-      const SizedBox(height: 12),
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: AppApi.instance.watch('categories'),
         builder: (context, categories) {
@@ -281,6 +159,10 @@ class _ProductsPageState extends State<ProductsPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               DataPanel(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -561,93 +443,91 @@ class _ProductsPageState extends State<ProductsPage> {
                   final page = currentPage.clamp(0, totalPages - 1);
                   final visible =
                       filtered.skip(page * pageSize).take(pageSize).toList();
-                  return DataPanel(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SectionHeading(
-                          title: 'Ürün listesi',
-                          subtitle: '${filtered.length} eşleşen ürün',
-                        ),
-                        const SizedBox(height: 12),
-                        LayoutBuilder(
-                          builder:
-                              (context, c) => Column(
-                                children: [
-                                  if (c.maxWidth >= 650)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 10,
-                                      ),
-                                      margin: const EdgeInsets.only(bottom: 8),
-                                      decoration: BoxDecoration(
-                                        color: canvas,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: const Row(
-                                        children: [
-                                          Expanded(
-                                            flex: 5,
-                                            child: Text(
-                                              'ÜRÜN BİLGİSİ',
-                                              style: TextStyle(
-                                                color: muted,
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: 10,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 2,
-                                            child: Text(
-                                              'SATIŞ FİYATI',
-                                              textAlign: TextAlign.end,
-                                              style: TextStyle(
-                                                color: muted,
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: 10,
-                                              ),
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            width: 117,
-                                            child: Text(
-                                              'STOK',
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                color: muted,
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: 10,
-                                              ),
-                                            ),
-                                          ),
-                                          SizedBox(width: 82),
-                                        ],
-                                      ),
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SectionHeading(
+                        title: 'Ürün listesi',
+                        subtitle: '${filtered.length} eşleşen ürün',
+                      ),
+                      const SizedBox(height: 12),
+                      LayoutBuilder(
+                        builder:
+                            (context, c) => Column(
+                              children: [
+                                if (c.maxWidth >= 650)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
                                     ),
-                                  ...visible.map(
-                                    (item) =>
-                                        c.maxWidth < 650
-                                            ? _mobileProduct(context, item)
-                                            : _wideProduct(context, item),
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    decoration: BoxDecoration(
+                                      color: canvas,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Row(
+                                      children: [
+                                        Expanded(
+                                          flex: 5,
+                                          child: Text(
+                                            'ÜRÜN BİLGİSİ',
+                                            style: TextStyle(
+                                              color: muted,
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text(
+                                            'SATIŞ FİYATI',
+                                            textAlign: TextAlign.end,
+                                            style: TextStyle(
+                                              color: muted,
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: 117,
+                                          child: Text(
+                                            'STOK',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: muted,
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(width: 82),
+                                      ],
+                                    ),
                                   ),
-                                ],
-                              ),
-                        ),
-                        ListPager(
-                          total: filtered.length,
-                          page: page,
-                          pageSize: pageSize,
-                          onPageChanged: (n) => setState(() => currentPage = n),
-                          onPageSizeChanged:
-                              (n) => setState(() {
-                                pageSize = n;
-                                currentPage = 0;
-                              }),
-                        ),
-                      ],
-                    ),
+                                ...visible.map(
+                                  (item) =>
+                                      c.maxWidth < 650
+                                          ? _mobileProduct(context, item)
+                                          : _wideProduct(context, item),
+                                ),
+                              ],
+                            ),
+                      ),
+                      ListPager(
+                        total: filtered.length,
+                        page: page,
+                        pageSize: pageSize,
+                        onPageChanged: (n) => setState(() => currentPage = n),
+                        onPageSizeChanged:
+                            (n) => setState(() {
+                              pageSize = n;
+                              currentPage = 0;
+                            }),
+                      ),
+                    ],
                   );
                 },
               ),
@@ -655,6 +535,129 @@ class _ProductsPageState extends State<ProductsPage> {
           );
         },
       ),
+      const SizedBox(height: 12),
+      ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        title: const Text(
+          'Kullanım ve uyarılar',
+          style: TextStyle(fontSize: 14),
+        ),
+        leading: const Icon(Icons.notifications_none_rounded, size: 20),
+        children: [
+          StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+            stream: AppApi.instance.workspace.snapshots(),
+            builder:
+                (
+                  context,
+                  ws,
+                ) => StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                  stream: AppApi.instance.entitlement(),
+                  builder: (context, ent) {
+                    final e = ent.data?.data() ?? {};
+                    final expiry = e['expiresAt'];
+                    final pro =
+                        e['status'] == 'active' &&
+                        (e['source'] == 'revenuecat' ||
+                            (AppApi.instance.uid ==
+                                    'gbw2USpZ8cNtcSyge5a2BEwJw3E3' &&
+                                e['source'] == 'review')) &&
+                        expiry is Timestamp &&
+                        expiry.toDate().isAfter(DateTime.now());
+                    final count =
+                        (ws.data?.data()?['productCount'] as num?)?.toInt() ??
+                        0;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: DataPanel(
+                        child: LayoutBuilder(
+                          builder: (context, c) {
+                            final remaining = (50 - count).clamp(0, 50);
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(9),
+                                      decoration: BoxDecoration(
+                                        color: softGreen,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        pro
+                                            ? Icons.workspace_premium_outlined
+                                            : Icons.inventory_2_outlined,
+                                        color: green,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            pro
+                                                ? 'StokPilot Pro • Sınırsız ürün'
+                                                : '$count / 50 ücretsiz ürün',
+                                            style: const TextStyle(
+                                              color: ink,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                          if (!pro)
+                                            Text(
+                                              '$remaining ürün hakkın kaldı',
+                                              style: const TextStyle(
+                                                color: muted,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (!pro && c.maxWidth > 380)
+                                      TextButton.icon(
+                                        onPressed:
+                                            () => Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) => const PaywallPage(),
+                                              ),
+                                            ),
+                                        icon: const Icon(
+                                          Icons.workspace_premium_outlined,
+                                        ),
+                                        label: const Text('Pro'),
+                                      ),
+                                  ],
+                                ),
+                                if (!pro) ...[
+                                  const SizedBox(height: 12),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: LinearProgressIndicator(
+                                      value: (count / 50).clamp(0.0, 1.0),
+                                      minHeight: 7,
+                                      color: count >= 45 ? amber : green,
+                                      backgroundColor: const Color(0xFFE5EEED),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+          ),
+          const _InventoryAlertsPanel(),
+        ],
+      ),
+      const SizedBox(height: 12),
     ],
   );
 
@@ -706,11 +709,11 @@ class _ProductsPageState extends State<ProductsPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(13),
-          border: Border.all(color: line),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: alert ? const Color(0xFFF0D8B0) : line),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -754,70 +757,94 @@ class _ProductsPageState extends State<ProductsPage> {
                 _productActions(context, p),
               ],
             ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 7,
-              runSpacing: 7,
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                StatusPill(
-                  label: 'Stok ${quantity(qty)}',
-                  color: alert ? amber : green,
-                ),
-                if (disabled) const StatusPill(label: 'Pasif', color: muted),
-                if (showPurchasePrice && _markup(m) != null)
-                  StatusPill(
-                    label: 'Alışa göre %${_markup(m)!.toStringAsFixed(1)}',
-                    color: _markup(m)! <= 0 ? const Color(0xFFC2574B) : green,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'SATIŞ FİYATI',
+                        style: TextStyle(
+                          color: muted,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          money((m['salePriceMinor'] as num?)?.toInt() ?? 0),
+                          style: const TextStyle(
+                            color: ink,
+                            fontSize: 21,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                StatusPill(
-                  label:
-                      'KDV %${((m['taxRateBps'] ?? 0) / 100).toStringAsFixed(0)}',
-                  color: ink,
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'STOK',
+                      style: TextStyle(
+                        color: muted,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      quantity(qty),
+                      style: TextStyle(
+                        color: alert ? amber : green,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            if (showPurchasePrice) ...[
+            if (alert || disabled || showPurchasePrice) ...[
               const SizedBox(height: 8),
               Text(
-                'Alış: ${money((m['purchasePriceMinor'] as num?)?.toInt() ?? 0)}',
-                style: const TextStyle(color: muted),
+                [
+                  if (disabled) 'Pasif',
+                  if (alert) qty <= 0 ? 'Stok tükendi' : 'Kritik stok',
+                  if (showPurchasePrice)
+                    'Alış ${money((m['purchasePriceMinor'] as num?)?.toInt() ?? 0)}',
+                  if (showPurchasePrice && _markup(m) != null)
+                    'Kâr %${_markup(m)!.toStringAsFixed(1)}',
+                ].join('  ·  '),
+                style: const TextStyle(color: muted, fontSize: 12),
               ),
             ],
-            const SizedBox(height: 10),
-            LayoutBuilder(
-              builder: (context, bounds) {
-                final price = Text(
-                  'Satış ${money((m['salePriceMinor'] as num?)?.toInt() ?? 0)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: ink,
-                    fontSize: 14,
+            const Divider(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => productDialog(context, item: p),
+                    child: const Text('Düzenle'),
                   ),
-                );
-                final action = TextButton.icon(
-                  onPressed: () => stockDialog(context, p),
-                  icon: const Icon(Icons.tune_rounded, size: 17),
-                  label: const Text('Stok işlemi'),
-                );
-                if (bounds.maxWidth < 345) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      price,
-                      Align(alignment: Alignment.centerRight, child: action),
-                    ],
-                  );
-                }
-                return Row(
-                  children: [
-                    Expanded(child: price),
-                    const SizedBox(width: 6),
-                    action,
-                  ],
-                );
-              },
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => stockDialog(context, p),
+                    child: const Text('Stok işlemi'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

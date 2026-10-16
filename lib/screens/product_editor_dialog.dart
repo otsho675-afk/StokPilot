@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/format.dart';
@@ -173,6 +175,8 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
   bool pricesIncludeVat = false;
   bool saving = false;
   String? error;
+  Timer? _namePause;
+  String completedName = '';
 
   String _currency(dynamic amount) => ((amount is num ? amount : 0) / 100)
       .toStringAsFixed(2)
@@ -198,7 +202,7 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
     taxRateBps = (data['taxRateBps'] as num?)?.toInt() ?? 0;
     purchase.addListener(_updatePricing);
     sale.addListener(_updatePricing);
-    name.addListener(_updatePricing);
+    name.addListener(_onNameEdited);
     sku.addListener(_updatePricing);
     barcode.addListener(_updatePricing);
     _catalog = widget.loadCatalog();
@@ -206,6 +210,14 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
 
   void _updatePricing() {
     if (mounted && !saving) setState(() {});
+  }
+
+  void _onNameEdited() {
+    _namePause?.cancel();
+    if (mounted && !saving) setState(() => completedName = '');
+    _namePause = Timer(const Duration(milliseconds: 650), () {
+      if (mounted && !saving) setState(() => completedName = name.text);
+    });
   }
 
   int _enteredNetPrice(String text) {
@@ -238,7 +250,8 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
   void dispose() {
     purchase.removeListener(_updatePricing);
     sale.removeListener(_updatePricing);
-    name.removeListener(_updatePricing);
+    _namePause?.cancel();
+    name.removeListener(_onNameEdited);
     sku.removeListener(_updatePricing);
     barcode.removeListener(_updatePricing);
     for (final input in [name, sku, barcode, purchase, sale, minimum]) {
@@ -330,6 +343,14 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
 
       final options = snapshot.data!;
       final duplicate = _match(options);
+      final similar =
+          duplicate == null
+              ? similarProductMatches(
+                name: completedName,
+                products: options.products,
+                excludingId: widget.existingId,
+              )
+              : const <ProductMatch>[];
       final categoryValue =
           options.categories.any((o) => o.id == categoryId) ? categoryId : '';
       final unitValue = options.units.any((o) => o.id == unitId) ? unitId : '';
@@ -378,6 +399,24 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
                   '“${duplicate.name}” zaten kayıtlı. Mevcut ürünü düzenleyin.',
                   style: const TextStyle(
                     color: Color(0xFF80500C),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+            if (similar.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAF5F2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Benzer kayıt olabilir: ${similar.map((item) => item.name).join(', ')}. Yeni ürünü kaydetmeden önce kontrol edin.',
+                  style: const TextStyle(
+                    color: ink,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

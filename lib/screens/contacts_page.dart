@@ -565,13 +565,14 @@ class _ContactsPageState extends State<ContactsPage> {
   }
 }
 
-Future<void> contactDialog(
+Future<String?> contactDialog(
   BuildContext context, {
   QueryDocumentSnapshot<Map<String, dynamic>>? item,
   String defaultType = 'customer',
+  String initialName = '',
 }) async {
   final m = item?.data();
-  final name = TextEditingController(text: m?['name'] ?? ''),
+  final name = TextEditingController(text: m?['name'] ?? initialName),
       phone = TextEditingController(text: m?['phone'] ?? ''),
       email = TextEditingController(text: m?['email'] ?? ''),
       tax = TextEditingController(text: m?['taxNumber'] ?? ''),
@@ -581,7 +582,7 @@ Future<void> contactDialog(
       iban = TextEditingController(text: m?['iban'] ?? '');
   String type = m?['type'] ?? defaultType;
   bool busy = false;
-  await showOwnedDialog<void>(
+  return showOwnedDialog<String>(
     context: context,
     controllers: [name, phone, email, tax, address, person, taxOffice, iban],
     builder:
@@ -714,11 +715,13 @@ Future<void> contactDialog(
                                   'taxOffice': taxOffice.text.trim(),
                                   'iban': iban.text.trim(),
                                 };
+                                String? createdId;
                                 if (item == null) {
-                                  await AppApi.instance.create('contacts', {
-                                    ...data,
-                                    'balanceMinor': 0,
-                                  });
+                                  createdId = await AppApi.instance
+                                      .createContact({
+                                        ...data,
+                                        'balanceMinor': 0,
+                                      });
                                 } else {
                                   await AppApi.instance.edit(
                                     'contacts',
@@ -726,7 +729,7 @@ Future<void> contactDialog(
                                     data,
                                   );
                                 }
-                                if (dc.mounted) Navigator.pop(dc);
+                                if (dc.mounted) Navigator.pop(dc, createdId);
                               } catch (e) {
                                 if (context.mounted) {
                                   notify(context, '$e', error: true);

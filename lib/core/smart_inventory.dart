@@ -53,6 +53,41 @@ ProductMatch? findProductMatch({
   return null;
 }
 
+/// Advisory matches. Call after typing has paused so incomplete names do not
+/// create noisy suggestions. Exact duplicates are handled by findProductMatch.
+List<ProductMatch> similarProductMatches({
+  required String name,
+  required Iterable<MapEntry<String, Map<String, dynamic>>> products,
+  String? excludingId,
+}) {
+  final normalized = normalizeProductText(name);
+  if (normalized.length < 5) return const [];
+  final words = normalized.split(' ').where((word) => word.length > 1).toSet();
+  final result = <ProductMatch>[];
+  for (final item in products) {
+    if (item.key == excludingId) continue;
+    final productName = (item.value['name'] ?? '').toString();
+    final other = normalizeProductText(productName);
+    if (other.isEmpty || other == normalized) continue;
+    final otherWords =
+        other.split(' ').where((word) => word.length > 1).toSet();
+    final shared = words.intersection(otherWords).length;
+    final closePhrase =
+        (normalized.contains(other) || other.contains(normalized)) &&
+        (normalized.length < other.length
+                ? normalized.length / other.length
+                : other.length / normalized.length) >=
+            0.7;
+    final closeWords =
+        shared >= 2 && shared / words.union(otherWords).length >= 0.6;
+    if (closePhrase || closeWords) {
+      result.add(ProductMatch(item.key, productName, ProductMatchKind.name));
+      if (result.length == 3) break;
+    }
+  }
+  return result;
+}
+
 class InventoryAlert {
   const InventoryAlert(
     this.productId,

@@ -2,6 +2,30 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:stokpilot/core/smart_inventory.dart';
 
 void main() {
+  test(
+    'suggests similar completed names without treating them as duplicates',
+    () {
+      final products = [
+        MapEntry('a', <String, dynamic>{'name': 'Filtre Kahve 250 g'}),
+        MapEntry('b', <String, dynamic>{'name': 'Cam bardak'}),
+      ];
+      expect(similarProductMatches(name: 'Filt', products: products), isEmpty);
+      expect(
+        similarProductMatches(
+          name: 'Filtre Kahve',
+          products: products,
+        ).map((match) => match.id),
+        ['a'],
+      );
+      expect(
+        similarProductMatches(
+          name: 'Kahve Filtre 250 g',
+          products: products,
+        ).map((match) => match.id),
+        ['a'],
+      );
+    },
+  );
   test('same Turkish product is matched by full name, SKU or barcode', () {
     final products = [
       MapEntry('one', <String, dynamic>{

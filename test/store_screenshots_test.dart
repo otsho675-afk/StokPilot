@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stokpilot/screens/shell.dart';
+import 'package:stokpilot/screens/reports_page.dart';
 import 'package:stokpilot/services/app_api.dart';
 import 'package:stokpilot/widgets/pilot_theme.dart';
 
@@ -189,6 +190,75 @@ void main() {
             image.dispose();
           });
         }
+        if (screen.$1 == 'sales') {
+          final customerField = find.byWidgetPredicate(
+            (widget) =>
+                widget is TextField &&
+                widget.decoration?.labelText == 'Müşteri adı veya telefon',
+          );
+          await tester.ensureVisible(customerField);
+          await tester.enterText(customerField, 'Ada');
+          await tester.pumpAndSettle();
+          expect(
+            find.text('İsmi listeden seçin veya yeni kart oluşturun.'),
+            findsOneWidget,
+          );
+          final saveButton = find.widgetWithText(
+            FilledButton,
+            'Satışı tamamla',
+          );
+          expect(tester.widget<FilledButton>(saveButton).onPressed, isNull);
+          await tester.tap(find.text('Ada Kafe').last);
+          await tester.pumpAndSettle();
+          expect(tester.widget<FilledButton>(saveButton).onPressed, isNotNull);
+          final credit = find.widgetWithText(ChoiceChip, 'Veresiye');
+          await tester.ensureVisible(credit);
+          await tester.tap(credit);
+          await tester.pumpAndSettle();
+          expect(find.textContaining('cari hesabın alacağına'), findsOneWidget);
+          expect(tester.takeException(), isNull);
+        }
+      }
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: boundary,
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: buildPilotTheme(),
+            locale: const Locale('tr', 'TR'),
+            supportedLocales: const [Locale('tr', 'TR')],
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            home: const Scaffold(
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(16),
+                  child: ReportsPage(),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Dönem satışları'), findsOneWidget);
+      expect(find.text('Güncel cari durum'), findsOneWidget);
+      expect(tester.takeException(), isNull, reason: '${device.$1} reports');
+      if (export) {
+        final render =
+            boundary.currentContext!.findRenderObject()!
+                as RenderRepaintBoundary;
+        await tester.runAsync(() async {
+          final image = await render.toImage(
+            pixelRatio: device.$1 == 'ipad' ? 2 : 3,
+          );
+          final data = await image.toByteData(format: ui.ImageByteFormat.png);
+          final folder = Directory('store_assets/screenshots/redesign');
+          await folder.create(recursive: true);
+          await File(
+            '${folder.path}/${device.$1}_reports.png',
+          ).writeAsBytes(data!.buffer.asUint8List());
+          image.dispose();
+        });
       }
     });
   }

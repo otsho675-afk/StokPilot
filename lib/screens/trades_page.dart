@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/format.dart';
 import '../core/sales_tools.dart';
+import '../core/trade_assistant.dart';
 import '../services/app_api.dart';
 import '../services/review_prompt.dart';
 import '../widgets/ui.dart';
+import 'contacts_page.dart';
 
 class _Line {
   _Line(
@@ -46,6 +48,10 @@ class _TradesPageState extends State<TradesPage> {
       externalNo = TextEditingController(),
       projectName = TextEditingController();
   String contactId = '';
+  String contactName = '';
+  TextEditingController? contactSearch;
+  TextEditingController? productSearch;
+  final checkoutKey = GlobalKey();
   String saleMethod = 'cash';
   String purchaseMethod = 'cash', documentKind = 'receipt';
   bool addVatToSale = false;
@@ -81,11 +87,11 @@ class _TradesPageState extends State<TradesPage> {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       PageTitle(
-        title: sale ? 'Satış ekranı' : 'Tedarikçi alışı',
+        title: sale ? 'Yeni satış' : 'Yeni alış',
         subtitle:
             sale
-                ? 'Ürün seç, miktarı belirle ve stoğu otomatik güncelle.'
-                : 'Alış kaydını gir, stoklarını anında artır.',
+                ? 'Ürünü ara, müşteriyi seç ve satışı kaydet.'
+                : 'Ürünü ara, tedarikçiyi seç ve alışı kaydet.',
       ),
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: AppApi.instance.watch('products'),
@@ -118,18 +124,29 @@ class _TradesPageState extends State<TradesPage> {
                                 (sale ? 'customer' : 'supplier'),
                       )
                       .toList();
+              final currentProducts = {
+                for (final product in products) product.id: product.data(),
+              };
+              final basketHints = inspectBasket(
+                sale: sale,
+                lines: lines.map(
+                  (item) => BasketLineSnapshot(
+                    id: item.id,
+                    name: item.name,
+                    quantityMilli: item.qtyMilli,
+                    priceMinor: item.priceMinor,
+                  ),
+                ),
+                products: currentProducts,
+              );
+              final basketBlocked = basketHints.any((hint) => hint.blocksSave);
+              final unmatchedContact =
+                  contactSearch?.text.trim().isNotEmpty == true &&
+                  contactId.isEmpty;
               return DataPanel(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SectionHeading(
-                      title: sale ? 'Yeni satış' : 'Yeni alış',
-                      subtitle:
-                          sale
-                              ? 'Ürünleri sepete ekleyin, ödeme şeklini seçin ve işlemi tamamlayın.'
-                              : 'Ürünleri ekle, tedarikçiyi seç ve stok girişini kaydet.',
-                    ),
-                    const SizedBox(height: 14),
                     LayoutBuilder(
                       builder: (context, viewport) {
                         final desktopPos = viewport.maxWidth >= 880;
@@ -138,8 +155,7 @@ class _TradesPageState extends State<TradesPage> {
                             viewport.maxWidth < 520 ? 12 : 21,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(color: line),
+                            color: canvas,
                             borderRadius: BorderRadius.circular(17),
                           ),
                           child: Column(
@@ -167,7 +183,7 @@ class _TradesPageState extends State<TradesPage> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Ürün seçimi',
+                                          '1  Ürün ekle',
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
@@ -198,7 +214,7 @@ class _TradesPageState extends State<TradesPage> {
                                   color: muted,
                                 ),
                               ),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 14),
                               Autocomplete<
                                 QueryDocumentSnapshot<Map<String, dynamic>>
                               >(
@@ -207,6 +223,13 @@ class _TradesPageState extends State<TradesPage> {
                                         (product.data()['name'] ?? '')
                                             .toString(),
                                 optionsBuilder: (value) {
+                                  if (value.text.trim().isEmpty) {
+                                    return const <
+                                      QueryDocumentSnapshot<
+                                        Map<String, dynamic>
+                                      >
+                                    >[];
+                                  }
                                   final entries = products.map((p) {
                                     final m = p.data();
                                     return ProductSearchEntry(
@@ -260,6 +283,11 @@ class _TradesPageState extends State<TradesPage> {
                                         ),
                                       );
                                     }
+                                  });
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
+                                    productSearch?.clear();
                                   });
                                 },
                                 optionsViewBuilder: (
@@ -356,28 +384,28 @@ class _TradesPageState extends State<TradesPage> {
                                     ),
                                   );
                                 },
-                                fieldViewBuilder:
-                                    (
-                                      ctx,
-                                      controller,
-                                      focus,
-                                      onSubmit,
-                                    ) => TextField(
-                                      controller: controller,
-                                      focusNode: focus,
-                                      textInputAction: TextInputAction.search,
-                                      decoration: const InputDecoration(
-                                        hintText:
-                                            'Ürün adı, barkod veya stok kodu yazın',
-                                        labelText: 'Ürün ara',
-                                        prefixIcon: Icon(
-                                          Icons.qr_code_scanner_outlined,
-                                        ),
-                                        suffixIcon: Icon(Icons.search),
-                                        helperText:
-                                            'Sonuçtan bir ürüne dokunarak sepete ekleyin.',
+                                fieldViewBuilder: (
+                                  ctx,
+                                  controller,
+                                  focus,
+                                  onSubmit,
+                                ) {
+                                  productSearch = controller;
+                                  return TextField(
+                                    controller: controller,
+                                    focusNode: focus,
+                                    textInputAction: TextInputAction.search,
+                                    decoration: const InputDecoration(
+                                      hintText:
+                                          'Ürün adı, barkod veya stok kodu yazın',
+                                      labelText: 'Ürün ara',
+                                      prefixIcon: Icon(
+                                        Icons.qr_code_scanner_outlined,
                                       ),
+                                      suffixIcon: Icon(Icons.search),
                                     ),
+                                  );
+                                },
                               ),
                               const SizedBox(height: 14),
                               Row(
@@ -405,33 +433,30 @@ class _TradesPageState extends State<TradesPage> {
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
+                                  if (lines.isNotEmpty)
+                                    IconButton(
+                                      tooltip: 'Sepeti temizle',
+                                      onPressed:
+                                          busy
+                                              ? null
+                                              : () async {
+                                                final approved = await confirm(
+                                                  context,
+                                                  'Sepeti temizle',
+                                                  'Kaydedilmemiş ${lines.length} kalem silinsin mi?',
+                                                );
+                                                if (approved && mounted) {
+                                                  setState(() => lines.clear());
+                                                }
+                                              },
+                                      icon: const Icon(
+                                        Icons.delete_sweep_outlined,
+                                        size: 20,
+                                      ),
+                                    ),
                                 ],
                               ),
                               const SizedBox(height: 12),
-                              if (lines.isNotEmpty)
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TextButton.icon(
-                                    onPressed:
-                                        busy
-                                            ? null
-                                            : () async {
-                                              final approved = await confirm(
-                                                context,
-                                                'Sepeti temizle',
-                                                'Kaydedilmemiş ${lines.length} kalem silinsin mi?',
-                                              );
-                                              if (approved && mounted) {
-                                                setState(() => lines.clear());
-                                              }
-                                            },
-                                    icon: const Icon(
-                                      Icons.delete_sweep_outlined,
-                                      size: 17,
-                                    ),
-                                    label: const Text('Sepeti temizle'),
-                                  ),
-                                ),
                               if (lines.isEmpty)
                                 Container(
                                   key: const ValueKey('pos-empty-cart'),
@@ -512,15 +537,14 @@ class _TradesPageState extends State<TradesPage> {
                                                 ),
                                               ),
                                               Text(
-                                                '${quantity(line.qtyMilli)} × ${money(line.priceMinor)} • KDV %${line.taxBps / 100}',
+                                                '${money(line.priceMinor)} / birim • KDV %${line.taxBps / 100}',
                                                 style: const TextStyle(
                                                   color: muted,
                                                   fontSize: 12,
                                                 ),
                                               ),
-                                              const SizedBox(height: 6),
+                                              const SizedBox(height: 4),
                                               Row(
-                                                mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   IconButton(
                                                     tooltip: 'Miktarı 1 azalt',
@@ -585,15 +609,21 @@ class _TradesPageState extends State<TradesPage> {
                                                       color: green,
                                                     ),
                                                   ),
+                                                  const Spacer(),
+                                                  Flexible(
+                                                    child: FittedBox(
+                                                      fit: BoxFit.scaleDown,
+                                                      child: Text(
+                                                        money(line.total),
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                          color: green,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
                                                 ],
-                                              ),
-                                              const SizedBox(height: 3),
-                                              Text(
-                                                money(line.total),
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w800,
-                                                  color: green,
-                                                ),
                                               ),
                                             ],
                                           ),
@@ -614,14 +644,112 @@ class _TradesPageState extends State<TradesPage> {
                                   ),
                                 ),
                               ),
+                              ...basketHints
+                                  .take(3)
+                                  .map(
+                                    (hint) => Container(
+                                      margin: const EdgeInsets.only(top: 8),
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            hint.blocksSave
+                                                ? const Color(0xFFFFEFEF)
+                                                : const Color(0xFFFFF6E8),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            hint.message,
+                                            style: TextStyle(
+                                              color:
+                                                  hint.blocksSave
+                                                      ? const Color(0xFFAA3030)
+                                                      : const Color(0xFF80500C),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                          if (hint.kind ==
+                                              BasketHintKind.priceChanged)
+                                            TextButton(
+                                              onPressed:
+                                                  busy
+                                                      ? null
+                                                      : () => setState(() {
+                                                        final latest =
+                                                            currentProducts[hint
+                                                                .productId];
+                                                        final price =
+                                                            (latest?['salePriceMinor']
+                                                                    as num?)
+                                                                ?.toInt();
+                                                        if (price == null) {
+                                                          return;
+                                                        }
+                                                        for (final line in lines
+                                                            .where(
+                                                              (line) =>
+                                                                  line.id ==
+                                                                  hint.productId,
+                                                            )) {
+                                                          line.priceMinor =
+                                                              price;
+                                                        }
+                                                      }),
+                                              child: const Text(
+                                                'Güncel fiyatı uygula',
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                              if (basketHints.length > 3)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Text(
+                                    '+${basketHints.length - 3} uyarı daha var',
+                                    style: const TextStyle(color: muted),
+                                  ),
+                                ),
+                              if (lines.isNotEmpty && !desktopPos) ...[
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: () {
+                                      final target = checkoutKey.currentContext;
+                                      if (target != null) {
+                                        Scrollable.ensureVisible(
+                                          target,
+                                          duration: const Duration(
+                                            milliseconds: 350,
+                                          ),
+                                          curve: Curves.easeOutCubic,
+                                        );
+                                      }
+                                    },
+                                    icon: const Icon(
+                                      Icons.arrow_downward_rounded,
+                                      size: 18,
+                                    ),
+                                    label: Text(
+                                      'Ödemeye geç · ${money(total)}',
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         );
                         final checkout = Container(
+                          key: checkoutKey,
                           padding: const EdgeInsets.all(21),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(color: line),
+                            color: canvas,
                             borderRadius: BorderRadius.circular(17),
                           ),
                           child: Column(
@@ -631,7 +759,7 @@ class _TradesPageState extends State<TradesPage> {
                                 children: [
                                   const Expanded(
                                     child: Text(
-                                      'Ödeme özeti',
+                                      '2  İşlemi tamamla',
                                       style: TextStyle(
                                         color: ink,
                                         fontSize: 18,
@@ -646,188 +774,304 @@ class _TradesPageState extends State<TradesPage> {
                                 ],
                               ),
                               const SizedBox(height: 14),
-                              Container(
-                                padding: const EdgeInsets.all(18),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFEAF5F2),
-                                  border: Border.all(
-                                    color: const Color(0xFFCAE6DF),
-                                  ),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'ÖDENECEK TOPLAM',
-                                      style: TextStyle(
-                                        color: Color(0xFF4F807A),
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 1.1,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        money(total),
-                                        style: const TextStyle(
-                                          color: ink,
-                                          fontSize: 32,
-                                          fontWeight: FontWeight.w900,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      '${lines.length} ürün kalemi · ${quantity(cartUnitMilli)} miktar',
-                                      style: const TextStyle(
-                                        color: Color(0xFF52756F),
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              const Divider(height: 24),
-                              _totalRow(
-                                'Matrah',
-                                money(lines.fold(0, (s, l) => s + l.net)),
-                              ),
-                              const SizedBox(height: 5),
-                              _totalRow(
-                                'KDV',
-                                money(lines.fold(0, (s, l) => s + l.tax)),
-                              ),
-                              const SizedBox(height: 8),
-                              _totalRow(
-                                'Genel toplam',
-                                money(total),
-                                highlight: true,
-                              ),
-                              const SizedBox(height: 16),
                               _posSection(
-                                'Müşteri ve belge',
+                                sale ? 'Müşteri' : 'Tedarikçi',
                                 Icons.person_outline_rounded,
                               ),
                               const SizedBox(height: 14),
-                              DropdownButtonFormField<String>(
-                                key: ValueKey('${widget.type}-$contactId'),
-                                initialValue: contactId,
-                                isExpanded: true,
-                                decoration: InputDecoration(
-                                  labelText:
-                                      sale
-                                          ? 'Müşteri / Cari'
-                                          : 'Tedarikçi / Cari',
-                                ),
-                                items: [
-                                  const DropdownMenuItem(
-                                    value: '',
-                                    child: Text('Cari olmadan (peşin)'),
-                                  ),
-                                  ...contacts.map(
-                                    (d) => DropdownMenuItem(
-                                      value: d.id,
-                                      child: Text(d.data()['name'] ?? ''),
-                                    ),
-                                  ),
-                                ],
-                                onChanged:
-                                    (s) => setState(() {
-                                      contactId = s ?? '';
-                                      if (contactId.isEmpty) {
+                              Autocomplete<
+                                QueryDocumentSnapshot<Map<String, dynamic>>
+                              >(
+                                displayStringForOption:
+                                    (item) =>
+                                        (item.data()['name'] ?? '').toString(),
+                                optionsBuilder: (value) {
+                                  final term = normalizeProductSearch(
+                                    value.text,
+                                  );
+                                  if (term.isEmpty) {
+                                    return const <
+                                      QueryDocumentSnapshot<
+                                        Map<String, dynamic>
+                                      >
+                                    >[];
+                                  }
+                                  return contacts
+                                      .where((item) {
+                                        final data = item.data();
+                                        return normalizeProductSearch(
+                                          '${data['name'] ?? ''} ${data['phone'] ?? ''} ${data['companyName'] ?? ''}',
+                                        ).contains(term);
+                                      })
+                                      .take(8);
+                                },
+                                onSelected:
+                                    (item) => setState(() {
+                                      contactId = item.id;
+                                      contactName =
+                                          (item.data()['name'] ?? '')
+                                              .toString();
+                                    }),
+                                fieldViewBuilder: (
+                                  context,
+                                  controller,
+                                  focus,
+                                  onSubmit,
+                                ) {
+                                  contactSearch = controller;
+                                  return TextField(
+                                    controller: controller,
+                                    focusNode: focus,
+                                    textInputAction: TextInputAction.search,
+                                    onChanged: (value) {
+                                      if (value == contactName) return;
+                                      setState(() {
+                                        contactId = '';
+                                        contactName = '';
                                         if (purchaseMethod == 'credit') {
                                           purchaseMethod = 'cash';
                                         }
                                         if (saleMethod == 'credit') {
                                           saleMethod = 'cash';
                                         }
-                                      }
-                                    }),
-                              ),
-                              const SizedBox(height: 14),
-                              DropdownButtonFormField<String>(
-                                initialValue: documentKind,
-                                decoration: const InputDecoration(
-                                  labelText: 'Belge türü',
-                                ),
-                                items: const [
-                                  DropdownMenuItem(
-                                    value: 'receipt',
-                                    child: Text('Satış / alış fişi'),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'invoice',
-                                    child: Text('Fatura kaydı'),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'project',
-                                    child: Text('Proje işlemi'),
-                                  ),
-                                ],
-                                onChanged:
-                                    (value) => setState(
-                                      () =>
-                                          documentKind = value ?? documentKind,
+                                      });
+                                    },
+                                    decoration: InputDecoration(
+                                      labelText:
+                                          sale
+                                              ? 'Müşteri adı veya telefon'
+                                              : 'Tedarikçi adı veya telefon',
+                                      hintText: 'Yazarak ara ve listeden seç',
+                                      prefixIcon: const Icon(
+                                        Icons.person_search_outlined,
+                                      ),
+                                      suffixIcon:
+                                          controller.text.isEmpty
+                                              ? null
+                                              : IconButton(
+                                                tooltip: 'Seçimi temizle',
+                                                icon: const Icon(
+                                                  Icons.close_rounded,
+                                                ),
+                                                onPressed:
+                                                    () => setState(() {
+                                                      controller.clear();
+                                                      contactId = '';
+                                                      contactName = '';
+                                                      saleMethod = 'cash';
+                                                      purchaseMethod = 'cash';
+                                                    }),
+                                              ),
                                     ),
-                              ),
-                              if (documentKind == 'invoice') ...[
-                                const SizedBox(height: 10),
-                                TextField(
-                                  controller: externalNo,
-                                  maxLength: 100,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Mevcut fatura numarası *',
-                                    helperText:
-                                        'Resmî fatura oluşturmaz; fatura bilgisini kaydeder.',
-                                  ),
-                                ),
-                              ],
-                              if (documentKind == 'project') ...[
-                                const SizedBox(height: 10),
-                                TextField(
-                                  controller: projectName,
-                                  maxLength: 150,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Proje adı *',
-                                  ),
-                                ),
-                              ],
-                              if (sale)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 7,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    border: Border.all(color: line),
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: SwitchListTile.adaptive(
-                                      contentPadding: EdgeInsets.zero,
-                                      title: const Text(
-                                        'Satışa KDV ekle',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w800,
+                                  );
+                                },
+                                optionsViewBuilder:
+                                    (context, onSelected, options) => Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Material(
+                                        elevation: 6,
+                                        borderRadius: BorderRadius.circular(12),
+                                        clipBehavior: Clip.antiAlias,
+                                        child: ConstrainedBox(
+                                          constraints: BoxConstraints(
+                                            maxWidth:
+                                                MediaQuery.sizeOf(
+                                                  context,
+                                                ).width -
+                                                48,
+                                            maxHeight: 260,
+                                          ),
+                                          child: ListView(
+                                            shrinkWrap: true,
+                                            padding: EdgeInsets.zero,
+                                            children: [
+                                              for (final item in options)
+                                                ListTile(
+                                                  dense: true,
+                                                  title: Text(
+                                                    (item.data()['name'] ?? '')
+                                                        .toString(),
+                                                  ),
+                                                  subtitle: Text(
+                                                    (item.data()['phone'] ?? '')
+                                                        .toString(),
+                                                  ),
+                                                  onTap: () => onSelected(item),
+                                                ),
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                      subtitle: Text(
-                                        addVatToSale
-                                            ? 'Üründeki KDV oranı satış tutarına ayrıca eklenir.'
-                                            : 'Kapalı: Ürüne yazdığın satış fiyatı aynen alınır.',
-                                      ),
-                                      value: addVatToSale,
-                                      onChanged: busy ? null : _setSaleVat,
+                                    ),
+                              ),
+                              if (unmatchedContact)
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 7),
+                                  child: Text(
+                                    'İsmi listeden seçin veya yeni kart oluşturun.',
+                                    style: TextStyle(
+                                      color: Color(0xFFAA3030),
+                                      fontSize: 12,
                                     ),
                                   ),
                                 ),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton.icon(
+                                  onPressed:
+                                      busy
+                                          ? null
+                                          : () async {
+                                            final name =
+                                                contactSearch?.text.trim() ??
+                                                '';
+                                            final id = await contactDialog(
+                                              context,
+                                              defaultType:
+                                                  sale
+                                                      ? 'customer'
+                                                      : 'supplier',
+                                              initialName: name,
+                                            );
+                                            if (id != null && mounted) {
+                                              final created =
+                                                  await AppApi.instance
+                                                      .collection('contacts')
+                                                      .doc(id)
+                                                      .get();
+                                              if (!mounted) return;
+                                              final createdName =
+                                                  (created.data()?['name'] ??
+                                                          name)
+                                                      .toString();
+                                              setState(() {
+                                                contactId = id;
+                                                contactName = createdName;
+                                                contactSearch?.text =
+                                                    createdName;
+                                              });
+                                            }
+                                          },
+                                  icon: const Icon(
+                                    Icons.person_add_alt_1_outlined,
+                                    size: 18,
+                                  ),
+                                  label: Text(
+                                    sale
+                                        ? 'Yeni müşteri ekle'
+                                        : 'Yeni tedarikçi ekle',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              Material(
+                                color: Colors.transparent,
+                                child: ExpansionTile(
+                                  tilePadding: EdgeInsets.zero,
+                                  title: const Text(
+                                    'Belge ve vergi ayrıntıları',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    documentKind == 'receipt'
+                                        ? 'Fiş • isteğe bağlı'
+                                        : documentKind == 'invoice'
+                                        ? 'Fatura kaydı'
+                                        : 'Proje işlemi',
+                                  ),
+                                  leading: const Icon(
+                                    Icons.description_outlined,
+                                    size: 20,
+                                  ),
+                                  children: [
+                                    DropdownButtonFormField<String>(
+                                      initialValue: documentKind,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Belge türü',
+                                      ),
+                                      items: const [
+                                        DropdownMenuItem(
+                                          value: 'receipt',
+                                          child: Text('Satış / alış fişi'),
+                                        ),
+                                        DropdownMenuItem(
+                                          value: 'invoice',
+                                          child: Text('Fatura kaydı'),
+                                        ),
+                                        DropdownMenuItem(
+                                          value: 'project',
+                                          child: Text('Proje işlemi'),
+                                        ),
+                                      ],
+                                      onChanged:
+                                          (value) => setState(
+                                            () =>
+                                                documentKind =
+                                                    value ?? documentKind,
+                                          ),
+                                    ),
+                                    if (documentKind == 'invoice') ...[
+                                      const SizedBox(height: 10),
+                                      TextField(
+                                        controller: externalNo,
+                                        maxLength: 100,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Mevcut fatura numarası *',
+                                          helperText:
+                                              'Resmî fatura oluşturmaz; fatura bilgisini kaydeder.',
+                                        ),
+                                      ),
+                                    ],
+                                    if (documentKind == 'project') ...[
+                                      const SizedBox(height: 10),
+                                      TextField(
+                                        controller: projectName,
+                                        maxLength: 150,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Proje adı *',
+                                        ),
+                                      ),
+                                    ],
+                                    if (sale)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 7,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          border: Border.all(color: line),
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
+                                        ),
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          child: SwitchListTile.adaptive(
+                                            contentPadding: EdgeInsets.zero,
+                                            title: const Text(
+                                              'Satışa KDV ekle',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
+                                            subtitle: Text(
+                                              addVatToSale
+                                                  ? 'Üründeki KDV oranı satış tutarına ayrıca eklenir.'
+                                                  : 'Kapalı: Ürüne yazdığın satış fiyatı aynen alınır.',
+                                            ),
+                                            value: addVatToSale,
+                                            onChanged:
+                                                busy ? null : _setSaleVat,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
                               const SizedBox(height: 14),
                               _posSection(
                                 'Ödeme yöntemi',
@@ -945,6 +1189,69 @@ class _TradesPageState extends State<TradesPage> {
                                   labelText: 'İşlem notu (opsiyonel)',
                                 ),
                               ),
+                              Container(
+                                padding: const EdgeInsets.all(18),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEAF5F2),
+                                  border: Border.all(
+                                    color: const Color(0xFFCAE6DF),
+                                  ),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      sale ? 'SATIŞ TOPLAMI' : 'ALIŞ TOPLAMI',
+                                      style: const TextStyle(
+                                        color: Color(0xFF4F807A),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 1.1,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        money(total),
+                                        style: const TextStyle(
+                                          color: ink,
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      '${lines.length} ürün kalemi · ${quantity(cartUnitMilli)} miktar',
+                                      style: const TextStyle(
+                                        color: Color(0xFF52756F),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              const Divider(height: 24),
+                              _totalRow(
+                                'Matrah',
+                                money(lines.fold(0, (s, l) => s + l.net)),
+                              ),
+                              const SizedBox(height: 5),
+                              _totalRow(
+                                'KDV',
+                                money(lines.fold(0, (s, l) => s + l.tax)),
+                              ),
+                              const SizedBox(height: 8),
+                              _totalRow(
+                                'Genel toplam',
+                                money(total),
+                                highlight: true,
+                              ),
+                              const SizedBox(height: 16),
                               const SizedBox(height: 15),
                               SizedBox(
                                 width: double.infinity,
@@ -958,7 +1265,12 @@ class _TradesPageState extends State<TradesPage> {
                                             : 'Alışı tamamla'),
                                   ),
                                   onPressed:
-                                      busy || lines.isEmpty ? null : save,
+                                      busy ||
+                                              lines.isEmpty ||
+                                              basketBlocked ||
+                                              unmatchedContact
+                                          ? null
+                                          : save,
                                 ),
                               ),
                             ],
@@ -1167,6 +1479,11 @@ class _TradesPageState extends State<TradesPage> {
   Future<void> save() async {
     if (busy || lines.isEmpty) return;
     try {
+      if (contactSearch?.text.trim().isNotEmpty == true && contactId.isEmpty) {
+        throw const FormatException(
+          'İsmi listeden seçin veya yeni cari kartı oluşturun.',
+        );
+      }
       final payment =
           sale
               ? salePaidMinor(
@@ -1209,6 +1526,8 @@ class _TradesPageState extends State<TradesPage> {
         externalNo.clear();
         projectName.clear();
         contactId = '';
+        contactName = '';
+        contactSearch?.clear();
         saleMethod = 'cash';
         purchaseMethod = 'cash';
         documentKind = 'receipt';
