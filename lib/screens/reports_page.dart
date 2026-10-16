@@ -287,7 +287,11 @@ class _ReportsPageState extends State<ReportsPage> {
             Expanded(
               child: Text(
                 '$periodName verileri',
-                style: const TextStyle(color: muted, fontSize: 12, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  color: muted,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
             IconButton(
