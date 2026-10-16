@@ -1,4 +1,4 @@
-import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:flutter/material.dart';
 import '../services/billing.dart';
 import '../widgets/ui.dart';
@@ -12,13 +12,13 @@ class PaywallPage extends StatefulWidget {
 
 class _PaywallPageState extends State<PaywallPage> {
   bool loading = false;
-  late Future<List<Package>> offerings = BillingService.instance.packages();
+  late Future<List<ProductDetails>> offerings = BillingService.instance.packages();
   Future<void> run(Future<void> Function() action) async {
     setState(() => loading = true);
     try {
       await action();
       if (mounted) {
-        notify(context, 'İşlem tamamlandı. Abonelik onayı bekleniyor.');
+        notify(context, 'İşlem mağazaya gönderildi. Sonuç bekleniyor.');
       }
     } catch (e) {
       if (mounted) notify(context, '$e', error: true);
@@ -108,10 +108,7 @@ class _PaywallPageState extends State<PaywallPage> {
                       ],
                     );
                   }
-                  final packages =
-                      (snap.data ?? [])
-                          .where((p) => p.packageType == PackageType.monthly)
-                          .toList();
+                  final packages = snap.data ?? <ProductDetails>[];
                   if (snap.connectionState != ConnectionState.done) {
                     return const CircularProgressIndicator();
                   }
@@ -132,14 +129,14 @@ class _PaywallPageState extends State<PaywallPage> {
                             child: FilledButton(
                               onPressed:
                                   loading ||
-                                          !BillingService.verifiedBackendReady
+                                          !BillingService.instance.available
                                       ? null
                                       : () => run(
                                         () =>
                                             BillingService.instance.purchase(p),
                                       ),
                               child: Text(
-                                'Abone ol • ${p.storeProduct.priceString} / ay',
+                                'Abone ol • ${p.price} / ay',
                               ),
                             ),
                           ),
@@ -148,6 +145,15 @@ class _PaywallPageState extends State<PaywallPage> {
                     ],
                   );
                 },
+              ),
+              ValueListenableBuilder<String?>(
+                valueListenable: BillingService.instance.message,
+                builder: (context, message, _) => message == null
+                    ? const SizedBox.shrink()
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(message, textAlign: TextAlign.center),
+                      ),
               ),
               const SizedBox(height: 7),
               const Text(
