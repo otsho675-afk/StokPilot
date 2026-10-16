@@ -8,7 +8,7 @@ service cloud.firestore {
     function premium(uid) {
       return exists(entitlement(uid)) &&
         get(entitlement(uid)).data.status == 'active' &&
-        (get(entitlement(uid)).data.source == 'revenuecat' ||
+        (get(entitlement(uid)).data.source in ['revenuecat', 'native_store'] ||
           (uid == 'gbw2USpZ8cNtcSyge5a2BEwJw3E3' &&
             get(entitlement(uid)).data.source == 'review')) &&
         get(entitlement(uid)).data.expiresAt is timestamp &&
