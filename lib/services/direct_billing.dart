@@ -24,7 +24,7 @@ class BillingService {
   final ValueNotifier<String?> lastError = ValueNotifier(null);
   StreamSubscription<List<PurchaseDetails>>? _subscription;
   String? _uid;
-  bool _processing = false;
+  Future<void> _queue = Future<void>.value();
 
   bool get available => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
   bool get canPurchase => available && verifiedBackendReady;
@@ -34,7 +34,7 @@ class BillingService {
     if (!canPurchase || _subscription != null) return;
     // Listen *before* querying products to process resumed unfinished purchases.
     _subscription = InAppPurchase.instance.purchaseStream.listen(
-      (updates) => unawaited(_onPurchases(updates)),
+      (updates) => _queue = _queue.then((_) => _onPurchases(updates)),
       onError: (Object error) => lastError.value = 'Mağaza bağlantı hatası: $error',
     );
   }
@@ -66,10 +66,7 @@ class BillingService {
   }
 
   Future<void> _onPurchases(List<PurchaseDetails> purchases) async {
-    if (_processing) return;
-    _processing = true;
-    try {
-      for (final purchase in purchases) {
+    for (final purchase in purchases) {
         if (purchase.productID != productId) continue;
         if (purchase.status == PurchaseStatus.pending) continue;
         if (purchase.status == PurchaseStatus.error) {
@@ -89,9 +86,6 @@ class BillingService {
           // Never acknowledge/deliver an unverified purchase as Pro.
           lastError.value = 'Ödeme doğrulanamadı: $error';
         }
-      }
-    } finally {
-      _processing = false;
     }
   }
 
