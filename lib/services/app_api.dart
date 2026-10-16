@@ -53,6 +53,7 @@ class AppApi {
     final expiry = ent?['expiresAt'];
     return ent?['status'] == 'active' &&
         (ent?['source'] == 'revenuecat' ||
+          ent?['source'] == 'native_store' ||
             (uid == 'gbw2USpZ8cNtcSyge5a2BEwJw3E3' &&
                 ent?['source'] == 'review')) &&
         expiry is Timestamp &&
