@@ -1,53 +1,60 @@
-# StokPilot Pro aylık abonelik - Firebase Spark + RevenueCat + Cloudflare Workers
+# StokPilot: RevenueCat olmadan abonelik
 
-**Amaç:** Firebase Blaze kullanmadan, Google Play/App Store abonelik doğrulamasını güvenli bir sunucuda tutmak. Cloudflare Workers'ın ücretsiz kotası başlangıç için yeterli olabilir (talep ve kota değişirse ücret çıkabilir). RevenueCat Pro, aylık takip edilen 2.500 USD gelir eşiğinin altında ücretsizdir; eşik aşılınca ücret uygulanabilir. Apple/Google mağaza ücret ve komisyonları ayrıdır.
+Premium ürün ID: stokpilot_pro_monthly. Uygulama ücretsiz, abonelik Türkiye'de 50 TL/ay.
+Flutter in_app_purchase, App Store Server API, Google Play Developer API, Cloudflare Workers ve Firebase Firestore kullanılır. RevenueCat hiçbir aşamada kullanılmaz.
 
-## Abonelik ürünlerini oluştur
+## İşleyiş ve güvenlik
+- Kullanıcı Apple/Google'ın native mağaza satın alma ekranında ödeme yapar.
+- Flutter mağaza işlem ID'sini (Apple) veya purchaseToken'ı (Google) Cloudflare /verify adresine Firebase Authentication ID token ile gönderir.
+- Worker kullanıcı JWT imzasını ve claimlerini denetler; mağaza sunucusundan güncel abonelik durumunu doğrular. İstemcinin iddiasına güvenilmez.
+- Tek bir mağaza aboneliği yalnızca bir Firebase UID ile eşleşebilir. Satın alma bilgileri billingPurchases koleksiyonundadır; Firestore güvenlik kuralları istemci erişimini kapatır.
+- Pro hakkı yalnızca Worker tarafından entitlements/current Firestore belgesine yazılır. Worker Cron her saat abonelikleri yeniden sorgular.
+- Doğrulama hazır olana kadar DIRECT_BILLING_READY=false olmalıdır.
 
-- Google Play Console > Subscriptions: ürün `stokpilot_pro_monthly`, base plan `monthly-50`, otomatik yenileme **1 ay**, Türkiye fiyatı vergi dahil **50,00 TRY**. Plan aktiftir (15 Ekim 2026).
-- App Store Connect > Subscriptions: ürün `stokpilot_pro_monthly`, otomatik yenileme **1 ay**, Türkiye fiyatı **50,00 TRY** olarak kaydedildi (15 Ekim 2026); henüz incelemeye gönderilmedi. İlk abonelik uygulamanın yeni sürümüyle incelemeye gönderilmelidir.
-- RevenueCat'te Android/iOS uygulamalarını bağla, **`pro`** entitlement oluştur, **`default`** offering içindeki `$rc_monthly`/Monthly paketini ilgili mağaza ürününe bağla.
-- RevenueCat SDK **public** anahtarları Google için `goog_...`, Apple için `appl_...`; bunları Flutter `--dart-define` ile kullan.
+## 1. Mağaza hazırlığı
 
-## Google Cloud hizmet hesabı (Firebase projesini Blaze'e yükseltme)
+Apple: App Store Connect üzerinde StokPilot Pro Aylık aboneliği, ID stokpilot_pro_monthly, 1 ay, 50 TRY. İlk abonelik mutlaka bir App Store uygulama sürümüyle incelemeye gönderilir.
 
-1. Google Cloud Console'da mevcut `stokpilot-5bd2e` projesini seç.
-2. IAM & Admin > Service Accounts'dan **sadece Firestore erişimli** özel hizmet hesabı oluştur. `Cloud Datastore User` rolü Firestore belge okumaya/yazmaya izin verir. Başka projeler için rol atama.
-3. Service Accounts > Keys > Add Key > JSON ile yeni anahtar oluştur (kuruluş politikası engelliyorsa alternatif sunucu kimliği yaklaşımı gerekir).
-4. Bu JSON'u **GitHub'a, Flutter uygulamasına veya sohbet mesajına ekleme**. Yalnızca Cloudflare Worker secret olarak yükle ve yerel kopyasını güvenli tut.
+Apple App Store Server API için Users and Access / Integrations / In-App Purchase alanında API private key (.p8), Key ID ve Issuer ID hazırlayın. Yalnızca App Store Connect upload için kullandığınız anahtarın Server API izinleri olduğunu varsaymayın.
 
-## Cloudflare kurulumu
+Android: Google Play'de stokpilot_pro_monthly aylık subscription ve aktif base plan. Android package name com.yesildas.stokpilot. Firebase için kullanılan Google service account'a Play Console üzerinden subscription/order read API yetkisi verin ve Google Play Developer API'yi açın.
 
-```powershell
-cd C:\Users\HGDGFJr\StokPilot-GitHub\cloudflare-billing
-npm install
-npx wrangler login
-# Google service account JSON dosyasının yerel konumunu KENDİ dosyanıza göre değiştirin:
-Get-Content -Raw "C:\Guvenli\stokpilot-service-account.json" | npx wrangler secret put FIREBASE_SERVICE_ACCOUNT_JSON
-npx wrangler secret put REVENUECAT_WEBHOOK_SECRET
-npx wrangler deploy
-```
+## 2. Worker kurulumu
 
-İkinci komut sizden uzun, rastgele bir parola isteyecek. **Bu değeri sakla**, RevenueCat Webhooks'ta aynı değeri `Authorization: Bearer <WEBHOOK_SECRET>` header'ında kullan.
+Proje dosyaları cloudflare-billing klasöründe. secrets asla GitHub'a, Flutter'a veya sohbete konmaz.
 
-Workers adresi genellikle `https://stokpilot-billing.<hesabiniz>.workers.dev` biçimindedir. RevenueCat webhook hedefi `https://...workers.dev/revenuecat` olmalı. `/health` adresi `ok` vermeli. Webhook, RevenueCat'ten gelen sipariş olayını gizli header ile doğrular; Firebase'e ait `entitlements/current` belgesini kendi IAM kimliğiyle yazar. Bu belgeyi Flutter doğrudan yazamaz.
+PowerShell:
+    cd C:\Users\HGDGFJr\StokPilot-GitHub\cloudflare-billing
+    npm install
+    Get-Content -Raw "C:\Guvenli\stokpilot-service-account.json" | npx wrangler secret put FIREBASE_SERVICE_ACCOUNT_JSON
+    Get-Content -Raw "C:\Guvenli\AppleServerAPI.p8" | npx wrangler secret put APPLE_PRIVATE_KEY
+    npx wrangler secret put APPLE_KEY_ID
+    npx wrangler secret put APPLE_ISSUER_ID
+    npx wrangler deploy
+    Invoke-RestMethod https://stokpilot-billing.otsho675.workers.dev/health
 
-> RevenueCat webhook tetikleyici, satın alma tamamlandığında Firebase kullanıcısının UID'sini `app_user_id` olarak taşımalıdır. Flutter kodu RevenueCat'te aynı Firebase UID ile identify yapar. RevenueCat'in rastgele anonim ID'lerine Pro yetkisi yazılmaz.
+Config in wrangler.toml: FIREBASE_PROJECT_ID=stokpilot-5bd2e, GOOGLE_PACKAGE_NAME=com.yesildas.stokpilot, APPLE_BUNDLE_ID=com.yesildas.stokpilot. Bu Bundle ID'leri mağaza kayıtlarıyla karşılaştırın.
 
-## Testten sonra satın almayı aç
+Firestore güvenlik kurallarını ayrıca yayınlayın:
+    firebase deploy --only firestore:rules --project stokpilot-5bd2e
 
-**Yalnızca** Apple/Google mağaza ürünleri aktif, RevenueCat Pro entitlement bağlı, Worker yayında, secrets tanımlı ve Sandbox satın alma/iptal/yenileme akışı **başarıyla doğrulanmışsa** aşağıdaki bayrağı açın:
+/health sadece Worker'ın yanıt verdiğini gösterir, ödeme zincirini doğrulamaz.
 
-```powershell
-flutter run --dart-define=RC_VERIFIED_BACKEND_READY=true --dart-define=RC_ANDROID_PUBLIC_KEY=goog_SIZIN_ANAHTARINIZ
-```
+## 3. Test ve yayın
 
-iOS için `RC_IOS_PUBLIC_KEY=appl_SIZIN_ANAHTARINIZ`. `RC_VERIFIED_BACKEND_READY=true` yalnızca ödeme düğmesinin görünmesine izin verir; Firestore güvenliği Pro belgesinin güvenilir sunucudan gelmesine bağlıdır.
+PowerShell:
+    flutter pub get
+    flutter analyze
+    flutter test
+    cd cloudflare-billing
+    node --test
 
-## Güvenlik ve önemli sınırlar
+App Store Sandbox ve Google Play lisans testçisiyle ödeme, yenileme, iptal, iade ve geri yükleme doğrulayın. Firestore'da ilgili kullanıcıya ait entitlements/current belgesi source=direct-store ve gelecekte expiresAt içermelidir. Farklı kullanıcıya bağlı bir işlemin yeniden bağlanması reddedilmelidir.
 
-- Hizmet hesabı anahtarı ve webhook secret yalnızca Cloudflare Secrets'ta bulunur. Kod deposunda ve uygulama paketinde bulunmaz.
-- Sunucu olay zamanına göre eski/duble olayları reddeder; Firestore optimistic concurrency kullanılır.
-- `CANCELLATION` otomatik yenileme iptali demektir, mevcut ödenmiş süre bitmeden Pro kapanmaz. `EXPIRATION` veya süre sonu kurallarca erişimi kapatır.
-- Kullanıcı hesabını Firebase Auth'tan silmek, mağaza aboneliğini otomatik iptal etmez.
-- Worker `https://stokpilot-billing.otsho675.workers.dev` adresinde yayındadır; `/health`, kimlik doğrulama ve sentetik webhook yetki döngüsü test edilmiştir. Gerçek Apple/Google satın alma, yenileme ve iptal akışı doğrulanmadan ödeme bayrağını açmayın.
+Test, Firestore rule deploy, Worker deploy, Apple ve Google yetkileri tamamlandıktan sonra GitHub repository / Settings / Secrets and variables / Actions / Variables bölümüne DIRECT_BILLING_READY=true ekleyin. Release workflow bunu yeni IPA/AAB derlemelerine taşır. Eski TestFlight uygulamasının butonu yeni sürüm olmadan açılmaz.
+
+## Operasyonel notlar
+- Apple/Google komisyonları geçerlidir; Cloudflare ücretsiz kotasının aşılması ücret doğurabilir.
+- İptal, iade ve yenileme değişimleri saatlik cron kontrolünden sonra yansır. App Store Server Notifications V2 ve Google RTDN gibi olay bazlı anlık bildirim bu sürümde bulunmaz.
+- App Store/Play üretim yetkileri kullanıcı hesabınıza bağlıdır. Bu repo değişiklikleri tek başına Worker'ı veya Firebase kurallarını yayınlamaz.
+- Üçüncü taraf ücretli abonelik hizmeti gerekmez. Gerçek mağaza doğrulama testleri tamamlanmadan ödeme bayrağı açılmamalıdır.

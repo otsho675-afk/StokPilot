@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "stokpilot-spark-billing-bridge",
+  "name": "stokpilot-direct-store-billing",
   "type": "module",
   "scripts": {
     "test": "node --test",

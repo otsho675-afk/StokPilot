@@ -8,7 +8,7 @@ service cloud.firestore {
     function premium(uid) {
       return exists(entitlement(uid)) &&
         get(entitlement(uid)).data.status == 'active' &&
-        (get(entitlement(uid)).data.source == 'revenuecat' ||
+        (get(entitlement(uid)).data.source == 'direct-store' ||
           (uid == 'gbw2USpZ8cNtcSyge5a2BEwJw3E3' &&
             get(entitlement(uid)).data.source == 'review')) &&
         get(entitlement(uid)).data.expiresAt is timestamp &&
@@ -18,6 +18,8 @@ service cloud.firestore {
     function money(value) { return intBetween(value, 0, 1000000000000); }
     function signedMoney(value) { return intBetween(value, -1000000000000, 1000000000000); }
     function named(value) { return value is string && value.size() > 0 && value.size() <= 150; }
+    // Server-only purchase token bindings; clients must never read or write purchase credentials.
+    match /billingPurchases/{id} { allow read, write: if false; }
     match /workspaces/{uid} {
       allow read: if owner(uid);
       allow delete: if false; // quota anchor survives account-data deletion

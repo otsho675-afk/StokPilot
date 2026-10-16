@@ -1,4 +1,4 @@
-import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:flutter/material.dart';
 import '../services/billing.dart';
 import '../widgets/ui.dart';
@@ -12,13 +12,13 @@ class PaywallPage extends StatefulWidget {
 
 class _PaywallPageState extends State<PaywallPage> {
   bool loading = false;
-  late Future<List<Package>> offerings = BillingService.instance.packages();
+  late Future<List<ProductDetails>> offerings = BillingService.instance.products();
   Future<void> run(Future<void> Function() action) async {
     setState(() => loading = true);
     try {
       await action();
       if (mounted) {
-        notify(context, 'İşlem tamamlandı. Abonelik onayı bekleniyor.');
+        notify(context, 'İşlem mağazaya iletildi. Doğrulama tamamlandığında Pro açılır.');
       }
     } catch (e) {
       if (mounted) notify(context, '$e', error: true);
@@ -78,12 +78,11 @@ class _PaywallPageState extends State<PaywallPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              if (!BillingService.verifiedBackendReady ||
-                  !BillingService.instance.available)
+              if (!BillingService.instance.canPurchase)
                 const Padding(
                   padding: EdgeInsets.only(bottom: 16),
                   child: Text(
-                    'Abonelik bu sürümde henüz satışa açık değil. Mevcut ürünlerinizi yönetmeye devam edebilirsiniz.',
+                    'Ödeme doğrulama sistemi etkinleştirildikten sonra aylık abonelik satın alınabilir. Mevcut ürünlerinizi yönetmeye devam edebilirsiniz.',
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -101,25 +100,20 @@ class _PaywallPageState extends State<PaywallPage> {
                               () => setState(
                                 () =>
                                     offerings =
-                                        BillingService.instance.packages(),
+                                        BillingService.instance.products(),
                               ),
                           child: const Text('Tekrar dene'),
                         ),
                       ],
                     );
                   }
-                  final packages =
-                      (snap.data ?? [])
-                          .where((p) => p.packageType == PackageType.monthly)
-                          .toList();
+                  final packages = snap.data ?? <ProductDetails>[];
                   if (snap.connectionState != ConnectionState.done) {
                     return const CircularProgressIndicator();
                   }
                   return Column(
                     children: [
-                      if (packages.isEmpty &&
-                          BillingService.verifiedBackendReady &&
-                          BillingService.instance.available)
+                      if (packages.isEmpty && BillingService.instance.canPurchase)
                         const Text(
                           'Aylık abonelik şu anda alınamıyor. Lütfen daha sonra tekrar deneyin.',
                           textAlign: TextAlign.center,
@@ -131,15 +125,14 @@ class _PaywallPageState extends State<PaywallPage> {
                             width: double.infinity,
                             child: FilledButton(
                               onPressed:
-                                  loading ||
-                                          !BillingService.verifiedBackendReady
+                                  loading || !BillingService.instance.canPurchase
                                       ? null
                                       : () => run(
                                         () =>
                                             BillingService.instance.purchase(p),
                                       ),
                               child: Text(
-                                'Abone ol • ${p.storeProduct.priceString} / ay',
+                                'Abone ol • ${p.price} / ay',
                               ),
                             ),
                           ),
@@ -149,6 +142,19 @@ class _PaywallPageState extends State<PaywallPage> {
                   );
                 },
               ),
+              ValueListenableBuilder<String?>(
+                valueListenable: BillingService.instance.lastError,
+                builder: (context, message, _) => message == null
+                    ? const SizedBox.shrink()
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          message,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+              ),
               const SizedBox(height: 7),
               const Text(
                 'Aylık abonelik otomatik yenilenir. Ücret ve yenileme koşulları ödeme öncesi mağazada gösterilir. Aboneliğinizi mağaza hesabınızdan iptal edebilirsiniz.',
@@ -157,7 +163,7 @@ class _PaywallPageState extends State<PaywallPage> {
               ),
               TextButton(
                 onPressed:
-                    loading || !BillingService.instance.available
+                    loading || !BillingService.instance.canPurchase
                         ? null
                         : () => run(BillingService.instance.restore),
                 child: const Text('Satın alımları geri yükle'),

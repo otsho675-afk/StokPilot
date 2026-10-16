@@ -108,6 +108,36 @@ test('review Pro grant applies only to the dedicated review account', async () =
 });
 
 
+
+test('direct-store Pro grant allows 51st product but cannot be forged by client', async () => {
+  const uid = 'direct-store-test-owner';
+  await env.withSecurityRulesDisabled(async context => {
+    const admin = context.firestore();
+    await setDoc(doc(admin, `workspaces/${uid}`), {
+      ownerUid: uid, name: 'Test', currency: 'TRY', productCount: 50,
+      createdAt: Timestamp.now(),
+    });
+    await setDoc(doc(admin, `workspaces/${uid}/entitlements/current`), {
+      status: 'active', source: 'direct-store',
+      expiresAt: Timestamp.fromDate(new Date(Date.now() + 86400000)),
+    });
+  });
+  const db = env.authenticatedContext(uid).firestore();
+  const entitlement = doc(db, `workspaces/${uid}/entitlements/current`);
+  await assertFails(updateDoc(entitlement, {
+    status: 'active', source: 'direct-store',
+    expiresAt: Timestamp.fromDate(new Date(Date.now() + 365 * 86400000)),
+  }));
+  await assertFails(getDoc(doc(db, 'billingPurchases/android_test_binding')));
+  const ws = doc(db, `workspaces/${uid}`);
+  const item = doc(collection(db, `workspaces/${uid}/products`));
+  await assertSucceeds(runTransaction(db, async tx => {
+    const current = await tx.get(ws);
+    tx.set(item, newProduct());
+    tx.update(ws, { productCount: current.data().productCount + 1, lastProductId: item.id });
+  }));
+});
+
 test('sale settlement rules distinguish cash, card and veresiye', async () => {
   const db = env.authenticatedContext('payment-test-owner').firestore();
   await assertSucceeds(setDoc(doc(db, 'workspaces/payment-test-owner'), {

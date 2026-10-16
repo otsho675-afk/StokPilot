@@ -1,26 +1,38 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { determineEntitlement } from './src/index.js';
-
-const at = 1760000000000;
-const event = {
-  id: 'event-1', app_user_id: 'firebase-uid', product_id: 'stokpilot_pro_monthly',
-  type: 'INITIAL_PURCHASE', entitlement_ids: ['pro'],
-  event_timestamp_ms: at, expiration_at_ms: at + 300000,
-};
-test('valid store purchase gets Pro until its expiry', () => {
-  assert.deepEqual(determineEntitlement(event, at), {
-    status: 'active', atMs: at, expiresMs: at + 300000,
-  });
+import { playState, appleState } from './src/index.js';
+const now = Date.parse('2026-10-16T12:00:00Z');
+const future = new Date(now + 30 * 86400000).toISOString();
+const item = { productId: 'stokpilot_pro_monthly', expiryTime: future };
+test('Play active subscription grants verified expiry', () => {
+  assert.equal(playState({ subscriptionState: 'SUBSCRIPTION_STATE_ACTIVE', lineItems: [item] }, now).expiresMs,
+    Date.parse(future));
 });
-test('does not grant Pro from invalid events', () => {
-  assert.equal(determineEntitlement({...event, entitlement_ids: ['other']}, at), null);
-  assert.equal(determineEntitlement({...event, expiration_at_ms: at - 1}, at), null);
-  assert.equal(determineEntitlement({...event, product_id: 'other'}, at), null);
-  assert.equal(determineEntitlement({...event, type: 'CANCELLATION'}, at), null);
+test('Play canceled retains prepaid days but pending/on-hold not granted', () => {
+  for (const state of ['SUBSCRIPTION_STATE_CANCELED', 'SUBSCRIPTION_STATE_IN_GRACE_PERIOD']) {
+    assert.equal(playState({ subscriptionState: state, lineItems: [item] }, now).expiresMs, Date.parse(future));
+  }
+  for (const state of ['SUBSCRIPTION_STATE_PENDING', 'SUBSCRIPTION_STATE_ON_HOLD', 'SUBSCRIPTION_STATE_EXPIRED']) {
+    assert.equal(playState({ subscriptionState: state, lineItems: [item] }, now).expiresMs, 0);
+  }
 });
-test('expiration removes paid access', () => {
-  assert.deepEqual(determineEntitlement({...event, type:'EXPIRATION'}, at), {
-    status:'expired', atMs: at, expiresMs: 0,
-  });
+test('Play never grants an unrelated SKU', () => {
+  assert.throws(() => playState({ subscriptionState: 'SUBSCRIPTION_STATE_ACTIVE',
+    lineItems: [{...item, productId: 'other'}]}, now), /mismatch/);
+});
+const jws = (payload) => 'e30.' + Buffer.from(JSON.stringify(payload)).toString('base64url') + '.signature';
+const appleInfo = { bundleId: 'com.yesildas.stokpilot',
+  productId: 'stokpilot_pro_monthly', originalTransactionId: '1000012345',
+  expiresDate: now + 2000000 };
+test('Apple active and grace statuses grant Pro; refunded/revoked denied', () => {
+  const input = (status, overrides = {}) => ({ data: [{ lastTransactions: [{
+    status, signedTransactionInfo: jws({...appleInfo, ...overrides}),
+  }] }] });
+  assert.equal(appleState(input(1), appleInfo.bundleId, null, now).expiresMs, appleInfo.expiresDate);
+  assert.equal(appleState(input(4), appleInfo.bundleId, null, now).expiresMs, appleInfo.expiresDate);
+  assert.equal(appleState(input(5), appleInfo.bundleId, null, now).expiresMs, 0);
+  assert.equal(appleState(input(1, { revocationDate: now }), appleInfo.bundleId, null, now).expiresMs, 0);
+  assert.throws(() => appleState(input(1, { bundleId: 'com.example.other' }), appleInfo.bundleId, null, now));
+  assert.throws(() => appleState(input(1, { productId: 'unrelated' }), appleInfo.bundleId, null, now));
+  assert.throws(() => appleState(input(1), appleInfo.bundleId, '100008888', now));
 });
