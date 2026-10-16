@@ -187,10 +187,12 @@ async function verifyStore(platform, lookup, env, access, original = null) {
 function precondition(existing) {
   return existing ? { updateTime: existing.updateTime } : { exists: false };
 }
-async function persist(env, access, uid, platform, storeState, isCron = false) {
+async function persist(env, access, uid, platform, storeState) {
   const base = baseUrl(env.FIREBASE_PROJECT_ID);
   const bkey = await bindingKey(platform, storeState.lookup);
   const bpath = base + '/billingPurchases/' + bkey;
+  const linkedKey = platform === 'android' && storeState.linkedPurchaseToken
+    ? await bindingKey('android', storeState.linkedPurchaseToken) : null;
   const epath = doc(base, uid);
   for (let retry = 0; retry < 4; retry++) {
     const [workspace, binding, entitlement] = await Promise.all([
@@ -198,6 +200,12 @@ async function persist(env, access, uid, platform, storeState, isCron = false) {
       readDoc(bpath, access), readDoc(epath, access),
     ]);
     if (!workspace || workspace.fields?.deletedAt) throw new Error('Workspace not available');
+    if (linkedKey && linkedKey !== bkey) {
+      const previousPurchase = await readDoc(base + '/billingPurchases/' + linkedKey, access);
+      if (previousPurchase && asString(previousPurchase.fields, 'uid') !== uid) {
+        return { error: 'Subscription is linked to a different account', status: 409 };
+      }
+    }
     if (binding && asString(binding.fields, 'uid') !== uid) {
       return { error: 'This store subscription is already linked to a different account', status: 409 };
     }
@@ -276,10 +284,6 @@ export default {
       const sa = storeConfig(env);
       const access = await googleAccessToken(sa);
       const state = await verifyStore(body.platform, reference, env, access);
-      // For Apple keep the original transaction ID as the durable lookup key.
-      if (body.platform === 'ios' && body.transactionId !== state.lookup) {
-        // Apple API provided the verified originalTransactionId.
-      }
       // Binding protects against reusing a store purchase across Firebase users.
       const result = await persist(env, access, uid, body.platform, state);
       return json(result.error ? { error: result.error } : result, result.status);
@@ -303,7 +307,7 @@ export default {
           const lookup = asString(fields, 'lookup');
           if (!uid || !lookup || !['ios', 'android'].includes(provider)) continue;
           const storeState = await verifyStore(provider, lookup, env, access, provider === 'ios' ? lookup : null);
-          await persist(env, access, uid, provider, storeState, true);
+          await persist(env, access, uid, provider, storeState);
         } catch (e) {
           console.error('Scheduled purchase check failed:', e?.message ?? 'unknown');
         }
