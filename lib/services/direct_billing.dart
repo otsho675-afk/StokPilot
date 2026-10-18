@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:uuid/uuid.dart';
 
 /// Native StoreKit / Google Play Billing; purchase proof is verified server-side.
 class BillingService {
@@ -67,8 +68,18 @@ class BillingService {
     if (!canPurchase || product.id != productId) {
       throw StateError('Satın alma henüz etkin değil.');
     }
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    // StoreKit 2 signs this UUID into the transaction as appAccountToken.
+    // It binds a new purchase to the Firebase account without exposing the UID.
+    final accountToken = const Uuid().v5(
+      Namespace.url.value,
+      'com.yesildas.stokpilot/firebase/$uid',
+    );
     final success = await InAppPurchase.instance.buyNonConsumable(
-      purchaseParam: PurchaseParam(productDetails: product),
+      purchaseParam: PurchaseParam(
+        productDetails: product,
+        applicationUserName: Platform.isIOS ? accountToken : null,
+      ),
     );
     if (!success) throw StateError('Mağaza ödeme ekranı açılamadı.');
     // Completion is performed *only* after the Worker validates the receipt.
@@ -125,11 +136,11 @@ class BillingService {
     final token = await user.getIdToken(true);
     if (token == null) throw StateError('Güvenli oturum anahtarı bulunamadı.');
     final isApple = Platform.isIOS;
-    final proof =
-        isApple
-            ? (purchase.purchaseID ?? '')
-            : purchase.verificationData.serverVerificationData;
-    if (proof.isEmpty) throw StateError('Mağaza doğrulama bilgisi alınamadı.');
+    final proof = purchase.verificationData.serverVerificationData;
+    final transactionId = purchase.purchaseID ?? '';
+    if (proof.isEmpty || (isApple && transactionId.isEmpty)) {
+      throw StateError('Mağaza doğrulama bilgisi alınamadı.');
+    }
     final response = await http
         .post(
           Uri.parse('${endpoint.replaceAll(RegExp(r"/+$"), "")}/verify'),
@@ -140,7 +151,11 @@ class BillingService {
           body: jsonEncode({
             'platform': isApple ? 'ios' : 'android',
             'productId': productId,
-            isApple ? 'transactionId' : 'purchaseToken': proof,
+            if (isApple) ...{
+              'transactionId': transactionId,
+              'signedTransactionInfo': proof,
+            } else
+              'purchaseToken': proof,
           }),
         )
         .timeout(const Duration(seconds: 25));
