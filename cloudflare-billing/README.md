@@ -30,11 +30,10 @@ PowerShell:
     Get-Content -Raw "C:\Guvenli\AppleServerAPI.p8" | npx wrangler secret put APPLE_PRIVATE_KEY
     npx wrangler secret put APPLE_KEY_ID
     npx wrangler secret put APPLE_ISSUER_ID
-    npx wrangler secret put APPLE_APP_ID
     npx wrangler deploy
     Invoke-RestMethod https://stokpilot-billing.otsho675.workers.dev/health
 
-`APPLE_APP_ID`, App Store Connect'teki uygulamanın sayısal Apple ID'sidir; Bundle ID veya abonelik ürün ID'si değildir. Config in wrangler.toml: FIREBASE_PROJECT_ID=stokpilot-5bd2e, GOOGLE_PACKAGE_NAME=com.yesildas.stokpilot, APPLE_BUNDLE_ID=com.yesildas.stokpilot. Bu Bundle ID'leri mağaza kayıtlarıyla karşılaştırın. `src/apple-roots.js` içindeki herkese açık Apple kök sertifikaları Apple PKI'den alınmıştır; özel anahtar içermez.
+`APPLE_APP_ID=6822247708`, App Store Connect'teki uygulamanın sayısal Apple ID'sidir; aboneliğin Apple ID'si (`6822256509`) veya ürün ID'si değildir. Bu herkese açık değer `wrangler.toml` içindedir. Aynı dosyada FIREBASE_PROJECT_ID=stokpilot-5bd2e, GOOGLE_PACKAGE_NAME=com.yesildas.stokpilot, APPLE_BUNDLE_ID=com.yesildas.stokpilot bulunur. Bundle ID'yi mağaza kaydıyla karşılaştırın. `src/apple-roots.js` içindeki herkese açık Apple kök sertifikaları Apple PKI'den alınmıştır; özel anahtar içermez.
 
 Firestore güvenlik kurallarını ayrıca yayınlayın:
     firebase deploy --only firestore:rules --project stokpilot-5bd2e

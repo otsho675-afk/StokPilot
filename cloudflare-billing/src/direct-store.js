@@ -157,7 +157,7 @@ export async function appleState(response, bundle, verifier, original = null, no
   const state = validCandidates[0];
   return { ...state, expiresMs: state.expiresMs > now ? state.expiresMs : 0 };
 }
-async function appleStatus(transactionId, env, original = null) {
+export async function appleStatus(transactionId, env, original = null) {
   if (!/^\d{4,32}$/.test(transactionId)) throw new Error('Invalid Apple transaction ID');
   // jsrsasign initializes random state at module load, which Workers disallows
   // in global scope. Load Apple's verifier only while handling a request.
@@ -172,7 +172,10 @@ async function appleStatus(transactionId, env, original = null) {
     const response = await fetch(host + '/inApps/v1/subscriptions/' + encodeURIComponent(transactionId), {
       headers: { authorization: 'Bearer ' + jwt },
     });
-    if (response.status === 404) continue;
+    // An app awaiting its first review can reject production status requests
+    // with 401 while the same key is accepted by sandbox. Sandbox can only
+    // grant access after its own signed response passes verification below.
+    if (response.status === 404 || (environment === Environment.PRODUCTION && response.status === 401)) continue;
     if (!response.ok) throw new Error('Apple verification error: ' + response.status);
     const verifier = new SignedDataVerifier(appleRootCAs, true, environment, env.APPLE_BUNDLE_ID,
       environment === Environment.PRODUCTION ? appId : undefined);

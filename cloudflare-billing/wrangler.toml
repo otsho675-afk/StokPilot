@@ -5,6 +5,7 @@ compatibility_date = "2026-10-01"
 [vars]
 FIREBASE_PROJECT_ID = "stokpilot-5bd2e"
 APPLE_BUNDLE_ID = "com.yesildas.stokpilot"
+APPLE_APP_ID = "6822247708"
 GOOGLE_PACKAGE_NAME = "com.yesildas.stokpilot"
 
 [triggers]

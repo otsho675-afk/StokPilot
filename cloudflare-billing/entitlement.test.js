@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { generateKeyPairSync } from 'node:crypto';
 import { Environment, SignedDataVerifier } from '@apple/app-store-server-library';
-import { playState, appleState } from './src/index.js';
+import { playState, appleState, appleStatus } from './src/index.js';
 import { appleRootCAs } from './src/apple-roots.js';
 const now = Date.parse('2026-10-16T12:00:00Z');
 const future = new Date(now + 30 * 86400000).toISOString();
@@ -59,4 +60,24 @@ test('Apple signed transaction payload cannot be forged by editing its JSON', as
     appleInfo.bundleId);
   await assert.rejects(appleState({data: [{lastTransactions: [{status: 1,
     signedTransactionInfo: jws(appleInfo)}]}]}, appleInfo.bundleId, verifier, null, now));
+});
+
+test('Apple production 401 falls back to sandbox without granting an unknown purchase', async () => {
+  const { privateKey } = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
+  const originalFetch = globalThis.fetch;
+  const hosts = [];
+  globalThis.fetch = async (url) => {
+    hosts.push(new URL(url).host);
+    return new Response(null, { status: hosts.length === 1 ? 401 : 404 });
+  };
+  try {
+    await assert.rejects(appleStatus('1000012345', {
+      APPLE_ISSUER_ID: 'test-issuer', APPLE_KEY_ID: 'TESTKEY',
+      APPLE_PRIVATE_KEY: privateKey.export({ type: 'pkcs8', format: 'pem' }),
+      APPLE_BUNDLE_ID: appleInfo.bundleId, APPLE_APP_ID: String(appleInfo.appAppleId),
+    }), /Apple transaction not found/);
+    assert.deepEqual(hosts, ['api.storekit.apple.com', 'api.storekit-sandbox.apple.com']);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
