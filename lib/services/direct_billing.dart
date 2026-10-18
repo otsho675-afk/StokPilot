@@ -41,7 +41,8 @@ class BillingService {
   }
 
   Future<List<ProductDetails>> products() async {
-    if (!canPurchase || !await InAppPurchase.instance.isAvailable()) return [];
+    // A store price may be displayed while server verification is still gated.
+    if (!available || !await InAppPurchase.instance.isAvailable()) return [];
     final response = await InAppPurchase.instance.queryProductDetails({
       productId,
     });
@@ -84,11 +85,14 @@ class BillingService {
         continue;
       }
       try {
-        await _verify(purchase);
+        final active = await _verify(purchase);
         if (purchase.pendingCompletePurchase) {
           await InAppPurchase.instance.completePurchase(purchase);
         }
-        lastError.value = null;
+        lastError.value =
+            active
+                ? null
+                : 'Bu mağaza aboneliği artık etkin değil. Pro erişimi açılmadı.';
       } catch (error) {
         // Never acknowledge/deliver an unverified purchase as Pro.
         lastError.value = 'Ödeme doğrulanamadı: $error';
@@ -96,7 +100,7 @@ class BillingService {
     }
   }
 
-  Future<void> _verify(PurchaseDetails purchase) async {
+  Future<bool> _verify(PurchaseDetails purchase) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.uid != _uid) {
       throw StateError(
@@ -136,7 +140,11 @@ class BillingService {
         (body['error'] ?? 'HTTP ${response.statusCode}').toString(),
       );
     }
+    if (body['active'] is! bool) {
+      throw StateError('Doğrulama servisi abonelik durumunu bildirmedi.');
+    }
     // The Firestore entitlement is written by the Worker only, not by the app.
+    return body['active'] as bool;
   }
 
   Future<void> logout() async {

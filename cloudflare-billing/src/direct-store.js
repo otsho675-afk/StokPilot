@@ -1,3 +1,5 @@
+import { appleRootCAs } from './apple-roots.js';
+
 /**
  * Direct Apple App Store Server API / Google Play Developer API billing.
  * No RevenueCat. All privileged credentials stay in Worker secrets.
@@ -24,10 +26,6 @@ function encode(input) {
 function decode(str) {
   const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
   return Uint8Array.from(atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')), x => x.charCodeAt(0));
-}
-function claims(jwt) {
-  if (typeof jwt !== 'string' || jwt.split('.').length !== 3) throw new Error('Malformed token');
-  return JSON.parse(new TextDecoder().decode(decode(jwt.split('.')[1])));
 }
 function privateKey(pem, alg) {
   const body = pem.replace(/-----BEGIN [^-]+-----|-----END [^-]+-----|\s/g, '');
@@ -122,40 +120,64 @@ async function appleAuth(env) {
     aud: 'appstoreconnect-v1', bid: env.APPLE_BUNDLE_ID,
   }, env.APPLE_PRIVATE_KEY.replace(/\\n/g, '\n'), 'ES256');
 }
-function appleTransaction(jws, bundle) {
-  const t = claims(jws); // Obtained from Apple's authenticated Server API over HTTPS.
+function appleTransaction(t, bundle) {
   if (t.bundleId !== bundle || t.productId !== PRODUCT ||
     !/^\d+$/.test(String(t.originalTransactionId ?? ''))) {
     throw new Error('Apple subscription does not belong to this app/product');
   }
   return t;
 }
-export function appleState(response, bundle, original = null, now = Date.now()) {
+export async function appleState(response, bundle, verifier, original = null, now = Date.now(), appId = null) {
   const items = (response.data ?? []).flatMap(x => x.lastTransactions ?? []);
-  const candidates = items.map(item => {
-    const tx = appleTransaction(item.signedTransactionInfo, bundle);
+  const candidates = await Promise.all(items.map(async item => {
+    // Apple's API is authenticated, but its embedded JWS still needs signature,
+    // certificate-chain, app and environment verification before granting access.
+    const tx = appleTransaction(await verifier.verifyAndDecodeTransaction(item.signedTransactionInfo), bundle);
+    if (appId !== null && Number(tx.appAppleId) !== appId) {
+      throw new Error('Apple app ID mismatch');
+    }
     if (original && String(tx.originalTransactionId) !== String(original)) return null;
-    const ms = Number(tx.expiresDate ?? 0);
+    let ms = Number(tx.expiresDate ?? 0);
     // 1 = active, 4 = billing grace period. Revoked transactions never grant Pro.
     const allowed = [1, 4].includes(Number(item.status)) && !tx.revocationDate;
+    if (Number(item.status) === 4 && allowed) {
+      if (!item.signedRenewalInfo) throw new Error('Apple grace period renewal proof missing');
+      const renewal = await verifier.verifyAndDecodeRenewalInfo(item.signedRenewalInfo);
+      if (String(renewal.originalTransactionId) !== String(tx.originalTransactionId)) {
+        throw new Error('Apple renewal transaction mismatch');
+      }
+      ms = Number(renewal.gracePeriodExpiresDate ?? 0);
+    }
     return { lookup: String(tx.originalTransactionId), expiresMs: allowed ? ms : 0,
       environment: tx.environment, productId: tx.productId };
-  }).filter(Boolean);
-  if (!candidates.length) throw new Error('Apple subscription not found');
-  candidates.sort((a, b) => b.expiresMs - a.expiresMs);
-  const state = candidates[0];
+  }));
+  const validCandidates = candidates.filter(Boolean);
+  if (!validCandidates.length) throw new Error('Apple subscription not found');
+  validCandidates.sort((a, b) => b.expiresMs - a.expiresMs);
+  const state = validCandidates[0];
   return { ...state, expiresMs: state.expiresMs > now ? state.expiresMs : 0 };
 }
 async function appleStatus(transactionId, env, original = null) {
   if (!/^\d{4,32}$/.test(transactionId)) throw new Error('Invalid Apple transaction ID');
+  // jsrsasign initializes random state at module load, which Workers disallows
+  // in global scope. Load Apple's verifier only while handling a request.
+  const { Environment, SignedDataVerifier } = await import('@apple/app-store-server-library');
   const jwt = await appleAuth(env);
-  for (const host of ['https://api.storekit.apple.com', 'https://api.storekit-sandbox.apple.com']) {
+  const appId = Number(env.APPLE_APP_ID);
+  if (!Number.isSafeInteger(appId) || appId <= 0) throw new Error('Apple app ID is not configured');
+  for (const [host, environment] of [
+    ['https://api.storekit.apple.com', Environment.PRODUCTION],
+    ['https://api.storekit-sandbox.apple.com', Environment.SANDBOX],
+  ]) {
     const response = await fetch(host + '/inApps/v1/subscriptions/' + encodeURIComponent(transactionId), {
       headers: { authorization: 'Bearer ' + jwt },
     });
     if (response.status === 404) continue;
     if (!response.ok) throw new Error('Apple verification error: ' + response.status);
-    return appleState(await response.json(), env.APPLE_BUNDLE_ID, original);
+    const verifier = new SignedDataVerifier(appleRootCAs, true, environment, env.APPLE_BUNDLE_ID,
+      environment === Environment.PRODUCTION ? appId : undefined);
+    return appleState(await response.json(), env.APPLE_BUNDLE_ID, verifier, original,
+      Date.now(), environment === Environment.PRODUCTION ? appId : null);
   }
   throw new Error('Apple transaction not found');
 }
@@ -248,17 +270,25 @@ async function persist(env, access, uid, platform, storeState) {
   }
   throw new Error('Concurrent subscription updates; retry');
 }
-async function readDue(env, access) {
+async function readDue(env, access, cutoff, after = null) {
   const base = baseUrl(env.FIREBASE_PROJECT_ID);
+  const structuredQuery = {
+    from: [{ collectionId: 'billingPurchases' }],
+    where: { fieldFilter: {
+      field: { fieldPath: 'nextCheckAt' }, op: 'LESS_THAN_OR_EQUAL', value: cutoff,
+    } },
+    orderBy: [
+      { field: { fieldPath: 'nextCheckAt' }, direction: 'ASCENDING' },
+      { field: { fieldPath: '__name__' }, direction: 'ASCENDING' },
+    ],
+    limit: 25,
+  };
+  if (after) structuredQuery.startAt = { values: [after.fields.nextCheckAt,
+    { referenceValue: after.name }], before: false };
   const response = await fetch(base + ':runQuery', {
     method: 'POST',
     headers: { authorization: 'Bearer ' + access, 'content-type': 'application/json' },
-    body: JSON.stringify({ structuredQuery: {
-      from: [{ collectionId: 'billingPurchases' }],
-      where: { fieldFilter: {
-        field: { fieldPath: 'nextCheckAt' }, op: 'LESS_THAN_OR_EQUAL', value: tf(Date.now()),
-      } }, limit: 25,
-    } }),
+    body: JSON.stringify({ structuredQuery }),
   });
   if (!response.ok) throw new Error('Firestore scheduled query failed: ' + response.status);
   return (await response.json()).map(x => x.document).filter(Boolean);
@@ -298,19 +328,27 @@ export default {
     ctx.waitUntil((async () => {
       const sa = storeConfig(env);
       const access = await googleAccessToken(sa);
-      const due = await readDue(env, access);
-      for (const record of due) {
-        try {
-          const fields = record.fields ?? {};
-          const uid = asString(fields, 'uid');
-          const provider = asString(fields, 'provider');
-          const lookup = asString(fields, 'lookup');
-          if (!uid || !lookup || !['ios', 'android'].includes(provider)) continue;
-          const storeState = await verifyStore(provider, lookup, env, access, provider === 'ios' ? lookup : null);
-          await persist(env, access, uid, provider, storeState);
-        } catch (e) {
-          console.error('Scheduled purchase check failed:', e?.message ?? 'unknown');
+      const cutoff = tf(Date.now());
+      let after = null;
+      for (let page = 0; page < 20; page++) {
+        const due = await readDue(env, access, cutoff, after);
+        if (!due.length) break;
+        after = due[due.length - 1];
+        for (const record of due) {
+          try {
+            const fields = record.fields ?? {};
+            const uid = asString(fields, 'uid');
+            const provider = asString(fields, 'provider');
+            const lookup = asString(fields, 'lookup');
+            if (!uid || !lookup || !['ios', 'android'].includes(provider)) continue;
+            const storeState = await verifyStore(provider, lookup, env, access,
+              provider === 'ios' ? lookup : null);
+            await persist(env, access, uid, provider, storeState);
+          } catch (e) {
+            console.error('Scheduled purchase check failed:', e?.message ?? 'unknown');
+          }
         }
+        if (due.length < 25) break;
       }
     })());
   },

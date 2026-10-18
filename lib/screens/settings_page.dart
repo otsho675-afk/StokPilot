@@ -30,7 +30,7 @@ class SettingsPage extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             const Text(
-              'Ücretsiz planda 50 ürün • StokPilot Pro sınırsız ürün • Türkiye hedefi 50 TL/ay',
+              'Ücretsiz planda 50 ürün • StokPilot Pro sınırsız ürün • Güncel fiyat mağazada',
             ),
             const SizedBox(height: 10),
             FilledButton.tonal(

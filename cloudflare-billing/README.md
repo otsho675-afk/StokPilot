@@ -6,9 +6,9 @@ Flutter in_app_purchase, App Store Server API, Google Play Developer API, Cloudf
 ## İşleyiş ve güvenlik
 - Kullanıcı Apple/Google'ın native mağaza satın alma ekranında ödeme yapar.
 - Flutter mağaza işlem ID'sini (Apple) veya purchaseToken'ı (Google) Cloudflare /verify adresine Firebase Authentication ID token ile gönderir.
-- Worker kullanıcı JWT imzasını ve claimlerini denetler; mağaza sunucusundan güncel abonelik durumunu doğrular. İstemcinin iddiasına güvenilmez.
+- Worker kullanıcı JWT imzasını ve claimlerini denetler; mağaza sunucusundan güncel abonelik durumunu doğrular. Apple'ın işlem ve grace period JWS imzaları, Apple kök sertifikalarıyla ayrıca doğrulanır. İstemcinin iddiasına güvenilmez.
 - Tek bir mağaza aboneliği yalnızca bir Firebase UID ile eşleşebilir. Satın alma bilgileri billingPurchases koleksiyonundadır; Firestore güvenlik kuralları istemci erişimini kapatır.
-- Pro hakkı yalnızca Worker tarafından entitlements/current Firestore belgesine yazılır. Worker Cron her saat abonelikleri yeniden sorgular.
+- Pro hakkı yalnızca Worker tarafından entitlements/current Firestore belgesine yazılır. Worker Cron her saat abonelikleri sayfalayarak yeniden sorgular. İptal edilen abonelik ödenmiş sürenin sonuna kadar, grace period ise Apple'ın bildirdiği bitişe kadar açık kalır; süre dolunca mevcut kayıtlar silinmez.
 - Doğrulama hazır olana kadar DIRECT_BILLING_READY=false olmalıdır.
 
 ## 1. Mağaza hazırlığı
@@ -30,10 +30,11 @@ PowerShell:
     Get-Content -Raw "C:\Guvenli\AppleServerAPI.p8" | npx wrangler secret put APPLE_PRIVATE_KEY
     npx wrangler secret put APPLE_KEY_ID
     npx wrangler secret put APPLE_ISSUER_ID
+    npx wrangler secret put APPLE_APP_ID
     npx wrangler deploy
     Invoke-RestMethod https://stokpilot-billing.otsho675.workers.dev/health
 
-Config in wrangler.toml: FIREBASE_PROJECT_ID=stokpilot-5bd2e, GOOGLE_PACKAGE_NAME=com.yesildas.stokpilot, APPLE_BUNDLE_ID=com.yesildas.stokpilot. Bu Bundle ID'leri mağaza kayıtlarıyla karşılaştırın.
+`APPLE_APP_ID`, App Store Connect'teki uygulamanın sayısal Apple ID'sidir; Bundle ID veya abonelik ürün ID'si değildir. Config in wrangler.toml: FIREBASE_PROJECT_ID=stokpilot-5bd2e, GOOGLE_PACKAGE_NAME=com.yesildas.stokpilot, APPLE_BUNDLE_ID=com.yesildas.stokpilot. Bu Bundle ID'leri mağaza kayıtlarıyla karşılaştırın. `src/apple-roots.js` içindeki herkese açık Apple kök sertifikaları Apple PKI'den alınmıştır; özel anahtar içermez.
 
 Firestore güvenlik kurallarını ayrıca yayınlayın:
     firebase deploy --only firestore:rules --project stokpilot-5bd2e
@@ -47,14 +48,16 @@ PowerShell:
     flutter analyze
     flutter test
     cd cloudflare-billing
-    node --test
+    npm ci
+    npm test
 
-App Store Sandbox ve Google Play lisans testçisiyle ödeme, yenileme, iptal, iade ve geri yükleme doğrulayın. Firestore'da ilgili kullanıcıya ait entitlements/current belgesi source=direct-store ve gelecekte expiresAt içermelidir. Farklı kullanıcıya bağlı bir işlemin yeniden bağlanması reddedilmelidir.
+App Store Sandbox ve Google Play lisans testçisiyle ödeme, yenileme, iptal, grace period, iade, çevrimdışı hata ve geri yükleme doğrulayın. Firestore'da ilgili kullanıcıya ait entitlements/current belgesi source=direct-store ve gelecekte expiresAt içermelidir. Farklı kullanıcıya bağlı bir işlemin yeniden bağlanması reddedilmelidir. Apple Review Information abonelik ekran görüntüsü ve inceleme notları, ücretli uygulama sözleşmesi/banka/vergi bilgileri, In-App Purchase capability ve aboneliğin uygulama sürümüne eklenmesi App Store Connect'te ayrıca kontrol edilmelidir.
 
 Test, Firestore rule deploy, Worker deploy, Apple ve Google yetkileri tamamlandıktan sonra GitHub repository / Settings / Secrets and variables / Actions / Variables bölümüne DIRECT_BILLING_READY=true ekleyin. Release workflow bunu yeni IPA/AAB derlemelerine taşır. Eski TestFlight uygulamasının butonu yeni sürüm olmadan açılmaz.
 
 ## Operasyonel notlar
 - Apple/Google komisyonları geçerlidir; Cloudflare ücretsiz kotasının aşılması ücret doğurabilir.
+- Ödeme kapalı derlemede de iOS mağazasının döndürdüğü yerel fiyat gösterilebilir; satın alma ve geri yükleme sunucu doğrulaması etkinleşene kadar kapalıdır. Mağaza ürün sorgusu başarısızsa fiyat tahmini gösterilmez.
 - İptal, iade ve yenileme değişimleri saatlik cron kontrolünden sonra yansır. App Store Server Notifications V2 ve Google RTDN gibi olay bazlı anlık bildirim bu sürümde bulunmaz.
 - App Store/Play üretim yetkileri kullanıcı hesabınıza bağlıdır. Bu repo değişiklikleri tek başına Worker'ı veya Firebase kurallarını yayınlamaz.
 - Üçüncü taraf ücretli abonelik hizmeti gerekmez. Gerçek mağaza doğrulama testleri tamamlanmadan ödeme bayrağı açılmamalıdır.

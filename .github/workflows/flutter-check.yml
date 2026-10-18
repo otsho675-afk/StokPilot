@@ -24,7 +24,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test cloudflare-billing/entitlement.test.js
+      - run: npm ci --prefix cloudflare-billing
+      - run: npm test --prefix cloudflare-billing
   firestore-rules-spark:
     runs-on: ubuntu-latest
     steps:
