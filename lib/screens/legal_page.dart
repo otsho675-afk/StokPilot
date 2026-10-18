@@ -44,7 +44,7 @@ Tam metin: https://stokpilot-5bd2e.web.app/terms.html
 
 StokPilot ürün, stok, müşteri, tedarikçi, alış, satış, fiş ve işletme içi finans kayıtları için bir yazılımdır. Fişler resmî e-fatura, e-arşiv fatura veya muhasebe defteri değildir. Vergi ve kayıt doğruluğunu kullanıcı kontrol eder.
 
-Ücretsiz hesap 50 ürün oluşturabilir. Daha fazla ürün için aylık StokPilot Pro aboneliği gerekir. Kesin fiyat ve yenileme koşulları satın alma öncesinde Apple App Store veya Google Play tarafından gösterilir. Abonelik mağaza hesabından iptal edilir; hesabı silmek aboneliği otomatik iptal etmez. Güvenli abonelik doğrulaması hazır olana kadar yeni ödeme başlatılmaz.
+Ücretsiz hesap 50 ürün oluşturabilir. Daha fazla ürün için aylık StokPilot Pro aboneliği gerekir. Kesin fiyat ve yenileme koşulları satın alma öncesinde Apple App Store veya Google Play tarafından gösterilir. Abonelik mağaza hesabından iptal edilir; hesabı silmek aboneliği otomatik iptal etmez. Ödeme yalnızca mağaza üzerinden başlatılır; Pro erişimi mağaza işlemi sunucumuz tarafından doğrulandıktan sonra açılır.
 
 Gizlilik: https://stokpilot-5bd2e.web.app/privacy.html
 Hesap silme: https://stokpilot-5bd2e.web.app/delete-account.html''';

@@ -27,11 +27,16 @@ class BillingService {
   Future<void> _queue = Future<void>.value();
 
   bool get available => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
-  bool get canPurchase => available && verifiedBackendReady;
+  // A purchase is bound to a Firebase UID on the server. Anonymous UIDs can
+  // disappear after reinstall, making a later restore impossible.
+  bool get accountReady =>
+      FirebaseAuth.instance.currentUser != null &&
+      FirebaseAuth.instance.currentUser!.isAnonymous == false;
+  bool get canPurchase => available && verifiedBackendReady && accountReady;
 
   Future<void> identify(String uid) async {
     _uid = uid;
-    if (!canPurchase || _subscription != null) return;
+    if (!available || !verifiedBackendReady || _subscription != null) return;
     // Listen *before* querying products to process resumed unfinished purchases.
     _subscription = InAppPurchase.instance.purchaseStream.listen(
       (updates) => _queue = _queue.then((_) => _onPurchases(updates)),
@@ -54,6 +59,11 @@ class BillingService {
   }
 
   Future<void> purchase(ProductDetails product) async {
+    if (!accountReady) {
+      throw StateError(
+        'Abonelik için önce hesabınızı Apple veya Google ile bağlayın.',
+      );
+    }
     if (!canPurchase || product.id != productId) {
       throw StateError('Satın alma henüz etkin değil.');
     }
@@ -65,6 +75,11 @@ class BillingService {
   }
 
   Future<void> restore() async {
+    if (!accountReady) {
+      throw StateError(
+        'Geri yükleme için aboneliği aldığınız hesaba giriş yapın.',
+      );
+    }
     if (!canPurchase) {
       throw StateError('Satın almaları geri yükleme henüz hazır değil.');
     }
@@ -102,7 +117,7 @@ class BillingService {
 
   Future<bool> _verify(PurchaseDetails purchase) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null || user.uid != _uid) {
+    if (user == null || user.isAnonymous || user.uid != _uid) {
       throw StateError(
         'Satın alınan üyeliği doğrulamak için hesabınıza giriş yapın.',
       );

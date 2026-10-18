@@ -52,7 +52,7 @@ PowerShell:
 
 App Store Sandbox ve Google Play lisans testçisiyle ödeme, yenileme, iptal, grace period, iade, çevrimdışı hata ve geri yükleme doğrulayın. Firestore'da ilgili kullanıcıya ait entitlements/current belgesi source=direct-store ve gelecekte expiresAt içermelidir. Farklı kullanıcıya bağlı bir işlemin yeniden bağlanması reddedilmelidir. Apple Review Information abonelik ekran görüntüsü ve inceleme notları, ücretli uygulama sözleşmesi/banka/vergi bilgileri, In-App Purchase capability ve aboneliğin uygulama sürümüne eklenmesi App Store Connect'te ayrıca kontrol edilmelidir.
 
-Test, Firestore rule deploy, Worker deploy, Apple ve Google yetkileri tamamlandıktan sonra GitHub repository / Settings / Secrets and variables / Actions / Variables bölümüne DIRECT_BILLING_READY=true ekleyin. Release workflow bunu yeni IPA/AAB derlemelerine taşır. Eski TestFlight uygulamasının butonu yeni sürüm olmadan açılmaz.
+Gerçek iOS sandbox testi için GitHub Actions / Build and upload store releases işini bu daldan `platform=ios`, `enable_ios_billing=true` girdileriyle elle çalıştırın. Bu yalnızca o iOS derlemesindeki StoreKit akışını açar; Android ve sonraki derlemeler etkilenmez. TestFlight cihazında satın alma, geri yükleme, iptal/süre dolma ve Firestore hakkını doğrulayın. Başarılı testler ve Apple incelemesi için doğru yeni build seçildikten sonra genel yayın derlemeleri için GitHub repository / Settings / Secrets and variables / Actions / Variables bölümüne DIRECT_BILLING_READY=true eklenebilir. Eski TestFlight uygulamasının butonu yeni sürüm olmadan açılmaz.
 
 ## Operasyonel notlar
 - Apple/Google komisyonları geçerlidir; Cloudflare ücretsiz kotasının aşılması ücret doğurabilir.

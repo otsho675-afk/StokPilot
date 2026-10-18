@@ -1,7 +1,10 @@
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../services/billing.dart';
 import '../widgets/ui.dart';
+import 'auth_page.dart';
 import 'legal_page.dart';
 
 class PaywallPage extends StatefulWidget {
@@ -12,16 +15,36 @@ class PaywallPage extends StatefulWidget {
 
 class _PaywallPageState extends State<PaywallPage> {
   bool loading = false;
-  late Future<List<ProductDetails>> offerings = BillingService.instance.products();
+  late Future<List<ProductDetails>> offerings =
+      BillingService.instance.products();
   Future<void> run(Future<void> Function() action) async {
     setState(() => loading = true);
     try {
       await action();
       if (mounted) {
-        notify(context, 'İşlem mağazaya iletildi. Doğrulama tamamlandığında Pro açılır.');
+        notify(
+          context,
+          'İşlem mağazaya iletildi. Doğrulama tamamlandığında Pro açılır.',
+        );
       }
     } catch (e) {
       if (mounted) notify(context, '$e', error: true);
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<void> linkAccount(Future<void> Function() action) async {
+    setState(() => loading = true);
+    try {
+      await action();
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) await BillingService.instance.identify(uid);
+      if (mounted) setState(() {});
+    } catch (error) {
+      if (mounted) {
+        notify(context, AuthActions.errorMessage(error), error: true);
+      }
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -78,7 +101,7 @@ class _PaywallPageState extends State<PaywallPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              if (!BillingService.instance.canPurchase)
+              if (!BillingService.verifiedBackendReady)
                 const Padding(
                   padding: EdgeInsets.only(bottom: 16),
                   child: Text(
@@ -86,6 +109,36 @@ class _PaywallPageState extends State<PaywallPage> {
                     textAlign: TextAlign.center,
                   ),
                 ),
+              if (BillingService.verifiedBackendReady &&
+                  !BillingService.instance.accountReady) ...[
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'Aboneliğinizi uygulamayı yeniden yükledikten sonra da geri '
+                    'yükleyebilmek için önce misafir hesabınızı bağlayın. '
+                    'Ürünleriniz ve diğer kayıtlarınız korunur.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                if (defaultTargetPlatform == TargetPlatform.iOS)
+                  TextButton(
+                    onPressed:
+                        loading
+                            ? null
+                            : () => linkAccount(
+                              () => AuthActions.apple(link: true),
+                            ),
+                    child: const Text('Apple ile hesabı bağla'),
+                  ),
+                TextButton(
+                  onPressed:
+                      loading
+                          ? null
+                          : () =>
+                              linkAccount(() => AuthActions.google(link: true)),
+                  child: const Text('Google ile hesabı bağla'),
+                ),
+              ],
               FutureBuilder(
                 future: offerings,
                 builder: (context, snap) {
@@ -113,7 +166,8 @@ class _PaywallPageState extends State<PaywallPage> {
                   }
                   return Column(
                     children: [
-                      if (packages.isEmpty && BillingService.instance.canPurchase)
+                      if (packages.isEmpty &&
+                          BillingService.instance.canPurchase)
                         const Text(
                           'Aylık abonelik şu anda alınamıyor. Lütfen daha sonra tekrar deneyin.',
                           textAlign: TextAlign.center,
@@ -125,15 +179,14 @@ class _PaywallPageState extends State<PaywallPage> {
                             width: double.infinity,
                             child: FilledButton(
                               onPressed:
-                                  loading || !BillingService.instance.canPurchase
+                                  loading ||
+                                          !BillingService.instance.canPurchase
                                       ? null
                                       : () => run(
                                         () =>
                                             BillingService.instance.purchase(p),
                                       ),
-                              child: Text(
-                                'Abone ol • ${p.price} / ay',
-                              ),
+                              child: Text('Abone ol • ${p.price} / ay'),
                             ),
                           ),
                         ),
@@ -144,16 +197,18 @@ class _PaywallPageState extends State<PaywallPage> {
               ),
               ValueListenableBuilder<String?>(
                 valueListenable: BillingService.instance.lastError,
-                builder: (context, message, _) => message == null
-                    ? const SizedBox.shrink()
-                    : Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(
-                          message,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
+                builder:
+                    (context, message, _) =>
+                        message == null
+                            ? const SizedBox.shrink()
+                            : Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Text(
+                                message,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
               ),
               const SizedBox(height: 7),
               const Text(

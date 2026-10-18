@@ -1,7 +1,7 @@
 name: stokpilot
 description: Profesyonel stok, cari, satis ve tedarik yonetimi.
 publish_to: none
-version: 1.0.0+13
+version: 1.0.0+14
 environment:
   sdk: '>=3.7.0 <4.0.0'
 dependencies:
