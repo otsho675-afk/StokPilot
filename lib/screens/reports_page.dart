@@ -309,22 +309,23 @@ class _ReportsPageState extends State<ReportsPage> {
         const SizedBox(height: 10),
         _metricGrid([
           MetricCard(
-            title: 'Toplam satış',
+            title: 'Satış toplamı',
             value: money(m.salesGrossMinor),
             icon: Icons.trending_up_rounded,
             subtext: '${m.saleCount} satış • KDV dahil',
           ),
           MetricCard(
-            title: 'Satışta alınan',
+            title: 'Satış anı tahsilat',
             value: money(m.salesPaidMinor),
             icon: Icons.payments_outlined,
-            subtext: 'Satış kaydında alınan ödeme',
+            subtext: 'Fiş kaydedilirken alınan para',
           ),
           MetricCard(
-            title: 'Satıştan ilk kalan',
+            title: 'Satış anı açık tutar',
             value: money(m.outstandingSalesMinor),
             icon: Icons.pending_actions_outlined,
             subtext: 'Sonraki cari tahsilatlar hariç',
+            accent: amber,
           ),
         ]),
         const SizedBox(height: 22),
@@ -341,7 +342,7 @@ class _ReportsPageState extends State<ReportsPage> {
             subtext: '${m.purchaseCount} alış • KDV dahil',
           ),
           MetricCard(
-            title: 'Bugünkü stok maliyeti',
+            title: 'Güncel stok maliyeti',
             value: money(m.inventoryCostMinor),
             icon: Icons.warehouse_outlined,
             subtext: 'Güncel miktar × tanımlı alış fiyatı',

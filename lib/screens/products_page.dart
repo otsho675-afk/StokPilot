@@ -675,7 +675,7 @@ class _ProductsPageState extends State<ProductsPage> {
     final qty = (m['stockMilli'] as num?)?.toInt() ?? 0;
     final min = (m['minStockMilli'] as num?)?.toInt() ?? 0;
     final disabled = m['isActive'] == false;
-    final alert = qty <= min;
+    final alert = !disabled && qty <= min;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
@@ -727,6 +727,25 @@ class _ProductsPageState extends State<ProductsPage> {
                 _productActions(context, p),
               ],
             ),
+            if (disabled || alert) ...[
+              const SizedBox(height: 9),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: StatusPill(
+                  label:
+                      disabled
+                          ? 'Pasif ürün'
+                          : qty <= 0
+                          ? 'Stok tükendi'
+                          : 'Kritik stok',
+                  color: disabled ? muted : amber,
+                  icon:
+                      disabled
+                          ? Icons.pause_circle_outline
+                          : Icons.warning_amber_rounded,
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -784,15 +803,12 @@ class _ProductsPageState extends State<ProductsPage> {
                 ),
               ],
             ),
-            if (alert || disabled || showPurchasePrice) ...[
+            if (showPurchasePrice) ...[
               const SizedBox(height: 8),
               Text(
                 [
-                  if (disabled) 'Pasif',
-                  if (alert) qty <= 0 ? 'Stok tükendi' : 'Kritik stok',
-                  if (showPurchasePrice)
-                    'Alış ${money((m['purchasePriceMinor'] as num?)?.toInt() ?? 0)}',
-                  if (showPurchasePrice && _markup(m) != null)
+                  'Alış ${money((m['purchasePriceMinor'] as num?)?.toInt() ?? 0)}',
+                  if (_markup(m) != null)
                     'Kâr %${_markup(m)!.toStringAsFixed(1)}',
                 ].join('  ·  '),
                 style: const TextStyle(color: muted, fontSize: 12),
@@ -829,7 +845,8 @@ class _ProductsPageState extends State<ProductsPage> {
     final m = p.data();
     final qty = (m['stockMilli'] as num?)?.toInt() ?? 0;
     final threshold = (m['minStockMilli'] as num?)?.toInt() ?? 0;
-    final alert = qty <= threshold;
+    final disabled = m['isActive'] == false;
+    final alert = !disabled && qty <= threshold;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
@@ -911,7 +928,15 @@ class _ProductsPageState extends State<ProductsPage> {
               ),
             ),
             const SizedBox(width: 9),
-            StatusPill(label: quantity(qty), color: alert ? amber : green),
+            StatusPill(
+              label: disabled ? 'Pasif · ${quantity(qty)}' : quantity(qty),
+              color:
+                  disabled
+                      ? muted
+                      : alert
+                      ? amber
+                      : green,
+            ),
             IconButton(
               tooltip: 'Stok işlemi',
               onPressed: () => stockDialog(context, p),
