@@ -1,10 +1,13 @@
+import { appleRootCAs } from './apple-roots.js';
+
 /**
  * Direct Apple App Store Server API / Google Play Developer API billing.
  * No RevenueCat. All privileged credentials stay in Worker secrets.
  * Entitlements are granted only after store verification + Firebase ID token verification.
  */
 const PRODUCT = 'stokpilot_pro_monthly';
-const MAX_BODY = 8192;
+// Apple's StoreKit 2 JWS carries its certificate chain; it can exceed 8 KiB.
+const MAX_BODY = 32768;
 const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token';
 const JWK_URL = 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com';
 const scopes = 'https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/androidpublisher';
@@ -24,10 +27,6 @@ function encode(input) {
 function decode(str) {
   const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
   return Uint8Array.from(atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')), x => x.charCodeAt(0));
-}
-function claims(jwt) {
-  if (typeof jwt !== 'string' || jwt.split('.').length !== 3) throw new Error('Malformed token');
-  return JSON.parse(new TextDecoder().decode(decode(jwt.split('.')[1])));
 }
 function privateKey(pem, alg) {
   const body = pem.replace(/-----BEGIN [^-]+-----|-----END [^-]+-----|\s/g, '');
@@ -112,6 +111,20 @@ async function bindingKey(platform, reference) {
   return platform + '_' + Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)),
     x => x.toString(16).padStart(2, '0')).join('');
 }
+// RFC 9562 UUIDv5, matching Flutter's Uuid.v5(Namespace.url, name).
+export async function appleAccountToken(uid) {
+  const namespace = Uint8Array.from('6ba7b8119dad11d180b400c04fd430c8'
+    .match(/../g), x => parseInt(x, 16));
+  const name = new TextEncoder().encode('com.yesildas.stokpilot/firebase/' + uid);
+  const input = new Uint8Array(namespace.length + name.length);
+  input.set(namespace);
+  input.set(name, namespace.length);
+  const bytes = new Uint8Array(await crypto.subtle.digest('SHA-1', input)).slice(0, 16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x50;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, x => x.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
 async function appleAuth(env) {
   if (!env.APPLE_ISSUER_ID || !env.APPLE_KEY_ID || !env.APPLE_PRIVATE_KEY) {
     throw new Error('Apple subscription verification is not configured');
@@ -122,40 +135,118 @@ async function appleAuth(env) {
     aud: 'appstoreconnect-v1', bid: env.APPLE_BUNDLE_ID,
   }, env.APPLE_PRIVATE_KEY.replace(/\\n/g, '\n'), 'ES256');
 }
-function appleTransaction(jws, bundle) {
-  const t = claims(jws); // Obtained from Apple's authenticated Server API over HTTPS.
+function appleTransaction(t, bundle) {
   if (t.bundleId !== bundle || t.productId !== PRODUCT ||
     !/^\d+$/.test(String(t.originalTransactionId ?? ''))) {
     throw new Error('Apple subscription does not belong to this app/product');
   }
   return t;
 }
-export function appleState(response, bundle, original = null, now = Date.now()) {
+export async function appleState(response, bundle, verifier, original = null, now = Date.now(), appId = null) {
   const items = (response.data ?? []).flatMap(x => x.lastTransactions ?? []);
-  const candidates = items.map(item => {
-    const tx = appleTransaction(item.signedTransactionInfo, bundle);
+  const candidates = await Promise.all(items.map(async item => {
+    // Apple's API is authenticated, but its embedded JWS still needs signature,
+    // certificate-chain, app and environment verification before granting access.
+    const decoded = await verifier.verifyAndDecodeTransaction(item.signedTransactionInfo);
+    // Get All Subscription Statuses includes every product in every group for
+    // this customer. An unrelated subscription must not hide a valid Pro one.
+    if (decoded.productId !== PRODUCT) return null;
+    const tx = appleTransaction(decoded, bundle);
+    if (appId !== null && Number(tx.appAppleId) !== appId) {
+      throw new Error('Apple app ID mismatch');
+    }
     if (original && String(tx.originalTransactionId) !== String(original)) return null;
-    const ms = Number(tx.expiresDate ?? 0);
+    let ms = Number(tx.expiresDate ?? 0);
     // 1 = active, 4 = billing grace period. Revoked transactions never grant Pro.
     const allowed = [1, 4].includes(Number(item.status)) && !tx.revocationDate;
+    if (Number(item.status) === 4 && allowed) {
+      if (!item.signedRenewalInfo) throw new Error('Apple grace period renewal proof missing');
+      const renewal = await verifier.verifyAndDecodeRenewalInfo(item.signedRenewalInfo);
+      if (String(renewal.originalTransactionId) !== String(tx.originalTransactionId)) {
+        throw new Error('Apple renewal transaction mismatch');
+      }
+      if (renewal.productId !== PRODUCT) throw new Error('Apple renewal product mismatch');
+      ms = Number(renewal.gracePeriodExpiresDate ?? 0);
+    }
     return { lookup: String(tx.originalTransactionId), expiresMs: allowed ? ms : 0,
       environment: tx.environment, productId: tx.productId };
-  }).filter(Boolean);
-  if (!candidates.length) throw new Error('Apple subscription not found');
-  candidates.sort((a, b) => b.expiresMs - a.expiresMs);
-  const state = candidates[0];
+  }));
+  const validCandidates = candidates.filter(Boolean);
+  if (!validCandidates.length) throw new Error('Apple subscription not found');
+  validCandidates.sort((a, b) => b.expiresMs - a.expiresMs);
+  const state = validCandidates[0];
   return { ...state, expiresMs: state.expiresMs > now ? state.expiresMs : 0 };
 }
-async function appleStatus(transactionId, env, original = null) {
+// Wrangler maps the Apple library's node-fetch import to the Workers Fetch API.
+// Its OCSP verifier calls response.buffer(), which Workers Response lacks.
+export function ensureOcspResponseBuffer() {
+  if (typeof Response.prototype.buffer === 'function') return;
+  Object.defineProperty(Response.prototype, 'buffer', {
+    configurable: true,
+    value: async function buffer() { return Buffer.from(await this.arrayBuffer()); },
+  });
+}
+export function appleProofClaims(tx, transactionId, bundle, appId) {
+  appleTransaction(tx, bundle);
+  if (String(tx.transactionId) !== transactionId) {
+    throw new Error('Apple signed transaction ID mismatch');
+  }
+  if (tx.appAppleId != null && Number(tx.appAppleId) !== appId) {
+    throw new Error('Apple signed app ID mismatch');
+  }
+  if (tx.environment === 'Production' && Number(tx.appAppleId) !== appId) {
+    throw new Error('Apple production app ID missing or mismatched');
+  }
+  return tx;
+}
+export async function verifyApplePurchaseProof(signed, transactionId, env) {
+  if (typeof signed !== 'string' || signed.length < 100 || signed.length > 24000 ||
+      !/^\d{4,32}$/.test(transactionId) || signed.split('.').length !== 3) {
+    throw new Error('Missing or malformed Apple signed transaction');
+  }
+  // This untrusted payload only selects a verifier. The verifier authenticates
+  // the environment, certificate chain, signature, bundle and transaction.
+  const payload = JSON.parse(new TextDecoder().decode(decode(signed.split('.')[1])));
+  const { Environment, SignedDataVerifier } = await import('@apple/app-store-server-library');
+  const environment = payload.environment === Environment.PRODUCTION ? Environment.PRODUCTION
+    : payload.environment === Environment.SANDBOX ? Environment.SANDBOX : null;
+  if (!environment) throw new Error('Unsupported Apple transaction environment');
+  const appId = Number(env.APPLE_APP_ID);
+  if (!Number.isSafeInteger(appId) || appId <= 0) throw new Error('Apple app ID is not configured');
+  ensureOcspResponseBuffer();
+  const verifier = new SignedDataVerifier(appleRootCAs, true, environment, env.APPLE_BUNDLE_ID,
+    environment === Environment.PRODUCTION ? appId : undefined);
+  const tx = appleProofClaims(await verifier.verifyAndDecodeTransaction(signed),
+    transactionId, env.APPLE_BUNDLE_ID, appId);
+  return { originalTransactionId: String(tx.originalTransactionId),
+    environment, appAccountToken: tx.appAccountToken ?? null };
+}
+export async function appleStatus(transactionId, env, original = null, requiredEnvironment = null) {
   if (!/^\d{4,32}$/.test(transactionId)) throw new Error('Invalid Apple transaction ID');
+  // jsrsasign initializes random state at module load, which Workers disallows
+  // in global scope. Load Apple's verifier only while handling a request.
+  const { Environment, SignedDataVerifier } = await import('@apple/app-store-server-library');
   const jwt = await appleAuth(env);
-  for (const host of ['https://api.storekit.apple.com', 'https://api.storekit-sandbox.apple.com']) {
+  const appId = Number(env.APPLE_APP_ID);
+  if (!Number.isSafeInteger(appId) || appId <= 0) throw new Error('Apple app ID is not configured');
+  for (const [host, environment] of [
+    ['https://api.storekit.apple.com', Environment.PRODUCTION],
+    ['https://api.storekit-sandbox.apple.com', Environment.SANDBOX],
+  ]) {
+    if (requiredEnvironment && requiredEnvironment !== environment) continue;
     const response = await fetch(host + '/inApps/v1/subscriptions/' + encodeURIComponent(transactionId), {
       headers: { authorization: 'Bearer ' + jwt },
     });
-    if (response.status === 404) continue;
+    // An app awaiting its first review can reject production status requests
+    // with 401 while the same key is accepted by sandbox. Sandbox can only
+    // grant access after its own signed response passes verification below.
+    if (response.status === 404 || (environment === Environment.PRODUCTION && response.status === 401)) continue;
     if (!response.ok) throw new Error('Apple verification error: ' + response.status);
-    return appleState(await response.json(), env.APPLE_BUNDLE_ID, original);
+    ensureOcspResponseBuffer();
+    const verifier = new SignedDataVerifier(appleRootCAs, true, environment, env.APPLE_BUNDLE_ID,
+      environment === Environment.PRODUCTION ? appId : undefined);
+    return appleState(await response.json(), env.APPLE_BUNDLE_ID, verifier, original,
+      Date.now(), environment === Environment.PRODUCTION ? appId : null);
   }
   throw new Error('Apple transaction not found');
 }
@@ -187,7 +278,7 @@ async function verifyStore(platform, lookup, env, access, original = null) {
 function precondition(existing) {
   return existing ? { updateTime: existing.updateTime } : { exists: false };
 }
-async function persist(env, access, uid, platform, storeState) {
+export async function persist(env, access, uid, platform, storeState, appleProof = null) {
   const base = baseUrl(env.FIREBASE_PROJECT_ID);
   const bkey = await bindingKey(platform, storeState.lookup);
   const bpath = base + '/billingPurchases/' + bkey;
@@ -206,8 +297,33 @@ async function persist(env, access, uid, platform, storeState) {
         return { error: 'Subscription is linked to a different account', status: 409 };
       }
     }
-    if (binding && asString(binding.fields, 'uid') !== uid) {
-      return { error: 'This store subscription is already linked to a different account', status: 409 };
+    const boundUid = asString(binding?.fields, 'uid');
+    const storedAccountToken = asString(binding?.fields, 'accountToken').toLowerCase();
+    if (platform === 'ios' && appleProof) {
+      const signedAccountToken = appleProof.appAccountToken?.toLowerCase() ?? '';
+      if (!signedAccountToken && (!binding || boundUid !== uid || storedAccountToken)) {
+        return { error: 'Apple account token missing from subscription', status: 409 };
+      }
+      if (signedAccountToken) {
+        // On a deleted-account restore, the signed token still names the
+        // original buyer. Preserve it across the new UID binding.
+        const expected = storedAccountToken || await appleAccountToken(boundUid || uid);
+        if (signedAccountToken !== expected) {
+          return { error: 'Apple account token does not match the linked account', status: 409 };
+        }
+      }
+    }
+    if (binding && boundUid !== uid) {
+      if (platform !== 'ios' || !appleProof) {
+        return { error: 'This store subscription is already linked to a different account', status: 409 };
+      }
+      // An account deletion leaves a quota anchor, but the Apple subscription
+      // can outlive that Firebase UID. A newly authenticated account may restore
+      // it only with a server-verified StoreKit 2 signed transaction.
+      const oldWorkspace = await readDoc(base + '/workspaces/' + encodeURIComponent(boundUid), access);
+      if (oldWorkspace && !oldWorkspace.fields?.deletedAt) {
+        return { error: 'This store subscription is already linked to a different account', status: 409 };
+      }
     }
     const now = Date.now();
     const previousExpiry = asMillis(entitlement?.fields, 'expiresAt');
@@ -227,6 +343,8 @@ async function persist(env, access, uid, platform, storeState) {
       nextCheckAt: tf(now + 60 * MINUTE),
       updatedAt: tf(now),
     };
+    const accountToken = appleProof?.appAccountToken?.toLowerCase() || storedAccountToken;
+    if (platform === 'ios' && accountToken) bindingFields.accountToken = sf(accountToken);
     const entitlementFields = {
       status: sf(expiresMs > now ? 'active' : 'expired'),
       source: sf('direct-store'), expiresAt: tf(expiresMs || 0),
@@ -248,17 +366,25 @@ async function persist(env, access, uid, platform, storeState) {
   }
   throw new Error('Concurrent subscription updates; retry');
 }
-async function readDue(env, access) {
+async function readDue(env, access, cutoff, after = null) {
   const base = baseUrl(env.FIREBASE_PROJECT_ID);
+  const structuredQuery = {
+    from: [{ collectionId: 'billingPurchases' }],
+    where: { fieldFilter: {
+      field: { fieldPath: 'nextCheckAt' }, op: 'LESS_THAN_OR_EQUAL', value: cutoff,
+    } },
+    orderBy: [
+      { field: { fieldPath: 'nextCheckAt' }, direction: 'ASCENDING' },
+      { field: { fieldPath: '__name__' }, direction: 'ASCENDING' },
+    ],
+    limit: 25,
+  };
+  if (after) structuredQuery.startAt = { values: [after.fields.nextCheckAt,
+    { referenceValue: after.name }], before: false };
   const response = await fetch(base + ':runQuery', {
     method: 'POST',
     headers: { authorization: 'Bearer ' + access, 'content-type': 'application/json' },
-    body: JSON.stringify({ structuredQuery: {
-      from: [{ collectionId: 'billingPurchases' }],
-      where: { fieldFilter: {
-        field: { fieldPath: 'nextCheckAt' }, op: 'LESS_THAN_OR_EQUAL', value: tf(Date.now()),
-      } }, limit: 25,
-    } }),
+    body: JSON.stringify({ structuredQuery }),
   });
   if (!response.ok) throw new Error('Firestore scheduled query failed: ' + response.status);
   return (await response.json()).map(x => x.document).filter(Boolean);
@@ -283,9 +409,13 @@ export default {
       const uid = await verifyFirebaseIdToken(token, env.FIREBASE_PROJECT_ID);
       const sa = storeConfig(env);
       const access = await googleAccessToken(sa);
-      const state = await verifyStore(body.platform, reference, env, access);
+      const proof = body.platform === 'ios'
+        ? await verifyApplePurchaseProof(body.signedTransactionInfo, reference, env) : null;
+      const state = body.platform === 'ios'
+        ? await appleStatus(reference, env, proof.originalTransactionId, proof.environment)
+        : await verifyStore(body.platform, reference, env, access);
       // Binding protects against reusing a store purchase across Firebase users.
-      const result = await persist(env, access, uid, body.platform, state);
+      const result = await persist(env, access, uid, body.platform, state, proof);
       return json(result.error ? { error: result.error } : result, result.status);
     } catch (e) {
       const message = e?.message ?? 'Unknown verification error';
@@ -298,19 +428,27 @@ export default {
     ctx.waitUntil((async () => {
       const sa = storeConfig(env);
       const access = await googleAccessToken(sa);
-      const due = await readDue(env, access);
-      for (const record of due) {
-        try {
-          const fields = record.fields ?? {};
-          const uid = asString(fields, 'uid');
-          const provider = asString(fields, 'provider');
-          const lookup = asString(fields, 'lookup');
-          if (!uid || !lookup || !['ios', 'android'].includes(provider)) continue;
-          const storeState = await verifyStore(provider, lookup, env, access, provider === 'ios' ? lookup : null);
-          await persist(env, access, uid, provider, storeState);
-        } catch (e) {
-          console.error('Scheduled purchase check failed:', e?.message ?? 'unknown');
+      const cutoff = tf(Date.now());
+      let after = null;
+      for (let page = 0; page < 20; page++) {
+        const due = await readDue(env, access, cutoff, after);
+        if (!due.length) break;
+        after = due[due.length - 1];
+        for (const record of due) {
+          try {
+            const fields = record.fields ?? {};
+            const uid = asString(fields, 'uid');
+            const provider = asString(fields, 'provider');
+            const lookup = asString(fields, 'lookup');
+            if (!uid || !lookup || !['ios', 'android'].includes(provider)) continue;
+            const storeState = await verifyStore(provider, lookup, env, access,
+              provider === 'ios' ? lookup : null);
+            await persist(env, access, uid, provider, storeState);
+          } catch (e) {
+            console.error('Scheduled purchase check failed:', e?.message ?? 'unknown');
+          }
         }
+        if (due.length < 25) break;
       }
     })());
   },

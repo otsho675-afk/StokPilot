@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:uuid/uuid.dart';
 
 /// Native StoreKit / Google Play Billing; purchase proof is verified server-side.
 class BillingService {
@@ -27,11 +28,16 @@ class BillingService {
   Future<void> _queue = Future<void>.value();
 
   bool get available => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
-  bool get canPurchase => available && verifiedBackendReady;
+  // A purchase is bound to a Firebase UID on the server. Anonymous UIDs can
+  // disappear after reinstall, making a later restore impossible.
+  bool get accountReady =>
+      FirebaseAuth.instance.currentUser != null &&
+      FirebaseAuth.instance.currentUser!.isAnonymous == false;
+  bool get canPurchase => available && verifiedBackendReady && accountReady;
 
   Future<void> identify(String uid) async {
     _uid = uid;
-    if (!canPurchase || _subscription != null) return;
+    if (!available || !verifiedBackendReady || _subscription != null) return;
     // Listen *before* querying products to process resumed unfinished purchases.
     _subscription = InAppPurchase.instance.purchaseStream.listen(
       (updates) => _queue = _queue.then((_) => _onPurchases(updates)),
@@ -41,7 +47,8 @@ class BillingService {
   }
 
   Future<List<ProductDetails>> products() async {
-    if (!canPurchase || !await InAppPurchase.instance.isAvailable()) return [];
+    // A store price may be displayed while server verification is still gated.
+    if (!available || !await InAppPurchase.instance.isAvailable()) return [];
     final response = await InAppPurchase.instance.queryProductDetails({
       productId,
     });
@@ -53,17 +60,37 @@ class BillingService {
   }
 
   Future<void> purchase(ProductDetails product) async {
+    if (!accountReady) {
+      throw StateError(
+        'Abonelik için önce hesabınızı Apple veya Google ile bağlayın.',
+      );
+    }
     if (!canPurchase || product.id != productId) {
       throw StateError('Satın alma henüz etkin değil.');
     }
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    // StoreKit 2 signs this UUID into the transaction as appAccountToken.
+    // It binds a new purchase to the Firebase account without exposing the UID.
+    final accountToken = const Uuid().v5(
+      Namespace.url.value,
+      'com.yesildas.stokpilot/firebase/$uid',
+    );
     final success = await InAppPurchase.instance.buyNonConsumable(
-      purchaseParam: PurchaseParam(productDetails: product),
+      purchaseParam: PurchaseParam(
+        productDetails: product,
+        applicationUserName: Platform.isIOS ? accountToken : null,
+      ),
     );
     if (!success) throw StateError('Mağaza ödeme ekranı açılamadı.');
     // Completion is performed *only* after the Worker validates the receipt.
   }
 
   Future<void> restore() async {
+    if (!accountReady) {
+      throw StateError(
+        'Geri yükleme için aboneliği aldığınız hesaba giriş yapın.',
+      );
+    }
     if (!canPurchase) {
       throw StateError('Satın almaları geri yükleme henüz hazır değil.');
     }
@@ -84,11 +111,14 @@ class BillingService {
         continue;
       }
       try {
-        await _verify(purchase);
+        final active = await _verify(purchase);
         if (purchase.pendingCompletePurchase) {
           await InAppPurchase.instance.completePurchase(purchase);
         }
-        lastError.value = null;
+        lastError.value =
+            active
+                ? null
+                : 'Bu mağaza aboneliği artık etkin değil. Pro erişimi açılmadı.';
       } catch (error) {
         // Never acknowledge/deliver an unverified purchase as Pro.
         lastError.value = 'Ödeme doğrulanamadı: $error';
@@ -96,9 +126,9 @@ class BillingService {
     }
   }
 
-  Future<void> _verify(PurchaseDetails purchase) async {
+  Future<bool> _verify(PurchaseDetails purchase) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null || user.uid != _uid) {
+    if (user == null || user.isAnonymous || user.uid != _uid) {
       throw StateError(
         'Satın alınan üyeliği doğrulamak için hesabınıza giriş yapın.',
       );
@@ -106,11 +136,11 @@ class BillingService {
     final token = await user.getIdToken(true);
     if (token == null) throw StateError('Güvenli oturum anahtarı bulunamadı.');
     final isApple = Platform.isIOS;
-    final proof =
-        isApple
-            ? (purchase.purchaseID ?? '')
-            : purchase.verificationData.serverVerificationData;
-    if (proof.isEmpty) throw StateError('Mağaza doğrulama bilgisi alınamadı.');
+    final proof = purchase.verificationData.serverVerificationData;
+    final transactionId = purchase.purchaseID ?? '';
+    if (proof.isEmpty || (isApple && transactionId.isEmpty)) {
+      throw StateError('Mağaza doğrulama bilgisi alınamadı.');
+    }
     final response = await http
         .post(
           Uri.parse('${endpoint.replaceAll(RegExp(r"/+$"), "")}/verify'),
@@ -121,7 +151,11 @@ class BillingService {
           body: jsonEncode({
             'platform': isApple ? 'ios' : 'android',
             'productId': productId,
-            isApple ? 'transactionId' : 'purchaseToken': proof,
+            if (isApple) ...{
+              'transactionId': transactionId,
+              'signedTransactionInfo': proof,
+            } else
+              'purchaseToken': proof,
           }),
         )
         .timeout(const Duration(seconds: 25));
@@ -136,7 +170,11 @@ class BillingService {
         (body['error'] ?? 'HTTP ${response.statusCode}').toString(),
       );
     }
+    if (body['active'] is! bool) {
+      throw StateError('Doğrulama servisi abonelik durumunu bildirmedi.');
+    }
     // The Firestore entitlement is written by the Worker only, not by the app.
+    return body['active'] as bool;
   }
 
   Future<void> logout() async {

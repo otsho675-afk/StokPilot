@@ -8,6 +8,10 @@ on:
         type: choice
         options: [android, ios, all]
         default: android
+      enable_ios_billing:
+        description: Enable iOS StoreKit purchases for TestFlight sandbox verification
+        type: boolean
+        default: false
   push:
     tags: ["v*"]
 
@@ -163,10 +167,12 @@ jobs:
               }, output)
           PY
       - name: Build signed IPA
+        env:
+          IOS_BILLING_READY: ${{ github.event_name == 'workflow_dispatch' && inputs.enable_ios_billing && 'true' || vars.DIRECT_BILLING_READY || 'false' }}
         run: |
           flutter pub get
           flutter test
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --dart-define=DIRECT_BILLING_READY=${{ vars.DIRECT_BILLING_READY || 'false' }}
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --dart-define=DIRECT_BILLING_READY="$IOS_BILLING_READY"
       - uses: actions/upload-artifact@v4
         with:
           name: stokpilot-ios-ipa

@@ -18,6 +18,7 @@ ios/Pods/
 ios/.symlinks/
 ios/Flutter/ephemeral/
 functions/node_modules/
+cloudflare-billing/node_modules/
 tests/firestore/node_modules/
 functions/.env*
 .firebase/
