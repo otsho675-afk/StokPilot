@@ -148,12 +148,14 @@ class ProductEditorDialog extends StatefulWidget {
     required this.saveProduct,
     this.existing,
     this.existingId,
+    this.initialName,
   });
 
   final Future<ProductCatalog> Function() loadCatalog;
   final Future<void> Function(Map<String, dynamic>) saveProduct;
   final Map<String, dynamic>? existing;
   final String? existingId;
+  final String? initialName;
 
   @override
   State<ProductEditorDialog> createState() => _ProductEditorDialogState();
@@ -186,7 +188,9 @@ class _ProductEditorDialogState extends State<ProductEditorDialog> {
   void initState() {
     super.initState();
     final data = widget.existing ?? const <String, dynamic>{};
-    name = TextEditingController(text: (data['name'] ?? '').toString());
+    name = TextEditingController(
+      text: (data['name'] ?? widget.initialName ?? '').toString(),
+    );
     sku = TextEditingController(text: (data['sku'] ?? '').toString());
     barcode = TextEditingController(text: (data['barcode'] ?? '').toString());
     purchase = TextEditingController(

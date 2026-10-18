@@ -49,7 +49,7 @@ class AppApi {
     });
   }
 
-  bool _hasPro(Map<String, dynamic>? ent) {
+  bool hasPro(Map<String, dynamic>? ent) {
     final expiry = ent?['expiresAt'];
     return ent?['status'] == 'active' &&
         (ent?['source'] == 'direct-store' ||
@@ -131,7 +131,7 @@ class AppApi {
       final entitlement = await tx.get(entitlementRef);
       if (!snapshot.exists) throw StateError('İşletme henüz oluşturulmamış.');
       final count = (snapshot.data()?['productCount'] as num?)?.toInt() ?? 0;
-      if (!_hasPro(entitlement.data()) && count >= 50) {
+      if (!hasPro(entitlement.data()) && count >= 50) {
         throw StateError('Ücretsiz 50 ürün hakkı doldu.');
       }
       tx.set(productRef, {

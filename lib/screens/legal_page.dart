@@ -25,14 +25,14 @@ class LegalPage extends StatelessWidget {
 }
 
 const _privacy = '''STOKPILOT GİZLİLİK BİLDİRİMİ
-Son güncelleme: 13 Ekim 2026
+Son güncelleme: 18 Ekim 2026
 İşletmeci: Hazim Yesildas
 İletişim: otsho675@gmail.com
 Tam metin: https://stokpilot-5bd2e.web.app/privacy.html
 
 Hesap ve giriş bilgilerinizi, uygulamaya eklediğiniz ürün, stok, firma, müşteri, tedarikçi, alış, satış, fiş, proje, gider, borç ve ödeme kayıtlarını hizmeti sağlamak için işleriz. Firma kartına girilen ad, ilgili kişi, telefon, e-posta, adres, vergi numarası ve IBAN da saklanır. Bu kayıtlar Firebase Authentication ve Cloud Firestore ile saklanır. Cari işlemlerde nakit/kart seçimi yalnızca kayıt etiketidir; kart numarası uygulamaya girilmez.
 
-Pro aboneliği açıldığında satın alma durumu Apple App Store veya Google Play üzerinden RevenueCat ile doğrulanır. Kart bilgileri StokPilot'a aktarılmaz. Hesap silme işlemi işletme alt kayıtlarını ve giriş hesabını kaldırır. Ücretsiz ürün kotasının yeniden kullanılmasını engellemek için kimlik ve sayaçtan oluşan sınırlı teknik kayıt tutulur.
+Pro aboneliği açıldığında satın alma durumu Apple App Store veya Google Play ile Cloudflare üzerindeki doğrulama hizmetimiz aracılığıyla kontrol edilir. Abonelik kimliği ve bitiş tarihi erişimi yönetmek için saklanır. Kart bilgileri StokPilot'a aktarılmaz. Hesap silme işlemi işletme alt kayıtlarını ve giriş hesabını kaldırır. Ücretsiz ürün kotasının yeniden kullanılmasını engellemek için kimlik ve sayaçtan oluşan sınırlı teknik kayıt tutulur.
 
 Veri erişimi, düzeltme ve silme talepleri için otsho675@gmail.com adresine yazabilirsiniz. Hesap silme adımları: https://stokpilot-5bd2e.web.app/delete-account.html''';
 

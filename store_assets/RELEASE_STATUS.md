@@ -1,4 +1,4 @@
-# StokPilot mağaza teslim durumu — 16 Ekim 2026
+# StokPilot mağaza teslim durumu — 18 Ekim 2026
 
 ## Doğrulanan sürüm
 
@@ -8,9 +8,10 @@
 
 ## Mağaza ve ödeme durumu
 
-- Google Play `stokpilot_pro_monthly` / `monthly-50` ürünü Türkiye'de 50,00 TRY/ay fiyatla aktif; RevenueCat `pro` yetkisine ve Monthly paketine bağlı.
+- Google Play `stokpilot_pro_monthly` / `monthly-50` ürünü Türkiye'de 50,00 TRY/ay fiyatla aktif. Uygulamanın güncel kodu mağaza satın alımını doğrudan Cloudflare doğrulama hizmetine gönderiyor.
 - Apple `stokpilot_pro_monthly` aboneliği 1 aylık ve Türkiye için 50,00 TRY olarak kaydedildi; abonelik incelemesi ve gerçek mağaza satın alma testi tamamlanmadı.
-- `RC_VERIFIED_BACKEND_READY=false` korunuyor. Sandbox satın alma, geri yükleme, yenileme, süre bitimi ve Firebase Pro erişim güncellemesi uçtan uca doğrulanana kadar uygulama aylık ücret tahsil etmiyor.
+- `DIRECT_BILLING_READY=false` varsayılanı korunuyor. Sandbox satın alma, geri yükleme, yenileme, süre bitimi ve Firebase Pro erişim güncellemesi uçtan uca doğrulanana kadar yeni derlemelerde ödeme başlatılmıyor.
+- Repo sürümü `1.0.0+13`; bu sürüm için henüz yayın etiketi ve mağaza yüklemesi yok. Mağazadaki son doğrulanan paket `1.0.0+12`.
 - Google Play üretim erişimi için konsolun istediği en az 12 kayıtlı test kullanıcısı ve 14 kesintisiz günlük kapalı test henüz tamamlanmadı.
 
 ## Tasarım ve veri
@@ -22,6 +23,8 @@
 - Genel arama ürün, barkod, SKU, müşteri, tedarikçi ve fiş kayıtlarını bulur. Ürün/firma kartı veya seçilen fiş açılabilir.
 - Kritik stok ve fiyat güncelliği uyarıları ürün ekranında ve üst çubuktaki rozetli hatırlatıcı merkezinde gösteriliyor.
 - Ücretsiz ürün kotası toplam 50 oluşturmadır. Ürün silmek kotayı geri kazandırmaz.
+- 18 Ekim düzeltmesi: Pro erişimi ürün ekranı ve kayıt sırasında aynı `direct-store` doğrulamasını kullanır. Satış sepetinde miktar elle ve ondalıklı girilebilir; satış akışından yeni ürün adıyla ürün kartı açılır.
+- Gizlilik metnindeki ödeme sağlayıcısı bilgisi güncellendi; Firebase Hosting üzerindeki açık sayfa yenilendi. Flutter analiz, 57 uygulama testi, dört ödeme doğrulama testi ve Android debug APK derlemesi geçti.
 
 ## Kalan yayın işleri
 

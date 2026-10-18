@@ -10,6 +10,7 @@ import '../services/app_api.dart';
 import '../services/review_prompt.dart';
 import '../widgets/ui.dart';
 import 'contacts_page.dart';
+import 'products_page.dart';
 
 class _Line {
   _Line(
@@ -72,6 +73,17 @@ class _TradesPageState extends State<TradesPage> {
       lines.fold<int>(0, (totalVat, line) => totalVat + line.tax);
   int get cartUnitMilli =>
       lines.fold<int>(0, (totalQty, line) => totalQty + line.qtyMilli);
+
+  Future<void> _editQuantity(_Line line) async {
+    final amount = await showDialog<int>(
+      context: context,
+      builder:
+          (_) => _QuantityDialog(name: line.name, quantityMilli: line.qtyMilli),
+    );
+    if (amount != null && mounted) {
+      setState(() => line.qtyMilli = amount);
+    }
+  }
 
   @override
   void dispose() {
@@ -407,6 +419,37 @@ class _TradesPageState extends State<TradesPage> {
                                   );
                                 },
                               ),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton.icon(
+                                  onPressed:
+                                      busy
+                                          ? null
+                                          : () async {
+                                            final name =
+                                                productSearch?.text.trim();
+                                            try {
+                                              await productDialog(
+                                                context,
+                                                initialName: name,
+                                              );
+                                            } catch (error) {
+                                              if (context.mounted) {
+                                                notify(
+                                                  context,
+                                                  'Ürün formu açılamadı: $error',
+                                                  error: true,
+                                                );
+                                              }
+                                            }
+                                          },
+                                  icon: const Icon(
+                                    Icons.add_circle_outline,
+                                    size: 18,
+                                  ),
+                                  label: const Text('Ürün oluştur'),
+                                ),
+                              ),
                               const SizedBox(height: 14),
                               Row(
                                 children: [
@@ -572,11 +615,21 @@ class _TradesPageState extends State<TradesPage> {
                                                       color: green,
                                                     ),
                                                   ),
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 8,
-                                                        ),
+                                                  TextButton(
+                                                    key: ValueKey(
+                                                      'trade-quantity-${line.id}',
+                                                    ),
+                                                    style: TextButton.styleFrom(
+                                                      minimumSize: const Size(40, 40),
+                                                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                                                    ),
+                                                    onPressed:
+                                                        busy
+                                                            ? null
+                                                            : () =>
+                                                                _editQuantity(
+                                                                  line,
+                                                                ),
                                                     child: Text(
                                                       quantity(line.qtyMilli),
                                                       style: const TextStyle(
@@ -1073,11 +1126,6 @@ class _TradesPageState extends State<TradesPage> {
                                 ),
                               ),
                               const SizedBox(height: 14),
-                              _posSection(
-                                'Ödeme yöntemi',
-                                Icons.payments_outlined,
-                              ),
-                              const SizedBox(height: 14),
                               if (sale) ...[
                                 const Text(
                                   'ÖDEME YÖNTEMİ',
@@ -1251,7 +1299,6 @@ class _TradesPageState extends State<TradesPage> {
                                 money(total),
                                 highlight: true,
                               ),
-                              const SizedBox(height: 16),
                               const SizedBox(height: 15),
                               SizedBox(
                                 width: double.infinity,
@@ -1540,6 +1587,73 @@ class _TradesPageState extends State<TradesPage> {
       if (mounted) setState(() => busy = false);
     }
   }
+}
+
+class _QuantityDialog extends StatefulWidget {
+  const _QuantityDialog({required this.name, required this.quantityMilli});
+
+  final String name;
+  final int quantityMilli;
+
+  @override
+  State<_QuantityDialog> createState() => _QuantityDialogState();
+}
+
+class _QuantityDialogState extends State<_QuantityDialog> {
+  late final TextEditingController amount = TextEditingController(
+    text: quantity(widget.quantityMilli),
+  );
+  String? error;
+
+  @override
+  void dispose() {
+    amount.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    try {
+      final value = parseQty(amount.text);
+      if (value <= 0) {
+        throw const FormatException('Miktar sıfırdan büyük olmalı.');
+      }
+      Navigator.of(context).pop(value);
+    } on FormatException catch (e) {
+      setState(() => error = e.message);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => ResponsiveFormDialog(
+    title: const Text('Miktarı değiştir'),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(widget.name, style: const TextStyle(fontWeight: FontWeight.w800)),
+        const SizedBox(height: 12),
+        TextField(
+          controller: amount,
+          autofocus: true,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _save(),
+          decoration: InputDecoration(
+            labelText: 'Miktar',
+            helperText: 'Ondalıklı miktar için virgül kullanabilirsiniz.',
+            errorText: error,
+          ),
+        ),
+      ],
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Text('Vazgeç'),
+      ),
+      FilledButton(onPressed: _save, child: const Text('Uygula')),
+    ],
+  );
 }
 
 String tradeSlipText(Map<String, dynamic> trade) {

@@ -42,28 +42,7 @@ class _ProductsPageState extends State<ProductsPage> {
     if (_openingProduct) return;
     setState(() => _openingProduct = true);
     try {
-      final ws = await AppApi.instance.workspace.get();
-      final ent =
-          await AppApi.instance.collection('entitlements').doc('current').get();
-      final e = ent.data() ?? {};
-      final expiry = e['expiresAt'];
-      final pro =
-          e['status'] == 'active' &&
-          (e['source'] == 'revenuecat' ||
-              (AppApi.instance.uid == 'gbw2USpZ8cNtcSyge5a2BEwJw3E3' &&
-                  e['source'] == 'review')) &&
-          expiry is Timestamp &&
-          expiry.toDate().isAfter(DateTime.now());
-      final count = (ws.data()?['productCount'] as num?)?.toInt() ?? 0;
-      if (!mounted) return;
-      if (!pro && count >= 50) {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const PaywallPage()),
-        );
-      } else {
-        await productDialog(context);
-      }
+      await productDialog(context);
     } catch (e) {
       if (mounted) {
         notify(context, 'Ürün limiti kontrol edilemedi: $e', error: true);
@@ -553,16 +532,7 @@ class _ProductsPageState extends State<ProductsPage> {
                 ) => StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                   stream: AppApi.instance.entitlement(),
                   builder: (context, ent) {
-                    final e = ent.data?.data() ?? {};
-                    final expiry = e['expiresAt'];
-                    final pro =
-                        e['status'] == 'active' &&
-                        (e['source'] == 'revenuecat' ||
-                            (AppApi.instance.uid ==
-                                    'gbw2USpZ8cNtcSyge5a2BEwJw3E3' &&
-                                e['source'] == 'review')) &&
-                        expiry is Timestamp &&
-                        expiry.toDate().isAfter(DateTime.now());
+                    final pro = AppApi.instance.hasPro(ent.data?.data());
                     final count =
                         (ws.data?.data()?['productCount'] as num?)?.toInt() ??
                         0;
@@ -1087,34 +1057,54 @@ Future<void> stockDialog(
 Future<void> productDialog(
   BuildContext context, {
   QueryDocumentSnapshot<Map<String, dynamic>>? item,
-}) => Navigator.of(context).push<void>(
-  MaterialPageRoute(
-    builder:
-        (_) => ProductEditorDialog(
-          existing: item?.data(),
-          existingId: item?.id,
-          loadCatalog: ProductCatalog.fetch,
-          saveProduct: (values) async {
-            final code = (values['barcode'] ?? '').toString().trim();
-            if (code.isNotEmpty) {
-              final matches =
-                  await AppApi.instance
-                      .collection('products')
-                      .where('barcode', isEqualTo: code)
-                      .limit(2)
-                      .get();
-              if (matches.docs.any((doc) => doc.id != item?.id)) {
-                throw const FormatException(
-                  'Bu barkod başka bir üründe kayıtlı.',
-                );
+  String? initialName,
+}) async {
+  if (item == null) {
+    final api = AppApi.instance;
+    final results = await Future.wait([
+      api.workspace.get(),
+      api.collection('entitlements').doc('current').get(),
+    ]);
+    if (!context.mounted) return;
+    final count = (results[0].data()?['productCount'] as num?)?.toInt() ?? 0;
+    if (count >= 50 && !api.hasPro(results[1].data())) {
+      await Navigator.of(
+        context,
+      ).push<void>(MaterialPageRoute(builder: (_) => const PaywallPage()));
+      return;
+    }
+  }
+  if (!context.mounted) return;
+  await Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder:
+          (_) => ProductEditorDialog(
+            existing: item?.data(),
+            existingId: item?.id,
+            initialName: initialName,
+            loadCatalog: ProductCatalog.fetch,
+            saveProduct: (values) async {
+              final code = (values['barcode'] ?? '').toString().trim();
+              if (code.isNotEmpty) {
+                final matches =
+                    await AppApi.instance
+                        .collection('products')
+                        .where('barcode', isEqualTo: code)
+                        .limit(2)
+                        .get();
+                if (matches.docs.any((doc) => doc.id != item?.id)) {
+                  throw const FormatException(
+                    'Bu barkod başka bir üründe kayıtlı.',
+                  );
+                }
               }
-            }
-            if (item == null) {
-              await AppApi.instance.create('products', values);
-            } else {
-              await AppApi.instance.edit('products', item.id, values);
-            }
-          },
-        ),
-  ),
-);
+              if (item == null) {
+                await AppApi.instance.create('products', values);
+              } else {
+                await AppApi.instance.edit('products', item.id, values);
+              }
+            },
+          ),
+    ),
+  );
+}
